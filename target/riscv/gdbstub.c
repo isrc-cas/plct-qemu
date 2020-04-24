@@ -268,6 +268,12 @@ static int csr_register_map[] = {
     CSR_MUCOUNTEREN,
     CSR_MSCOUNTEREN,
     CSR_MHCOUNTEREN,
+    CSR_VSTART,
+    CSR_VXSAT,
+    CSR_VXRM,
+    CSR_VL,
+    CSR_VTYPE,
+    CSR_VLENB,
 };
 
 int riscv_cpu_gdb_read_register(CPUState *cs, GByteArray *mem_buf, int n)
@@ -351,6 +357,32 @@ static int riscv_gdb_set_fpu(CPURISCVState *env, uint8_t *mem_buf, int n)
     return 0;
 }
 
+static int riscv_gdb_get_vector(CPURISCVState *env, GByteArray *mem_buf, int n)
+{
+    if (n < 32) {
+        int i;
+        int cnt = 0;
+        for (i = 0; i < env->vlenb; i += 8) {
+            cnt += gdb_get_reg64(mem_buf + i,
+                                 env->vreg[n * RV_VLEN_MAX / 64 + i / 8]);
+        }
+        return cnt;
+    }
+    return 0;
+}
+
+static int riscv_gdb_set_vector(CPURISCVState *env, uint8_t *mem_buf, int n)
+{
+    if (n < 32) {
+        int i;
+        for (i = 0; i < env->vlenb; i += 8) {
+            env->vreg[n * RV_VLEN_MAX / 64 + i / 8] = ldq_p(mem_buf + i);
+        }
+        return env->vlenb;
+    }
+    return 0;
+}
+
 static int riscv_gdb_get_csr(CPURISCVState *env, GByteArray *buf, int n)
 {
     if (n < ARRAY_SIZE(csr_register_map)) {
@@ -416,15 +448,36 @@ void riscv_cpu_register_gdb_regs_for_features(CPUState *cs)
         gdb_register_coprocessor(cs, riscv_gdb_get_fpu, riscv_gdb_set_fpu,
                                  36, "riscv-32bit-fpu.xml", 0);
     }
+    if (env->misa & RVV) {
+        /* FIXME: It only supports vlen = 128, 256, 512 currently. */
+        const char *vector_xml_name = NULL;
+        switch (cpu->cfg.vlen) {
+            case 128:
+                vector_xml_name = "riscv-64bit-vector-128b.xml";
+                break;
+            case 256:
+                vector_xml_name = "riscv-64bit-vector-256b.xml";
+                break;
+            case 512:
+                vector_xml_name = "riscv-64bit-vector-512b.xml";
+                break;
+            default:
+                vector_xml_name = NULL;
+                break;
+        }
+        if (vector_xml_name)
+            gdb_register_coprocessor(cs, riscv_gdb_get_vector, riscv_gdb_set_vector,
+                                     32, vector_xml_name, 0);
+    }
 #if defined(TARGET_RISCV32)
     gdb_register_coprocessor(cs, riscv_gdb_get_csr, riscv_gdb_set_csr,
-                             241, "riscv-32bit-csr.xml", 0);
+                             247, "riscv-32bit-csr.xml", 0);
 
     gdb_register_coprocessor(cs, riscv_gdb_get_virtual, riscv_gdb_set_virtual,
                              1, "riscv-32bit-virtual.xml", 0);
 #elif defined(TARGET_RISCV64)
     gdb_register_coprocessor(cs, riscv_gdb_get_csr, riscv_gdb_set_csr,
-                             241, "riscv-64bit-csr.xml", 0);
+                             247, "riscv-64bit-csr.xml", 0);
 
     gdb_register_coprocessor(cs, riscv_gdb_get_virtual, riscv_gdb_set_virtual,
                              1, "riscv-64bit-virtual.xml", 0);

@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<!-- Copyright (C) 2018-2019 Free Software Foundation, Inc.
+
+     Copying and distribution of this file, with or without modification,
+     are permitted in any medium without royalty provided the copyright
+     notice and this notice are preserved.  -->
+
+<!-- Register numbers are hard-coded in order to maintain backward
+     compatibility with older versions of tools that didn't use xml
+     register descriptions.  -->
+
+<!DOCTYPE feature SYSTEM "gdb-target.dtd">
+<feature name="org.gnu.gdb.riscv.vector">
+<vector id="bytes" type="uint8" count="64"/>
+<vector id="shorts" type="uint16" count="32"/>
+<vector id="words" type="uint32" count="16"/>
+<vector id="longs" type="uint64" count="8"/>
+<vector id="quads" type="uint128" count="4"/>
+  <union id="riscv_vector">
+    <field name="b" type="bytes"/>
+    <field name="s" type="shorts"/>
+    <field name="w" type="words"/>
+    <field name="l" type="longs"/>
+    <field name="q" type="quads"/>
+  </union>
+
+  <reg name="v0" bitsize="512" save-restore="no" type="riscv_vector" group="vector" regnum="69"/>
+  <reg name="v1" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v2" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v3" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v4" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v5" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v6" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v7" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v8" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v9" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v10" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v11" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v12" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v13" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v14" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v15" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v16" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v17" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v18" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v19" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v20" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v21" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v22" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v23" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v24" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v25" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v26" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v27" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v28" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v29" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v30" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+  <reg name="v31" bitsize="512" save-restore="no" type="riscv_vector" group="vector"/>
+</feature>
