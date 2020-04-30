@@ -60,8 +60,16 @@
 #define CSR_VSTART          0x008
 #define CSR_VXSAT           0x009
 #define CSR_VXRM            0x00a
+#define CSR_VCSR            0x00f
 #define CSR_VL              0xc20
 #define CSR_VTYPE           0xc21
+#define CSR_VLENB           0xc22
+
+/* VCSR fields */
+#define VCSR_VXSAT_SHIFT    0
+#define VCSR_VXSAT          (0x1 << VCSR_VXSAT_SHIFT)
+#define VCSR_VXRM_SHIFT     1
+#define VCSR_VXRM           (0x3 << VCSR_VXRM_SHIFT)
 
 /* User Timers and Counters */
 #define CSR_CYCLE           0xc00
@@ -369,6 +377,7 @@
 #define MSTATUS_SPP         0x00000100
 #define MSTATUS_MPP         0x00001800
 #define MSTATUS_FS          0x00006000
+#define MSTATUS_VS          0x01800000
 #define MSTATUS_XS          0x00018000
 #define MSTATUS_MPRV        0x00020000
 #define MSTATUS_PUM         0x00040000 /* until: priv-1.9.1 */

@@ -19,11 +19,17 @@
 #include "tcg/tcg-gvec-desc.h"
 #include "internals.h"
 
-static bool trans_vsetvl(DisasContext *ctx, arg_vsetvl *a)
+#define REQUIRE_RVV do {\
+    if (s->mstatus_vs == 0) \
+        return false;                       \
+} while (0)
+
+static bool trans_vsetvl(DisasContext *s, arg_vsetvl *a)
 {
     TCGv s1, s2, dst;
 
-    if (!has_ext(ctx, RVV)) {
+    REQUIRE_RVV;
+    if (!has_ext(s, RVV)) {
         return false;
     }
 
@@ -41,21 +47,23 @@ static bool trans_vsetvl(DisasContext *ctx, arg_vsetvl *a)
     gen_get_gpr(s2, a->rs2);
     gen_helper_vsetvl(dst, cpu_env, s1, s2);
     gen_set_gpr(a->rd, dst);
-    tcg_gen_movi_tl(cpu_pc, ctx->pc_succ_insn);
-    lookup_and_goto_ptr(ctx);
-    ctx->base.is_jmp = DISAS_NORETURN;
+    tcg_gen_movi_tl(cpu_pc, s->pc_succ_insn);
+    lookup_and_goto_ptr(s);
+    s->base.is_jmp = DISAS_NORETURN;
 
     tcg_temp_free(s1);
     tcg_temp_free(s2);
     tcg_temp_free(dst);
+    mark_vs_dirty(s);
     return true;
 }
 
-static bool trans_vsetvli(DisasContext *ctx, arg_vsetvli *a)
+static bool trans_vsetvli(DisasContext *s, arg_vsetvli *a)
 {
     TCGv s1, s2, dst;
 
-    if (!has_ext(ctx, RVV)) {
+    REQUIRE_RVV;
+    if (!has_ext(s, RVV)) {
         return false;
     }
 
@@ -72,12 +80,13 @@ static bool trans_vsetvli(DisasContext *ctx, arg_vsetvli *a)
     }
     gen_helper_vsetvl(dst, cpu_env, s1, s2);
     gen_set_gpr(a->rd, dst);
-    gen_goto_tb(ctx, 0, ctx->pc_succ_insn);
-    ctx->base.is_jmp = DISAS_NORETURN;
+    gen_goto_tb(s, 0, s->pc_succ_insn);
+    s->base.is_jmp = DISAS_NORETURN;
 
     tcg_temp_free(s1);
     tcg_temp_free(s2);
     tcg_temp_free(dst);
+    mark_vs_dirty(s);
     return true;
 }
 
@@ -235,6 +244,7 @@ static bool ld_us_op(DisasContext *s, arg_r2nfvm *a, uint8_t seq)
           { NULL,                NULL,
             gen_helper_vlwu_v_w, gen_helper_vlwu_v_d } }
     };
+    bool ret;
 
     fn =  fns[a->vm][seq][s->sew];
     if (fn == NULL) {
@@ -245,11 +255,14 @@ static bool ld_us_op(DisasContext *s, arg_r2nfvm *a, uint8_t seq)
     data = FIELD_DP32(data, VDATA, VM, a->vm);
     data = FIELD_DP32(data, VDATA, LMUL, s->lmul);
     data = FIELD_DP32(data, VDATA, NF, a->nf);
-    return ldst_us_trans(a->rd, a->rs1, data, fn, s);
+    ret = ldst_us_trans(a->rd, a->rs1, data, fn, s);
+    mark_vs_dirty(s);
+    return ret;
 }
 
 static bool ld_us_check(DisasContext *s, arg_r2nfvm* a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, false) &&
             vext_check_reg(s, a->rd, false) &&
@@ -303,6 +316,7 @@ static bool st_us_op(DisasContext *s, arg_r2nfvm *a, uint8_t seq)
 
 static bool st_us_check(DisasContext *s, arg_r2nfvm* a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_reg(s, a->rd, false) &&
             vext_check_nf(s, a->nf));
@@ -372,6 +386,7 @@ static bool ld_stride_op(DisasContext *s, arg_rnfvm *a, uint8_t seq)
         { NULL,                 NULL,
           gen_helper_vlswu_v_w, gen_helper_vlswu_v_d },
     };
+    bool ret;
 
     fn =  fns[seq][s->sew];
     if (fn == NULL) {
@@ -382,11 +397,14 @@ static bool ld_stride_op(DisasContext *s, arg_rnfvm *a, uint8_t seq)
     data = FIELD_DP32(data, VDATA, VM, a->vm);
     data = FIELD_DP32(data, VDATA, LMUL, s->lmul);
     data = FIELD_DP32(data, VDATA, NF, a->nf);
-    return ldst_stride_trans(a->rd, a->rs1, a->rs2, data, fn, s);
+    ret  = ldst_stride_trans(a->rd, a->rs1, a->rs2, data, fn, s);
+    mark_vs_dirty(s);
+    return ret;
 }
 
 static bool ld_stride_check(DisasContext *s, arg_rnfvm* a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, false) &&
             vext_check_reg(s, a->rd, false) &&
@@ -431,6 +449,7 @@ static bool st_stride_op(DisasContext *s, arg_rnfvm *a, uint8_t seq)
 
 static bool st_stride_check(DisasContext *s, arg_rnfvm* a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_reg(s, a->rd, false) &&
             vext_check_nf(s, a->nf));
@@ -500,6 +519,7 @@ static bool ld_index_op(DisasContext *s, arg_rnfvm *a, uint8_t seq)
         { NULL,                 NULL,
           gen_helper_vlxwu_v_w, gen_helper_vlxwu_v_d },
     };
+    bool ret;
 
     fn =  fns[seq][s->sew];
     if (fn == NULL) {
@@ -510,11 +530,14 @@ static bool ld_index_op(DisasContext *s, arg_rnfvm *a, uint8_t seq)
     data = FIELD_DP32(data, VDATA, VM, a->vm);
     data = FIELD_DP32(data, VDATA, LMUL, s->lmul);
     data = FIELD_DP32(data, VDATA, NF, a->nf);
-    return ldst_index_trans(a->rd, a->rs1, a->rs2, data, fn, s);
+    ret = ldst_index_trans(a->rd, a->rs1, a->rs2, data, fn, s);
+    mark_vs_dirty(s);
+    return ret;
 }
 
 static bool ld_index_check(DisasContext *s, arg_rnfvm* a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, false) &&
             vext_check_reg(s, a->rd, false) &&
@@ -559,6 +582,7 @@ static bool st_index_op(DisasContext *s, arg_rnfvm *a, uint8_t seq)
 
 static bool st_index_check(DisasContext *s, arg_rnfvm* a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_reg(s, a->rd, false) &&
             vext_check_reg(s, a->rs2, false) &&
@@ -622,6 +646,7 @@ static bool ldff_op(DisasContext *s, arg_r2nfvm *a, uint8_t seq)
         { NULL,                  NULL,
           gen_helper_vlwuff_v_w, gen_helper_vlwuff_v_d }
     };
+    bool ret;
 
     fn =  fns[seq][s->sew];
     if (fn == NULL) {
@@ -632,7 +657,9 @@ static bool ldff_op(DisasContext *s, arg_r2nfvm *a, uint8_t seq)
     data = FIELD_DP32(data, VDATA, VM, a->vm);
     data = FIELD_DP32(data, VDATA, LMUL, s->lmul);
     data = FIELD_DP32(data, VDATA, NF, a->nf);
-    return ldff_trans(a->rd, a->rs1, data, fn, s);
+    ret = ldff_trans(a->rd, a->rs1, data, fn, s);
+    mark_vs_dirty(s);
+    return ret;
 }
 
 GEN_VEXT_TRANS(vlbff_v, 0, r2nfvm, ldff_op, ld_us_check)
@@ -719,6 +746,7 @@ static bool amo_op(DisasContext *s, arg_rwdvm *a, uint8_t seq)
         gen_helper_vamomaxud_v_d
     };
 #endif
+    bool ret;
 
     if (tb_cflags(s->base.tb) & CF_PARALLEL) {
         gen_helper_exit_atomic(cpu_env);
@@ -741,7 +769,9 @@ static bool amo_op(DisasContext *s, arg_rwdvm *a, uint8_t seq)
     data = FIELD_DP32(data, VDATA, VM, a->vm);
     data = FIELD_DP32(data, VDATA, LMUL, s->lmul);
     data = FIELD_DP32(data, VDATA, WD, a->wd);
-    return amo_trans(a->rd, a->rs1, a->rs2, data, fn, s);
+    ret = amo_trans(a->rd, a->rs1, a->rs2, data, fn, s);
+    mark_vs_dirty(s);
+    return ret;
 }
 /*
  * There are two rules check here.
@@ -752,6 +782,7 @@ static bool amo_op(DisasContext *s, arg_rwdvm *a, uint8_t seq)
  */
 static bool amo_check(DisasContext *s, arg_rwdvm* a)
 {
+    REQUIRE_RVV;
     return (!s->vill && has_ext(s, RVA) &&
             (!a->wd || vext_check_overlap_mask(s, a->rd, a->vm, false)) &&
             vext_check_reg(s, a->rd, false) &&
@@ -788,6 +819,7 @@ GEN_VEXT_TRANS(vamomaxud_v, 17, rwdvm, amo_op, amo_check)
 
 static bool opivv_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, false) &&
             vext_check_reg(s, a->rd, false) &&
@@ -823,6 +855,7 @@ do_opivv_gvec(DisasContext *s, arg_rmrr *a, GVecGen3Fn *gvec_fn,
                            vreg_ofs(s, a->rs1), vreg_ofs(s, a->rs2),
                            cpu_env, 0, s->vlen / 8, data, fn);
     }
+    mark_vs_dirty(s);
     gen_set_label(over);
     return true;
 }
@@ -883,6 +916,7 @@ static bool opivx_trans(uint32_t vd, uint32_t rs1, uint32_t vs2, uint32_t vm,
 
 static bool opivx_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, false) &&
             vext_check_reg(s, a->rd, false) &&
@@ -896,6 +930,7 @@ static inline bool
 do_opivx_gvec(DisasContext *s, arg_rmrr *a, GVecGen2sFn *gvec_fn,
               gen_helper_opivx *fn)
 {
+    bool ret;
     if (!opivx_check(s, a)) {
         return false;
     }
@@ -911,9 +946,12 @@ do_opivx_gvec(DisasContext *s, arg_rmrr *a, GVecGen2sFn *gvec_fn,
 
         tcg_temp_free_i64(src1);
         tcg_temp_free(tmp);
+        mark_vs_dirty(s);
         return true;
     }
-    return opivx_trans(a->rd, a->rs1, a->rs2, a->vm, fn, s);
+    ret = opivx_trans(a->rd, a->rs1, a->rs2, a->vm, fn, s);
+    mark_vs_dirty(s);
+    return ret;
 }
 
 /* OPIVX with GVEC IR */
@@ -1030,6 +1068,7 @@ static inline bool
 do_opivi_gvec(DisasContext *s, arg_rmrr *a, GVecGen2iFn *gvec_fn,
               gen_helper_opivx *fn, int zx)
 {
+    bool ret;
     if (!opivx_check(s, a)) {
         return false;
     }
@@ -1042,10 +1081,12 @@ do_opivi_gvec(DisasContext *s, arg_rmrr *a, GVecGen2iFn *gvec_fn,
             gvec_fn(s->sew, vreg_ofs(s, a->rd), vreg_ofs(s, a->rs2),
                     sextract64(a->rs1, 0, 5), MAXSZ(s), MAXSZ(s));
         }
+        ret = true;
     } else {
-        return opivi_trans(a->rd, a->rs1, a->rs2, a->vm, fn, s, zx);
+        ret = opivi_trans(a->rd, a->rs1, a->rs2, a->vm, fn, s, zx);
     }
-    return true;
+    mark_vs_dirty(s);
+    return ret;
 }
 
 /* OPIVI with GVEC IR */
@@ -1077,6 +1118,7 @@ GEN_OPIVI_GVEC_TRANS(vrsub_vi, 0, vrsub_vx, rsubi)
 /* OPIVV with WIDEN */
 static bool opivv_widen_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, true) &&
             vext_check_reg(s, a->rd, true) &&
@@ -1106,6 +1148,7 @@ static bool do_opivv_widen(DisasContext *s, arg_rmrr *a,
                            vreg_ofs(s, a->rs2),
                            cpu_env, 0, s->vlen / 8,
                            data, fn);
+        mark_vs_dirty(s);
         gen_set_label(over);
         return true;
     }
@@ -1131,6 +1174,7 @@ GEN_OPIVV_WIDEN_TRANS(vwsub_vv, opivv_widen_check)
 /* OPIVX with WIDEN */
 static bool opivx_widen_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, true) &&
             vext_check_reg(s, a->rd, true) &&
@@ -1168,6 +1212,7 @@ GEN_OPIVX_WIDEN_TRANS(vwsub_vx)
 /* WIDEN OPIVV with WIDEN */
 static bool opiwv_widen_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, true) &&
             vext_check_reg(s, a->rd, true) &&
@@ -1193,6 +1238,7 @@ static bool do_opiwv_widen(DisasContext *s, arg_rmrr *a,
                            vreg_ofs(s, a->rs1),
                            vreg_ofs(s, a->rs2),
                            cpu_env, 0, s->vlen / 8, data, fn);
+        mark_vs_dirty(s);
         gen_set_label(over);
         return true;
     }
@@ -1218,6 +1264,7 @@ GEN_OPIWV_WIDEN_TRANS(vwsub_wv)
 /* WIDEN OPIVX with WIDEN */
 static bool opiwx_widen_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, true) &&
             vext_check_reg(s, a->rd, true) &&
@@ -1271,6 +1318,7 @@ static bool trans_##NAME(DisasContext *s, arg_rmrr *a)             \
                            vreg_ofs(s, a->rs1),                    \
                            vreg_ofs(s, a->rs2), cpu_env, 0,        \
                            s->vlen / 8, data, fns[s->sew]);        \
+        mark_vs_dirty(s);                                        \
         gen_set_label(over);                                       \
         return true;                                               \
     }                                                              \
@@ -1283,6 +1331,7 @@ static bool trans_##NAME(DisasContext *s, arg_rmrr *a)             \
  */
 static bool opivv_vadc_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_reg(s, a->rd, false) &&
             vext_check_reg(s, a->rs2, false) &&
@@ -1299,6 +1348,7 @@ GEN_OPIVV_TRANS(vsbc_vvm, opivv_vadc_check)
  */
 static bool opivv_vmadc_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_reg(s, a->rs2, false) &&
             vext_check_reg(s, a->rs1, false) &&
@@ -1311,6 +1361,7 @@ GEN_OPIVV_TRANS(vmsbc_vvm, opivv_vmadc_check)
 
 static bool opivx_vadc_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_reg(s, a->rd, false) &&
             vext_check_reg(s, a->rs2, false) &&
@@ -1337,6 +1388,7 @@ GEN_OPIVX_TRANS(vsbc_vxm, opivx_vadc_check)
 
 static bool opivx_vmadc_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_reg(s, a->rs2, false) &&
             vext_check_overlap_group(a->rd, 1, a->rs2, 1 << s->lmul));
@@ -1402,6 +1454,7 @@ do_opivx_gvec_shift(DisasContext *s, arg_rmrr *a, GVecGen2sFn32 *gvec_fn,
 
         tcg_temp_free_i32(src1);
         tcg_temp_free(tmp);
+        mark_vs_dirty(s);
         return true;
     }
     return opivx_trans(a->rd, a->rs1, a->rs2, a->vm, fn, s);
@@ -1429,6 +1482,7 @@ GEN_OPIVI_GVEC_TRANS(vsra_vi, 1, vsra_vx,  sari)
 /* Vector Narrowing Integer Right Shift Instructions */
 static bool opivv_narrow_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, false) &&
             vext_check_reg(s, a->rd, false) &&
@@ -1460,6 +1514,7 @@ static bool trans_##NAME(DisasContext *s, arg_rmrr *a)             \
                            vreg_ofs(s, a->rs1),                    \
                            vreg_ofs(s, a->rs2), cpu_env, 0,        \
                            s->vlen / 8, data, fns[s->sew]);        \
+        mark_vs_dirty(s);                                        \
         gen_set_label(over);                                       \
         return true;                                               \
     }                                                              \
@@ -1470,6 +1525,7 @@ GEN_OPIVV_NARROW_TRANS(vnsrl_vv)
 
 static bool opivx_narrow_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, false) &&
             vext_check_reg(s, a->rd, false) &&
@@ -1524,6 +1580,7 @@ GEN_OPIVI_NARROW_TRANS(vnsrl_vi, 1, vnsrl_vx)
  */
 static bool opivv_cmp_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_reg(s, a->rs2, false) &&
             vext_check_reg(s, a->rs1, false) &&
@@ -1540,6 +1597,7 @@ GEN_OPIVV_TRANS(vmsle_vv, opivv_cmp_check)
 
 static bool opivx_cmp_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_reg(s, a->rs2, false) &&
             (vext_check_overlap_group(a->rd, 1, a->rs2, 1 << s->lmul) ||
@@ -1622,6 +1680,7 @@ GEN_OPIVX_WIDEN_TRANS(vwmaccus_vx)
 /* Vector Integer Merge and Move Instructions */
 static bool trans_vmv_v_v(DisasContext *s, arg_vmv_v_v *a)
 {
+    REQUIRE_RVV;
     if (vext_check_isa_ill(s) &&
         vext_check_reg(s, a->rd, false) &&
         vext_check_reg(s, a->rs1, false)) {
@@ -1630,6 +1689,7 @@ static bool trans_vmv_v_v(DisasContext *s, arg_vmv_v_v *a)
             tcg_gen_gvec_mov(s->sew, vreg_ofs(s, a->rd),
                              vreg_ofs(s, a->rs1),
                              MAXSZ(s), MAXSZ(s));
+            mark_vs_dirty(s);
         } else {
             uint32_t data = FIELD_DP32(0, VDATA, LMUL, s->lmul);
             static gen_helper_gvec_2_ptr * const fns[4] = {
@@ -1641,6 +1701,7 @@ static bool trans_vmv_v_v(DisasContext *s, arg_vmv_v_v *a)
 
             tcg_gen_gvec_2_ptr(vreg_ofs(s, a->rd), vreg_ofs(s, a->rs1),
                                cpu_env, 0, s->vlen / 8, data, fns[s->sew]);
+            mark_vs_dirty(s);
             gen_set_label(over);
         }
         return true;
@@ -1651,6 +1712,7 @@ static bool trans_vmv_v_v(DisasContext *s, arg_vmv_v_v *a)
 typedef void gen_helper_vmv_vx(TCGv_ptr, TCGv_i64, TCGv_env, TCGv_i32);
 static bool trans_vmv_v_x(DisasContext *s, arg_vmv_v_x *a)
 {
+    REQUIRE_RVV;
     if (vext_check_isa_ill(s) &&
         vext_check_reg(s, a->rd, false)) {
 
@@ -1690,6 +1752,7 @@ static bool trans_vmv_v_x(DisasContext *s, arg_vmv_v_x *a)
         }
 
         tcg_temp_free(s1);
+        mark_vs_dirty(s);
         gen_set_label(over);
         return true;
     }
@@ -1698,6 +1761,7 @@ static bool trans_vmv_v_x(DisasContext *s, arg_vmv_v_x *a)
 
 static bool trans_vmv_v_i(DisasContext *s, arg_vmv_v_i *a)
 {
+    REQUIRE_RVV;
     if (vext_check_isa_ill(s) &&
         vext_check_reg(s, a->rd, false)) {
 
@@ -1724,6 +1788,7 @@ static bool trans_vmv_v_i(DisasContext *s, arg_vmv_v_i *a)
                 g_assert_not_reached();
                 break;
             }
+            mark_vs_dirty(s);
         } else {
             TCGv_i32 desc;
             TCGv_i64 s1;
@@ -1745,6 +1810,7 @@ static bool trans_vmv_v_i(DisasContext *s, arg_vmv_v_i *a)
             tcg_temp_free_ptr(dest);
             tcg_temp_free_i32(desc);
             tcg_temp_free_i64(s1);
+            mark_vs_dirty(s);
             gen_set_label(over);
         }
         return true;
@@ -1819,6 +1885,7 @@ GEN_OPIVI_NARROW_TRANS(vnclip_vi, 1, vnclip_vx)
  */
 static bool opfvv_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, false) &&
             vext_check_reg(s, a->rd, false) &&
@@ -1848,6 +1915,7 @@ static bool trans_##NAME(DisasContext *s, arg_rmrr *a)             \
                            vreg_ofs(s, a->rs1),                    \
                            vreg_ofs(s, a->rs2), cpu_env, 0,        \
                            s->vlen / 8, data, fns[s->sew - 1]);    \
+        mark_vs_dirty(s);                                        \
         gen_set_label(over);                                       \
         return true;                                               \
     }                                                              \
@@ -1893,6 +1961,7 @@ static bool opfvf_check(DisasContext *s, arg_rmrr *a)
  * If the current SEW does not correspond to a supported IEEE floating-point
  * type, an illegal instruction exception is raised
  */
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, false) &&
             vext_check_reg(s, a->rd, false) &&
@@ -1927,6 +1996,7 @@ GEN_OPFVF_TRANS(vfrsub_vf,  opfvf_check)
 /* Vector Widening Floating-Point Add/Subtract Instructions */
 static bool opfvv_widen_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, true) &&
             vext_check_reg(s, a->rd, true) &&
@@ -1958,6 +2028,7 @@ static bool trans_##NAME(DisasContext *s, arg_rmrr *a)           \
                            vreg_ofs(s, a->rs1),                  \
                            vreg_ofs(s, a->rs2), cpu_env, 0,      \
                            s->vlen / 8, data, fns[s->sew - 1]);  \
+        mark_vs_dirty(s);                                      \
         gen_set_label(over);                                     \
         return true;                                             \
     }                                                            \
@@ -1969,6 +2040,7 @@ GEN_OPFVV_WIDEN_TRANS(vfwsub_vv, opfvv_widen_check)
 
 static bool opfvf_widen_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, true) &&
             vext_check_reg(s, a->rd, true) &&
@@ -2001,6 +2073,7 @@ GEN_OPFVF_WIDEN_TRANS(vfwsub_vf)
 
 static bool opfwv_widen_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, true) &&
             vext_check_reg(s, a->rd, true) &&
@@ -2030,6 +2103,7 @@ static bool trans_##NAME(DisasContext *s, arg_rmrr *a)             \
                            vreg_ofs(s, a->rs1),                    \
                            vreg_ofs(s, a->rs2), cpu_env, 0,        \
                            s->vlen / 8, data, fns[s->sew - 1]);    \
+        mark_vs_dirty(s);                                        \
         gen_set_label(over);                                       \
         return true;                                               \
     }                                                              \
@@ -2041,6 +2115,7 @@ GEN_OPFWV_WIDEN_TRANS(vfwsub_wv)
 
 static bool opfwf_widen_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, true) &&
             vext_check_reg(s, a->rd, true) &&
@@ -2116,7 +2191,8 @@ GEN_OPFVF_WIDEN_TRANS(vfwnmsac_vf)
  */
 static bool opfv_check(DisasContext *s, arg_rmr *a)
 {
-   return (vext_check_isa_ill(s) &&
+    REQUIRE_RVV;
+    return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, false) &&
             vext_check_reg(s, a->rd, false) &&
             vext_check_reg(s, a->rs2, false) &&
@@ -2142,6 +2218,7 @@ static bool trans_##NAME(DisasContext *s, arg_rmr *a)              \
         tcg_gen_gvec_3_ptr(vreg_ofs(s, a->rd), vreg_ofs(s, 0),     \
                            vreg_ofs(s, a->rs2), cpu_env, 0,        \
                            s->vlen / 8, data, fns[s->sew - 1]);    \
+        mark_vs_dirty(s);                                        \
         gen_set_label(over);                                       \
         return true;                                               \
     }                                                              \
@@ -2167,6 +2244,7 @@ GEN_OPFVF_TRANS(vfsgnjx_vf, opfvf_check)
 /* Vector Floating-Point Compare Instructions */
 static bool opfvv_cmp_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_reg(s, a->rs2, false) &&
             vext_check_reg(s, a->rs1, false) &&
@@ -2184,6 +2262,7 @@ GEN_OPFVV_TRANS(vmford_vv, opfvv_cmp_check)
 
 static bool opfvf_cmp_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_reg(s, a->rs2, false) &&
             (s->sew != 0) &&
@@ -2207,6 +2286,7 @@ GEN_OPFVF_TRANS(vfmerge_vfm,  opfvf_check)
 
 static bool trans_vfmv_v_f(DisasContext *s, arg_vfmv_v_f *a)
 {
+    REQUIRE_RVV;
     if (vext_check_isa_ill(s) &&
         vext_check_reg(s, a->rd, false) &&
         (s->sew != 0)) {
@@ -2214,6 +2294,7 @@ static bool trans_vfmv_v_f(DisasContext *s, arg_vfmv_v_f *a)
         if (s->vl_eq_vlmax) {
             tcg_gen_gvec_dup_i64(s->sew, vreg_ofs(s, a->rd),
                                  MAXSZ(s), MAXSZ(s), cpu_fpr[a->rs1]);
+            mark_vs_dirty(s);
         } else {
             TCGv_ptr dest;
             TCGv_i32 desc;
@@ -2233,6 +2314,7 @@ static bool trans_vfmv_v_f(DisasContext *s, arg_vfmv_v_f *a)
 
             tcg_temp_free_ptr(dest);
             tcg_temp_free_i32(desc);
+            mark_vs_dirty(s);
             gen_set_label(over);
         }
         return true;
@@ -2254,6 +2336,7 @@ GEN_OPFV_TRANS(vfcvt_f_x_v, opfv_check)
  */
 static bool opfv_widen_check(DisasContext *s, arg_rmr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, true) &&
             vext_check_reg(s, a->rd, true) &&
@@ -2281,6 +2364,7 @@ static bool trans_##NAME(DisasContext *s, arg_rmr *a)              \
         tcg_gen_gvec_3_ptr(vreg_ofs(s, a->rd), vreg_ofs(s, 0),     \
                            vreg_ofs(s, a->rs2), cpu_env, 0,        \
                            s->vlen / 8, data, fns[s->sew - 1]);    \
+        mark_vs_dirty(s);                                        \
         gen_set_label(over);                                       \
         return true;                                               \
     }                                                              \
@@ -2301,6 +2385,7 @@ GEN_OPFV_WIDEN_TRANS(vfwcvt_f_f_v)
  */
 static bool opfv_narrow_check(DisasContext *s, arg_rmr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, false) &&
             vext_check_reg(s, a->rd, false) &&
@@ -2328,6 +2413,7 @@ static bool trans_##NAME(DisasContext *s, arg_rmr *a)              \
         tcg_gen_gvec_3_ptr(vreg_ofs(s, a->rd), vreg_ofs(s, 0),     \
                            vreg_ofs(s, a->rs2), cpu_env, 0,        \
                            s->vlen / 8, data, fns[s->sew - 1]);    \
+        mark_vs_dirty(s);                                        \
         gen_set_label(over);                                       \
         return true;                                               \
     }                                                              \
@@ -2346,6 +2432,7 @@ GEN_OPFV_NARROW_TRANS(vfncvt_f_f_v)
 /* Vector Single-Width Integer Reduction Instructions */
 static bool reduction_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return vext_check_isa_ill(s) && vext_check_reg(s, a->rs2, false);
 }
 
@@ -2378,6 +2465,7 @@ GEN_OPFVV_WIDEN_TRANS(vfwredsum_vs, reduction_check)
 #define GEN_MM_TRANS(NAME)                                         \
 static bool trans_##NAME(DisasContext *s, arg_r *a)                \
 {                                                                  \
+    REQUIRE_RVV;                                                   \
     if (vext_check_isa_ill(s)) {                                   \
         uint32_t data = 0;                                         \
         gen_helper_gvec_4_ptr *fn = gen_helper_##NAME;             \
@@ -2390,6 +2478,7 @@ static bool trans_##NAME(DisasContext *s, arg_r *a)                \
                            vreg_ofs(s, a->rs1),                    \
                            vreg_ofs(s, a->rs2), cpu_env, 0,        \
                            s->vlen / 8, data, fn);                 \
+        mark_vs_dirty(s);                                        \
         gen_set_label(over);                                       \
         return true;                                               \
     }                                                              \
@@ -2408,6 +2497,7 @@ GEN_MM_TRANS(vmxnor_mm)
 /* Vector mask population count vmpopc */
 static bool trans_vmpopc_m(DisasContext *s, arg_rmr *a)
 {
+    REQUIRE_RVV;
     if (vext_check_isa_ill(s)) {
         TCGv_ptr src2, mask;
         TCGv dst;
@@ -2440,6 +2530,7 @@ static bool trans_vmpopc_m(DisasContext *s, arg_rmr *a)
 /* vmfirst find-first-set mask bit */
 static bool trans_vmfirst_m(DisasContext *s, arg_rmr *a)
 {
+    REQUIRE_RVV;
     if (vext_check_isa_ill(s)) {
         TCGv_ptr src2, mask;
         TCGv dst;
@@ -2475,6 +2566,7 @@ static bool trans_vmfirst_m(DisasContext *s, arg_rmr *a)
 #define GEN_M_TRANS(NAME)                                          \
 static bool trans_##NAME(DisasContext *s, arg_rmr *a)              \
 {                                                                  \
+    REQUIRE_RVV;                                                   \
     if (vext_check_isa_ill(s)) {                                   \
         uint32_t data = 0;                                         \
         gen_helper_gvec_3_ptr *fn = gen_helper_##NAME;             \
@@ -2487,6 +2579,7 @@ static bool trans_##NAME(DisasContext *s, arg_rmr *a)              \
         tcg_gen_gvec_3_ptr(vreg_ofs(s, a->rd),                     \
                            vreg_ofs(s, 0), vreg_ofs(s, a->rs2),    \
                            cpu_env, 0, s->vlen / 8, data, fn);     \
+        mark_vs_dirty(s);                                        \
         gen_set_label(over);                                       \
         return true;                                               \
     }                                                              \
@@ -2500,6 +2593,7 @@ GEN_M_TRANS(vmsof_m)
 /* Vector Iota Instruction */
 static bool trans_viota_m(DisasContext *s, arg_viota_m *a)
 {
+    REQUIRE_RVV;
     if (vext_check_isa_ill(s) &&
         vext_check_reg(s, a->rd, false) &&
         vext_check_overlap_group(a->rd, 1 << s->lmul, a->rs2, 1) &&
@@ -2518,6 +2612,7 @@ static bool trans_viota_m(DisasContext *s, arg_viota_m *a)
         tcg_gen_gvec_3_ptr(vreg_ofs(s, a->rd), vreg_ofs(s, 0),
                            vreg_ofs(s, a->rs2), cpu_env, 0,
                            s->vlen / 8, data, fns[s->sew]);
+        mark_vs_dirty(s);
         gen_set_label(over);
         return true;
     }
@@ -2527,6 +2622,7 @@ static bool trans_viota_m(DisasContext *s, arg_viota_m *a)
 /* Vector Element Index Instruction */
 static bool trans_vid_v(DisasContext *s, arg_vid_v *a)
 {
+    REQUIRE_RVV;
     if (vext_check_isa_ill(s) &&
         vext_check_reg(s, a->rd, false) &&
         vext_check_overlap_mask(s, a->rd, a->vm, false)) {
@@ -2543,6 +2639,7 @@ static bool trans_vid_v(DisasContext *s, arg_vid_v *a)
         };
         tcg_gen_gvec_2_ptr(vreg_ofs(s, a->rd), vreg_ofs(s, 0),
                            cpu_env, 0, s->vlen / 8, data, fns[s->sew]);
+        mark_vs_dirty(s);
         gen_set_label(over);
         return true;
     }
@@ -2646,8 +2743,12 @@ static void vec_element_loadi(DisasContext *s, TCGv_i64 dest,
 
 static bool trans_vext_x_v(DisasContext *s, arg_r *a)
 {
-    TCGv_i64 tmp = tcg_temp_new_i64();
-    TCGv dest = tcg_temp_new();
+    TCGv_i64 tmp;
+    TCGv dest;
+    REQUIRE_RVV;
+
+    tmp = tcg_temp_new_i64();
+    dest = tcg_temp_new();
 
     if (a->rs1 == 0) {
         /* Special case vmv.x.s rd, vs2. */
@@ -2702,6 +2803,7 @@ static void vec_element_storei(DisasContext *s, int vreg,
 /* vmv.s.x vd, rs1 # vd[0] = rs1 */
 static bool trans_vmv_s_x(DisasContext *s, arg_vmv_s_x *a)
 {
+    REQUIRE_RVV;
     if (vext_check_isa_ill(s)) {
         /* This instruction ignores LMUL and vector register groups */
         int maxsz = s->vlen >> 3;
@@ -2718,6 +2820,7 @@ static bool trans_vmv_s_x(DisasContext *s, arg_vmv_s_x *a)
         tcg_gen_extu_tl_i64(t1, cpu_gpr[a->rs1]);
         vec_element_storei(s, a->rd, 0, t1);
         tcg_temp_free_i64(t1);
+        mark_vs_dirty(s);
     done:
         gen_set_label(over);
         return true;
@@ -2728,6 +2831,7 @@ static bool trans_vmv_s_x(DisasContext *s, arg_vmv_s_x *a)
 /* Floating-Point Scalar Move Instructions */
 static bool trans_vfmv_f_s(DisasContext *s, arg_vfmv_f_s *a)
 {
+    REQUIRE_RVV;
     if (!s->vill && has_ext(s, RVF) &&
         (s->mstatus_fs != 0) && (s->sew != 0)) {
         unsigned int ofs = (8 << s->sew);
@@ -2752,6 +2856,7 @@ static bool trans_vfmv_f_s(DisasContext *s, arg_vfmv_f_s *a)
 /* vfmv.s.f vd, rs1 # vd[0] = rs1 (vs2=0) */
 static bool trans_vfmv_s_f(DisasContext *s, arg_vfmv_s_f *a)
 {
+    REQUIRE_RVV;
     if (!s->vill && has_ext(s, RVF) && (s->sew != 0)) {
         TCGv_i64 t1;
         /* The instructions ignore LMUL and vector register group. */
@@ -2773,6 +2878,7 @@ static bool trans_vfmv_s_f(DisasContext *s, arg_vfmv_s_f *a)
         }
         vec_element_storei(s, a->rd, 0, t1);
         tcg_temp_free_i64(t1);
+        mark_vs_dirty(s);
         gen_set_label(over);
         return true;
     }
@@ -2782,6 +2888,7 @@ static bool trans_vfmv_s_f(DisasContext *s, arg_vfmv_s_f *a)
 /* Vector Slide Instructions */
 static bool slideup_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, true) &&
             vext_check_reg(s, a->rd, false) &&
@@ -2800,6 +2907,7 @@ GEN_OPIVI_TRANS(vslidedown_vi, 1, vslidedown_vx, opivx_check)
 /* Vector Register Gather Instruction */
 static bool vrgather_vv_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, true) &&
             vext_check_reg(s, a->rd, false) &&
@@ -2812,6 +2920,7 @@ GEN_OPIVV_TRANS(vrgather_vv, vrgather_vv_check)
 
 static bool vrgather_vx_check(DisasContext *s, arg_rmrr *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_overlap_mask(s, a->rd, a->vm, true) &&
             vext_check_reg(s, a->rd, false) &&
@@ -2839,6 +2948,7 @@ static bool trans_vrgather_vx(DisasContext *s, arg_rmrr *a)
         tcg_gen_gvec_dup_i64(s->sew, vreg_ofs(s, a->rd),
                              MAXSZ(s), MAXSZ(s), dest);
         tcg_temp_free_i64(dest);
+        mark_vs_dirty(s);
     } else {
         static gen_helper_opivx * const fns[4] = {
             gen_helper_vrgather_vx_b, gen_helper_vrgather_vx_h,
@@ -2864,6 +2974,7 @@ static bool trans_vrgather_vi(DisasContext *s, arg_rmrr *a)
                                  endian_ofs(s, a->rs2, a->rs1),
                                  MAXSZ(s), MAXSZ(s));
         }
+        mark_vs_dirty(s);
     } else {
         static gen_helper_opivx * const fns[4] = {
             gen_helper_vrgather_vx_b, gen_helper_vrgather_vx_h,
@@ -2877,6 +2988,7 @@ static bool trans_vrgather_vi(DisasContext *s, arg_rmrr *a)
 /* Vector Compress Instruction */
 static bool vcompress_vm_check(DisasContext *s, arg_r *a)
 {
+    REQUIRE_RVV;
     return (vext_check_isa_ill(s) &&
             vext_check_reg(s, a->rd, false) &&
             vext_check_reg(s, a->rs2, false) &&
@@ -2900,6 +3012,7 @@ static bool trans_vcompress_vm(DisasContext *s, arg_r *a)
         tcg_gen_gvec_4_ptr(vreg_ofs(s, a->rd), vreg_ofs(s, 0),
                            vreg_ofs(s, a->rs1), vreg_ofs(s, a->rs2),
                            cpu_env, 0, s->vlen / 8, data, fns[s->sew]);
+        mark_vs_dirty(s);
         gen_set_label(over);
         return true;
     }
