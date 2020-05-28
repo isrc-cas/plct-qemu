@@ -22,6 +22,8 @@
 #include "cpu.h"
 #include "qemu/main-loop.h"
 #include "exec/exec-all.h"
+#include "exec/address-spaces.h"
+
 
 /* CSR function table */
 static riscv_csr_operations csr_ops[];
@@ -116,6 +118,11 @@ static int pmp(CPURISCVState *env, int csrno)
 {
     return -!riscv_feature(env, RISCV_FEATURE_PMP);
 }
+
+// static int eclic(CPURISCVState *env, int csrno)
+// {
+//     return -!riscv_feature(env, RISCV_FEATURE_ECLIC);
+// }
 #endif
 
 /* User Floating-Point CSRs */
@@ -523,11 +530,20 @@ static int read_mtvec(CPURISCVState *env, int csrno, target_ulong *val)
 
 static int write_mtvec(CPURISCVState *env, int csrno, target_ulong val)
 {
+    int mode1 = val & 0b11, mode2 = val & 0b111111;
+
     /* bits [1:0] encode mode; 0 = direct, 1 = vectored, 2 >= reserved */
-    if ((val & 3) < 2) {
+    if (mode1 < 2) {
         env->mtvec = val;
     } else {
+         /* bits [5:0] encode extended modes currently used by the ECLIC */
+        switch (mode2) {
+        case 0b000011: /* ECLIC  mode */
+            env->mtvec = val;
+            break;
+        default:
         qemu_log_mask(LOG_UNIMP, "CSR_MTVEC: reserved mode not supported\n");
+    }
     }
     return 0;
 }
@@ -547,6 +563,344 @@ static int write_mcounteren(CPURISCVState *env, int csrno, target_ulong val)
         return -1;
     }
     env->mcounteren = val;
+    return 0;
+}
+
+static int read_mtvt(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mtvt;
+    return 0;
+}
+
+static int write_mtvt(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->mtvt = val;
+    return 0;
+}
+
+static int read_mnxti(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mnxti;
+    return 0;
+}
+
+static int write_mnxti(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->mnxti = val;
+    return 0;
+}
+
+static int rmw_mnxti(CPURISCVState *env, int csrno, target_ulong *ret_value,
+                target_ulong new_value, target_ulong write_mask)
+{
+    env->mstatus |= (new_value & write_mask) & 0b11111;
+    if (ret_value) {
+        *ret_value = 0;
+    }
+
+    return 0;
+}
+
+static int read_mintstatus(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mintstatus;
+    return 0;
+}
+
+static int write_mintstatus(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->mintstatus = val;
+    return 0;
+}
+
+static int read_mscratchcsw(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mscratchcsw;
+    return 0;
+}
+
+static int write_mscratchcsw(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->mscratchcsw = val;
+    return 0;
+}
+
+static int rmw_mscratchcsw(CPURISCVState *env, int csrno, target_ulong *ret_value,
+                target_ulong new_value, target_ulong write_mask)
+{
+    target_ulong t;
+    if(get_field(env->mcause, MCAUSE_MPP)  !=  PRV_M)
+    {
+        t = new_value;
+        *ret_value = env->mscratch;
+        env->mscratch = t;
+    }else{
+        *ret_value =  new_value;
+    }
+    return 0;
+}
+
+static int read_mscratchcswl(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mscratchcswl;
+    return 0;
+}
+
+static int write_mscratchcswl(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->mscratchcswl = val;
+    return 0;
+}
+
+static int rmw_mscratchcswl(CPURISCVState *env, int csrno, target_ulong *ret_value,
+                target_ulong new_value, target_ulong write_mask)
+{
+    target_ulong t;
+    if( (get_field(env->mcause, MCAUSE_MPIL) == 0) 
+        != (get_field(env->mintstatus, MINTSTATUS_MIL) == 0))
+    {
+        t = new_value;
+        *ret_value = env->mscratch;
+        env->mscratch = t;
+    }else{
+        *ret_value =  new_value;
+    }
+    return 0;
+}
+
+static int read_mnvec(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mnvec;
+    return 0;
+}
+
+static int write_mnvec(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->mnvec = val;
+    return 0;
+}
+
+static int read_msubm(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->msubm;
+    return 0;
+}
+
+static int write_msubm(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->msubm = val;
+    return 0;
+}
+
+static int read_mdcause(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mdcause;
+    return 0;
+}
+
+static int write_mdcause(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->mdcause = val;
+    return 0;
+}
+
+static int read_mcache_ctl(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mcache_ctl;
+    return 0;
+}
+
+static int write_mcache_ctl(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->mcache_ctl = val;
+    return 0;
+}
+
+static int read_mmisc_ctl(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mmisc_ctl;
+    return 0;
+}
+
+static int write_mmisc_ctl(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->mmisc_ctl = val;
+    return 0;
+}
+
+static int read_msavestatus(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->msavestatus;
+    return 0;
+}
+
+static int write_msavestatus(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->msavestatus = val;
+    return 0;
+}
+
+static int read_msaveepc1(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->msaveepc1;
+    return 0;
+}
+
+static int write_msaveepc1(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->msaveepc1 = val;
+    return 0;
+}
+
+static int read_msavecause1(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->msavecause1;
+    return 0;
+}
+
+static int write_msavecause1(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->msavecause1 = val;
+    return 0;
+}
+
+static int read_msaveepc2(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->msaveepc2;
+    return 0;
+}
+
+static int write_msaveepc2(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->msaveepc2 = val;
+    return 0;
+}
+
+static int read_msavecause2(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->msavecause2;
+    return 0;
+}
+
+static int write_msavecause2(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->msavecause2 = val;
+    return 0;
+}
+
+static int read_msavedcause1(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->msavedcause1;
+    return 0;
+}
+
+static int write_msavedcause1(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->msavedcause1 = val;
+    return 0;
+}
+
+static int read_msavedcause2(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->msavedcause2;
+    return 0;
+}
+
+static int write_msavedcause2(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->msavedcause2 = val;
+    return 0;
+}
+
+static int rmw_pushmsubm(CPURISCVState *env, int csrno, target_ulong *ret_value,
+                target_ulong new_value, target_ulong write_mask)
+{
+
+    uint64_t notify_addr = new_value * 4 + env->gpr[2];
+
+    cpu_physical_memory_rw(notify_addr, &env->msubm,  4, 1);
+     
+    return 0;
+}
+
+static int read_mtvt2(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mtvt2;
+    return 0;
+}
+
+static int write_mtvt2(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->mtvt2 = val;
+    return 0;
+}
+
+static int rmw_jalmnxti(CPURISCVState *env, int csrno, target_ulong *ret_value,
+                target_ulong new_value, target_ulong write_mask)
+{
+    target_ulong addr;
+    uint64_t vec_addr = (env->mcause & 0x3FF) *4 + env->mtvt;
+    cpu_physical_memory_rw(vec_addr, &addr,  4, 0);
+
+    env->gpr[1] = env->pc + 4;  //ret use
+    env->gpr[5] = env->pc + 4;  //link reg
+    *ret_value = addr;
+    env->mstatus = set_field(env->mstatus, MSTATUS_MIE, 1);
+
+    return 0;
+}
+
+static int rmw_pushmcause(CPURISCVState *env, int csrno, target_ulong *ret_value,
+                target_ulong new_value, target_ulong write_mask)
+{
+    uint64_t notify_addr = new_value * 4 + env->gpr[2];
+
+    cpu_physical_memory_rw(notify_addr, &env->mcause,  4, 1);
+
+    return 0;
+}
+
+static int rmw_pushmepc(CPURISCVState *env, int csrno, target_ulong *ret_value,
+                target_ulong new_value, target_ulong write_mask)
+{
+    uint64_t notify_addr = new_value * 4 + env->gpr[2];
+    cpu_physical_memory_rw(notify_addr, &env->mepc, 4, 1);
+    return 0;
+}
+
+static int read_wfe(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->wfe;
+    return 0;
+}
+
+static int write_wfe(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->wfe = val;
+    return 0;
+}
+
+static int read_sleepvalue(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->sleepvalue;
+    return 0;
+}
+
+static int write_sleepvalue(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->sleepvalue = val;
+    return 0;
+}
+
+static int read_txevt(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->txevt;
+    return 0;
+}
+
+static int write_txevt(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->txevt = val;
     return 0;
 }
 
@@ -630,6 +984,7 @@ static int write_mcause(CPURISCVState *env, int csrno, target_ulong val)
 static int read_mbadaddr(CPURISCVState *env, int csrno, target_ulong *val)
 {
     *val = env->mbadaddr;
+    
     return 0;
 }
 
@@ -1308,6 +1663,32 @@ static riscv_csr_operations csr_ops[CSR_TABLE_SIZE] = {
     [CSR_MIE] =                 { any,  read_mie,         write_mie         },
     [CSR_MTVEC] =               { any,  read_mtvec,       write_mtvec       },
     [CSR_MCOUNTEREN] =          { any,  read_mcounteren,  write_mcounteren  },
+
+    [CSR_MTVT] =                { any,  read_mtvt,        write_mtvt        },
+    [CSR_MNXTI] =               { any,  read_mnxti,       write_mnxti, rmw_mnxti},
+    [CSR_MINTSTATUS] =          { any,  read_mintstatus,  write_mintstatus  },
+    [CSR_MSCRATCHCSW] =         { any,  read_mscratchcsw, write_mscratchcsw, rmw_mscratchcsw},
+    [CSR_MSCRATCHCSWL] =        { any,  read_mscratchcswl, write_mscratchcswl,  rmw_mscratchcswl},
+    [CSR_MNVEC] =               { any,  read_mnvec,       write_mnvec       },
+    [CSR_MSUBM] =               { any,  read_msubm,       write_msubm       },
+    [CSR_MDCAUSE] =             { any,  read_mdcause,     write_mdcause     },
+    [CSR_MCACHE_CTL] =          { any,  read_mcache_ctl,  write_mcache_ctl  },
+    [CSR_MMISC_CTL] =           { any,  read_mmisc_ctl,   write_mmisc_ctl   },
+    [CSR_MSAVESTATUS] =         { any,  read_msavestatus, write_msavestatus },
+    [CSR_MSAVEEPC1] =           { any,  read_msaveepc1,   write_msaveepc1   },  
+    [CSR_MSAVECAUSE1] =         { any,  read_msavecause1, write_msavecause1 },
+    [CSR_MSAVEEPC2] =           { any,  read_msaveepc2,   write_msaveepc2   },
+    [CSR_MSAVECAUSE2] =         { any,  read_msavecause2, write_msavecause2 },
+    [CSR_MSAVEDCAUSE1] =        { any,  read_msavedcause1, write_msavedcause1 },
+    [CSR_MSAVEDCAUSE2] =        { any,  read_msavedcause2, write_msavedcause2 },
+    [CSR_PUSHMSUBM] =           { any,  NULL,   NULL, rmw_pushmsubm },
+    [CSR_MTVT2] =               { any,  read_mtvt2,       write_mtvt2       },
+    [CSR_JALMNXTI] =            { any,  NULL,    NULL,  rmw_jalmnxti },
+    [CSR_PUSHMCAUSE] =          { any,  NULL,  NULL , rmw_pushmcause },
+    [CSR_PUSHMEPC] =            { any,  NULL,    NULL,  rmw_pushmepc },
+    [CSR_WFE] =                 { any,  read_wfe,         write_wfe         },
+    [CSR_SLEEPVALUE] =          { any,  read_sleepvalue,  write_sleepvalue  },
+    [CSR_TXEVT] =               { any,  read_txevt,       write_txevt       },
 
 #if defined(TARGET_RISCV32)
     [CSR_MSTATUSH] =            { any,  read_mstatush,    write_mstatush    },

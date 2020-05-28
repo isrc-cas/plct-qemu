@@ -40,6 +40,19 @@
 #define TYPE_RISCV_CPU_SIFIVE_E51       RISCV_CPU_TYPE_NAME("sifive-e51")
 #define TYPE_RISCV_CPU_SIFIVE_U34       RISCV_CPU_TYPE_NAME("sifive-u34")
 #define TYPE_RISCV_CPU_SIFIVE_U54       RISCV_CPU_TYPE_NAME("sifive-u54")
+#define TYPE_RISCV_CPU_NUCLEI_N201    RISCV_CPU_TYPE_NAME("nuclei-n201")
+#define TYPE_RISCV_CPU_NUCLEI_N201E    RISCV_CPU_TYPE_NAME("nuclei-n201e")
+#define TYPE_RISCV_CPU_NUCLEI_N203    RISCV_CPU_TYPE_NAME("nuclei-n203")
+#define TYPE_RISCV_CPU_NUCLEI_N203E    RISCV_CPU_TYPE_NAME("nuclei-n203e")
+#define TYPE_RISCV_CPU_NUCLEI_N205    RISCV_CPU_TYPE_NAME("nuclei-n205")
+#define TYPE_RISCV_CPU_NUCLEI_N205E    RISCV_CPU_TYPE_NAME("nuclei-n205e")
+#define TYPE_RISCV_CPU_NUCLEI_N305    RISCV_CPU_TYPE_NAME("nuclei-n305")
+#define TYPE_RISCV_CPU_NUCLEI_N307    RISCV_CPU_TYPE_NAME("nuclei-n307")
+#define TYPE_RISCV_CPU_NUCLEI_N307FD    RISCV_CPU_TYPE_NAME("nuclei-n307fd")
+#define TYPE_RISCV_CPU_NUCLEI_N600    RISCV_CPU_TYPE_NAME("nuclei-n600")
+#define TYPE_RISCV_CPU_NUCLEI_N600FD    RISCV_CPU_TYPE_NAME("nuclei-n600fd")
+#define TYPE_RISCV_CPU_NUCLEI_NX600    RISCV_CPU_TYPE_NAME("nuclei-nx600")
+#define TYPE_RISCV_CPU_NUCLEI_NX600FD    RISCV_CPU_TYPE_NAME("nuclei-nx600fd")
 /* Deprecated */
 #define TYPE_RISCV_CPU_RV32IMACU_NOMMU  RISCV_CPU_TYPE_NAME("rv32imacu-nommu")
 #define TYPE_RISCV_CPU_RV32GCSU_V1_09_1 RISCV_CPU_TYPE_NAME("rv32gcsu-v1.9.1")
@@ -77,7 +90,8 @@
 enum {
     RISCV_FEATURE_MMU,
     RISCV_FEATURE_PMP,
-    RISCV_FEATURE_MISA
+    RISCV_FEATURE_MISA,
+    RISCV_FEATURE_ECLIC
 };
 
 #define PRIV_VERSION_1_09_1 0x00010901
@@ -90,6 +104,8 @@ enum {
 #define MMU_USER_IDX 3
 
 #define MAX_RISCV_PMPS (16)
+
+#define CPU_INTERRUPT_ECLIC CPU_INTERRUPT_TGT_EXT_0
 
 typedef struct CPURISCVState CPURISCVState;
 
@@ -127,6 +143,12 @@ struct CPURISCVState {
     target_ulong mstatus;
 
     target_ulong mip;
+    uint32_t exccode;    /* irq id: 0~11  shv: 12 */
+    uint32_t *exccode_pending;
+    uint8_t  irq_start_idx;
+    uint8_t  irq_end_idx;
+
+    uint32_t eclic_flag;
 
 #ifdef TARGET_RISCV32
     target_ulong mstatush;
@@ -148,9 +170,38 @@ struct CPURISCVState {
     target_ulong scause;
 
     target_ulong mtvec;
+    target_ulong mtvt;
     target_ulong mepc;
     target_ulong mcause;
     target_ulong mtval;  /* since: priv-1.10.0 */
+
+    target_ulong mnxti;
+    target_ulong mintstatus;
+    target_ulong mscratchcsw;
+    target_ulong mscratchcswl;
+
+    /* NMI  CSR*/
+    target_ulong mnvec;
+    target_ulong msubm;
+    target_ulong mdcause;
+    target_ulong mcache_ctl;
+    target_ulong mmisc_ctl;
+    target_ulong msavestatus;
+    target_ulong msaveepc1;
+    target_ulong msavecause1;
+    target_ulong msaveepc2;
+    target_ulong msavecause2;
+    target_ulong msavedcause1;
+    target_ulong msavedcause2;
+    target_ulong pushmsubm;
+    target_ulong mtvt2;
+    target_ulong jalmnxti;
+    target_ulong pushmcause;
+    target_ulong pushmepc;
+
+    target_ulong wfe;
+    target_ulong sleepvalue;
+    target_ulong txevt;
 
     /* Hypervisor CSRs */
     target_ulong hstatus;
@@ -200,6 +251,9 @@ struct CPURISCVState {
     uint64_t mtohost;
     uint64_t timecmp;
 
+     /*nuclei timer comparators */
+    uint64_t mtimecmp;
+
     /* physical memory protection */
     pmp_table_t pmp_state;
 
@@ -214,6 +268,8 @@ struct CPURISCVState {
 
     /* Fields from here on are preserved across CPU reset. */
     QEMUTimer *timer; /* Internal timer */
+    QEMUTimer *mtimer; /* Nuclei Internal timer */
+    void *eclic;
 };
 
 #define RISCV_CPU_CLASS(klass) \
@@ -326,6 +382,7 @@ void riscv_cpu_list(void);
 void riscv_cpu_swap_hypervisor_regs(CPURISCVState *env);
 int riscv_cpu_claim_interrupts(RISCVCPU *cpu, uint32_t interrupts);
 uint32_t riscv_cpu_update_mip(RISCVCPU *cpu, uint32_t mask, uint32_t value);
+void riscv_cpu_eclic_interrupt(RISCVCPU *cpu, int intinfo);
 #define BOOL_TO_MASK(x) (-!!(x)) /* helper for riscv_cpu_update_mip value */
 void riscv_cpu_set_rdtime_fn(CPURISCVState *env, uint64_t (*fn)(void));
 #endif

@@ -31,6 +31,7 @@ static void vcpu_tb_trans(qemu_plugin_id_t id, struct qemu_plugin_tb *tb)
 
     for (i = 0; i < n; i++) {
         struct qemu_plugin_insn *insn = qemu_plugin_tb_get_insn(tb, i);
+        printf("vaddr :%lx\n", qemu_plugin_insn_vaddr(insn));
 
         if (do_inline) {
             qemu_plugin_register_vcpu_insn_exec_inline(

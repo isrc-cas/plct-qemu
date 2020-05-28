@@ -105,6 +105,7 @@
   <reg name="mie" bitsize="32"/>
   <reg name="mtvec" bitsize="32"/>
   <reg name="mcounteren" bitsize="32"/>
+  <reg name="mtvt" bitsize="32"/>
   <reg name="mscratch" bitsize="32"/>
   <reg name="mepc" bitsize="32"/>
   <reg name="mcause" bitsize="32"/>

@@ -56,7 +56,6 @@ static void tcg_handle_interrupt(CPUState *cpu, int mask)
 
     old_mask = cpu->interrupt_request;
     cpu->interrupt_request |= mask;
-
     /*
      * If called from iothread context, wake the target cpu in
      * case its halted.
