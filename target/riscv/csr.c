@@ -695,6 +695,7 @@ static int write_msubm(CPURISCVState *env, int csrno, target_ulong val)
 static int read_mdcause(CPURISCVState *env, int csrno, target_ulong *val)
 {
     *val = env->mdcause;
+   
     return 0;
 }
 

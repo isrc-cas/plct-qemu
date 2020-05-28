@@ -127,18 +127,24 @@ static void nuclei_eclic_write(void *opaque, hwaddr offset, uint64_t value,
         eclic->cliccfg = value & 0xFF;
         break;
     case NUCLEI_ECLIC_REG_MTH:
+//        eclic->mth =  value & 0xFF;
         nuclei_eclic_update_intmth(eclic, id, value & 0xFF);
         break;
     case NUCLEI_ECLIC_REG_CLICINTIP_BASE:
+//        int old_ip = eclic->clicintip[id];
+//        eclic->clicintip[id] = value & 0xFF;
         nuclei_eclic_update_intip(eclic, id, value & 0xFF);
         break;
     case NUCLEI_ECLIC_REG_CLICINTIE_BASE:
+//        eclic->clicintie[id] = value & 0xFF;
         nuclei_eclic_update_intie(eclic, id, value & 0xFF);
         break;
     case NUCLEI_ECLIC_REG_CLICINTATTR_BASE:
+//        eclic->clicintattr[id] = value & 0xFF;
         nuclei_eclic_update_intattr(eclic, id, value & 0xFF);
         break;
     case NUCLEI_ECLIC_REG_CLICINTCTL_BASE:
+//        eclic->clicintctl[id] = value & 0xFF;
         nuclei_eclic_update_intctl(eclic, id, value & 0xFF);
         break;
     default:
@@ -196,6 +202,8 @@ static void nuclei_eclic_next_interrupt(NucLeiECLICState *eclic, int old_intip, 
 
     ECLICPendingInterrupt *active;
     int level, priority, enable, trigger, new_intip = 0;
+    int shv;
+
     QLIST_FOREACH(active, &eclic->pending_list, next) {
         new_intip = eclic->clicintip[active->irq] & 0x1;
         reg_decode(eclic, active->irq, &level, &priority, &enable, &trigger);
@@ -218,11 +226,14 @@ static void nuclei_eclic_next_interrupt(NucLeiECLICState *eclic, int old_intip, 
         }
 
         if (trigger == 0 && new_intip == 0) {
+            //printf("[NUCLEI ECLIC] delete pending %d (%d)\n" , active->irq, trigger);
             eclic->active_count++;
             QLIST_REMOVE(active, next);
             free(active);
         }
     }
+    //printf("reset int\n");
+    //riscv_cpu_eclic_interrupt(cpu, -1);
 }
 
 static int level_compare(NucLeiECLICState *eclic, ECLICPendingInterrupt *irq1, ECLICPendingInterrupt *irq2) 
@@ -273,7 +284,7 @@ static void nuclei_eclic_update_intip(NucLeiECLICState *eclic, int irq, int new_
 {
     ECLICPendingInterrupt *newActiveIRQ = (ECLICPendingInterrupt *)calloc(sizeof(ECLICPendingInterrupt), 1);
     ECLICPendingInterrupt *node;
-
+   
     int old_intip = eclic->clicintip[irq];
     newActiveIRQ->irq = irq;
     eclic->clicintip[irq] = new_intip & 0x1;
@@ -359,6 +370,7 @@ static void nuclei_eclic_class_init(ObjectClass *klass, void *data)
 
     device_class_set_props(dc, nuclei_eclic_properties);
     dc->realize = nuclei_eclic_realize;
+    
 }
 
 static const TypeInfo nuclei_eclic_info = {

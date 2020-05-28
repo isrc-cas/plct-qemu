@@ -37,17 +37,20 @@ static void nuclei_timer_update_compare(NucLeiSYSTIMERState *s)
 {
     CPUState *cpu = qemu_get_cpu(0);
     CPURISCVState *env = cpu ? cpu->env_ptr : NULL;
-    uint64_t cmp, cur, diff;
-    cur = cpu_riscv_read_rtc();
-    s->mtime_lo = cur & 0xffffffff;
-    s->mtime_hi = (cur >> 32) & 0xffffffff;
+    uint64_t cmp, real_time;
+    int64_t diff;
+
+    real_time =  cpu_riscv_read_rtc();
+
+    s->mtime_lo = real_time& 0xffffffff;
+    s->mtime_hi = (real_time>> 32) & 0xffffffff;
+    env->mtimer->expire_time  = real_time;
 
     cmp = (uint64_t)s->mtimecmp_lo | ((uint64_t)s->mtimecmp_hi<<32);
-    diff = cmp - cur;
+    env->mtimecmp =  cmp;
 
-    env->mtimer->expire_time  |= (uint64_t) ((uint64_t)s->mtime_hi << 32) |  s->mtime_lo;
+    diff = cmp - real_time;
 
-    if (cmp < cur) {
     if ( real_time >= cmp) {
         qemu_set_irq(*(s->timer_irq), 1);
     }
@@ -155,8 +158,10 @@ static void nuclei_timer_write(void *opaque, hwaddr offset,
         if ((s->msip & 0x1) == 1) {    
             qemu_set_irq(*(s->soft_irq), 1);
         }else{
+            //riscv_cpu_eclic_interrupt(riscv_cpu, -1);
             qemu_set_irq(*(s->soft_irq), 0);
         }
+
         break;
     default:
         break;

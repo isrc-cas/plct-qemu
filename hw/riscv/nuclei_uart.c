@@ -30,10 +30,23 @@
 #include "hw/riscv/nuclei_uart.h"
 
 /*
- * TODO: Transmit FIFO using "qemu/fifo8.h"
+ * Not yet implemented:
+ *
+ * Transmit FIFO using "qemu/fifo8.h"
  */
+
 static void update_irq(NucLeiUARTState *s)
 {
+    // int cond = 0;
+    // if ((s->ie & NUCLEI_UART_IE_TXWM) ||
+    //     ((s->ie & NUCLEI_UART_IE_RXWM) && s->rx_fifo_len)) {
+    //     cond = 1;
+    // }
+    // if (cond) {
+    //     qemu_irq_raise(s->irq);
+    // } else {
+    //     qemu_irq_lower(s->irq);
+    // }
 }
 
 static uint64_t
@@ -172,5 +185,6 @@ NucLeiUARTState *nuclei_uart_create(MemoryRegion *address_space, hwaddr base,  u
     memory_region_init_io(&s->mmio, NULL, &uart_ops, s,
                           TYPE_NUCLEI_UART, size);
     memory_region_add_subregion(address_space, base, &s->mmio);
+ 
     return s;
 }

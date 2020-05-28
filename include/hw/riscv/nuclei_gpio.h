@@ -32,15 +32,18 @@
 #define NUCLEI_GPIOx_CTL0      0x00
 #define NUCLEI_GPIOx_CTL1      0x04
 #define NUCLEI_GPIOx_ISTAT     0x08
-#define NUCLEI_GPIOx_OCTL      0x0C
+#define NUCLEI_GPIOx_OCTL     0x0C
 #define NUCLEI_GPIOx_BOP       0x10
-#define NUCLEI_GPIOx_BC        0x14
-#define NUCLEI_GPIOx_LOCK      0x18
+#define NUCLEI_GPIOx_BC          0x14
+#define NUCLEI_GPIOx_LOCK     0x18
 
 typedef struct NucLeiGPIOState {
     SysBusDevice parent_obj;
 
     MemoryRegion mmio;
+
+    // qemu_irq irq[NUCLEI_GPIO_PINS];
+    // qemu_irq output[NUCLEI_GPIO_PINS];
 
     uint32_t gpiox_ctl0;
     uint32_t gpiox_ctl1;

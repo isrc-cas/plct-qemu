@@ -332,6 +332,7 @@ void riscv_cpu_eclic_interrupt(RISCVCPU *cpu, int exccode)
     if (locked) {
         qemu_mutex_unlock_iothread();
     }
+
 }
 
 void riscv_cpu_set_rdtime_fn(CPURISCVState *env, uint64_t (*fn)(void))
@@ -916,6 +917,7 @@ bool riscv_cpu_tlb_fill(CPUState *cs, vaddr address, int size,
  */
 void riscv_cpu_do_interrupt(CPUState *cs)
 {
+
 #if !defined(CONFIG_USER_ONLY)
     RISCVCPU *cpu = RISCV_CPU(cs);
     CPURISCVState *env = &cpu->env;
@@ -1053,6 +1055,7 @@ void riscv_cpu_do_interrupt(CPUState *cs)
         riscv_cpu_set_mode(env, PRV_S);
     } else {
         /* handle the trap in M-mode */
+
         if(eclic_flag ) {
             if(mode)
             {

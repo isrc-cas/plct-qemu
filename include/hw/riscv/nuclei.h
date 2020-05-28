@@ -44,6 +44,11 @@ typedef struct NucleiSoCState {
     NucLeiTIMERState timer;
     NucLeiUARTState uart;
     SIFIVEGPIOState gpio;
+<<<<<<< HEAD
+=======
+   
+
+>>>>>>> a37d2e24e1... Support Nuclei HummingBird RISC-V SoC emulation:
 } NucleiSoCState;
 
 typedef struct {

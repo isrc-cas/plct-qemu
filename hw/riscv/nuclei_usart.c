@@ -30,8 +30,11 @@
 #include "hw/riscv/nuclei_usart.h"
 
 /*
- * TODO: Transmit FIFO using "qemu/fifo8.h"
+ * Not yet implemented:
+ *
+ * Transmit FIFO using "qemu/fifo8.h"
  */
+
 static void update_irq(NucLeiUSARTState *s)
 {
      static int cond = 0;
