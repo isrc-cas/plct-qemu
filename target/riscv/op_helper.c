@@ -144,6 +144,12 @@ target_ulong helper_mret(CPURISCVState *env, target_ulong cpu_pc_deb)
         riscv_raise_exception(env, RISCV_EXCP_INST_ADDR_MIS, GETPC());
     }
 
+    /* if ECLIC mode */
+    if ((env->mtvec & 0b111111) == 0b000011) {
+        env->mintstatus = set_field(env->mintstatus, MINTSTATUS_MIL, 
+                    get_field(env->mcause, MCAUSE_MPIL));
+    }
+
     target_ulong mstatus = env->mstatus;
     target_ulong prev_priv = get_field(mstatus, MSTATUS_MPP);
     target_ulong prev_virt = MSTATUS_MPV_ISSET(env);

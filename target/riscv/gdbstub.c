@@ -125,6 +125,7 @@ static int csr_register_map[] = {
     CSR_MIE,
     CSR_MTVEC,
     CSR_MCOUNTEREN,
+    CSR_MTVT,
     CSR_MSCRATCH,
     CSR_MEPC,
     CSR_MCAUSE,

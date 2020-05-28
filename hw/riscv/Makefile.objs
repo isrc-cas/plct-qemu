@@ -13,3 +13,7 @@ obj-$(CONFIG_SIFIVE_U) += sifive_u_prci.o
 obj-$(CONFIG_SIFIVE) += sifive_uart.o
 obj-$(CONFIG_SPIKE) += spike.o
 obj-$(CONFIG_RISCV_VIRT) += virt.o
+obj-$(CONFIG_NUCLEI) += nuclei.o
+obj-$(CONFIG_NUCLEI) += nuclei_timer.o
+obj-$(CONFIG_NUCLEI) += nuclei_eclic.o
+obj-$(CONFIG_NUCLEI) += nuclei_uart.o

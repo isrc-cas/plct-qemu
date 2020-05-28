@@ -89,6 +89,17 @@ bool riscv_cpu_exec_interrupt(CPUState *cs, int interrupt_request)
             return true;
         }
     }
+
+    if (interrupt_request & CPU_INTERRUPT_ECLIC) {
+        RISCVCPU *cpu = RISCV_CPU(cs);
+        CPURISCVState *env = &cpu->env;
+        int interruptno = riscv_cpu_local_irq_pending(env);
+        if (interruptno >= 0) {
+            cs->exception_index = RISCV_EXCP_INT_ECLIC | interruptno;
+            riscv_cpu_do_interrupt(cs);
+            return true;
+        }
+    }
 #endif
     return false;
 }
@@ -256,6 +267,17 @@ uint32_t riscv_cpu_update_mip(RISCVCPU *cpu, uint32_t mask, uint32_t value)
     }
 
     return old;
+}
+
+void riscv_cpu_eclic_interrupt(RISCVCPU *cpu, int intinfo)
+{
+    CPURISCVState *env = &cpu->env;
+    env->intinfo = intinfo;
+    if (intinfo != -1) {
+        cpu_interrupt(CPU(cpu), CPU_INTERRUPT_ECLIC);
+    } else {
+        cpu_reset_interrupt(CPU(cpu), CPU_INTERRUPT_ECLIC);
+    }
 }
 
 void riscv_cpu_set_rdtime_fn(CPURISCVState *env, uint64_t (*fn)(void))
@@ -839,6 +861,7 @@ bool riscv_cpu_tlb_fill(CPUState *cs, vaddr address, int size,
  */
 void riscv_cpu_do_interrupt(CPUState *cs)
 {
+
 #if !defined(CONFIG_USER_ONLY)
 
     RISCVCPU *cpu = RISCV_CPU(cs);
@@ -850,6 +873,7 @@ void riscv_cpu_do_interrupt(CPUState *cs)
      * so we mask off the MSB and separate into trap type and cause.
      */
     bool async = !!(cs->exception_index & RISCV_EXCP_INT_FLAG);
+    bool eclic_flag = !!(cs->exception_index & RISCV_EXCP_INT_ECLIC);  //TODO: eclic support
     target_ulong cause = cs->exception_index & RISCV_EXCP_INT_MASK;
     target_ulong deleg = async ? env->mideleg : env->medeleg;
     target_ulong tval = 0;
@@ -955,6 +979,11 @@ void riscv_cpu_do_interrupt(CPUState *cs)
         riscv_cpu_set_mode(env, PRV_S);
     } else {
         /* handle the trap in M-mode */
+        if(eclic_flag)
+        {
+            s = env->mstatus;
+        }
+
         if (riscv_has_ext(env, RVH)) {
             if (riscv_cpu_virt_enabled(env)) {
                 riscv_cpu_swap_hypervisor_regs(env);

@@ -134,6 +134,7 @@
 #define CSR_MIE             0x304
 #define CSR_MTVEC           0x305
 #define CSR_MCOUNTEREN      0x306
+#define CSR_MTVT      0x307
 
 /* 32-bit only */
 #define CSR_MSTATUSH        0x310
@@ -150,6 +151,10 @@
 #define CSR_MCAUSE          0x342
 #define CSR_MTVAL           0x343
 #define CSR_MIP             0x344
+#define CSR_MNXTI             0x345
+#define CSR_MINTSTATUS        0x346
+#define CSR_MSCRATCHCSW        0x347
+#define CSR_MSCRATCHCSWL        0x348
 
 /* Legacy Machine Trap Handling (priv v1.9.1) */
 #define CSR_MBADADDR        0x343
@@ -246,6 +251,30 @@
 #define CSR_DCSR            0x7b0
 #define CSR_DPC             0x7b1
 #define CSR_DSCRATCH        0x7b2
+
+/* NMI Registers*/
+#define CSR_MNVEC   0x07c3
+#define CSR_MSUBM  0x07c4
+#define CSR_MDCAUSE  0x07c9
+#define CSR_MCACHE_CTL  0x07ca
+#define CSR_MMISC_CTL           0x07d0         
+#define CSR_MSAVESTATUS     0x07d6  
+#define CSR_MSAVEEPC1     0x07d7  
+#define CSR_MSAVECAUSE1     0x07d8  
+#define CSR_MSAVEEPC2     0x07d9  
+#define CSR_MSAVECAUSE2     0x07da  
+#define CSR_MSAVEDCAUSE1     0x07db  
+#define CSR_MSAVEDCAUSE2     0x07dc  
+#define CSR_PUSHMSUBM     0x07eb  
+#define CSR_MTVT2     0x07ec  
+#define CSR_JALMNXTI     0x07ed  
+#define CSR_PUSHMCAUSE     0x07ee  
+#define CSR_PUSHMEPC     0x07ef  
+
+/*  WFI Registers*/
+#define CSR_WFE     0x0810  
+#define CSR_SLEEPVALUE     0x0811  
+#define CSR_TXEVT     0x0812  
 
 /* Performance Counters */
 #define CSR_MHPMCOUNTER3    0xb03
@@ -531,6 +560,7 @@
 #define RISCV_EXCP_LOAD_GUEST_ACCESS_FAULT       0x15
 #define RISCV_EXCP_STORE_GUEST_AMO_ACCESS_FAULT  0x17
 
+#define RISCV_EXCP_INT_ECLIC                0x40000000
 #define RISCV_EXCP_INT_FLAG                0x80000000
 #define RISCV_EXCP_INT_MASK                0x7fffffff
 
@@ -574,4 +604,17 @@
 #define MIE_UTIE                           (1 << IRQ_U_TIMER)
 #define MIE_SSIE                           (1 << IRQ_S_SOFT)
 #define MIE_USIE                           (1 << IRQ_U_SOFT)
+
+/* mintstatus */
+#define MINTSTATUS_MIL                     0xff000000 /* mil[31:24] */
+#define MINTSTATUS_UIL                     0x000000ff /* uil[7:0] */
+
+/* mcause */
+#define MCAUSE_INTERRUPT             0x80000000 /* INTERRUPT  31*/
+#define MCAUSE_MINHV                       0x40000000 /* minhv  30*/
+#define MCAUSE_MPP                         0x30000000 /* mpp[29:28] */
+#define MCAUSE_MPIE                        0x08000000 /* mpie 27*/
+#define MCAUSE_MPIL                        0x00ff0000 /* mpil[23:16] */
+#define MCAUSE_EXCCODE               0x00000fff /* exccode[11:0] */
+
 #endif
