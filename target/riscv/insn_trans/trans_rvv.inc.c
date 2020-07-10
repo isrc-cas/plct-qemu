@@ -2008,153 +2008,121 @@ GEN_OPIVX_QUAD_WIDEN_TRANS(vqmacc_vx)
 GEN_OPIVX_QUAD_WIDEN_TRANS(vqmaccsu_vx)
 GEN_OPIVX_QUAD_WIDEN_TRANS(vqmaccus_vx)
 
+/* Vector Integer Move Instructions */
 static bool trans_vmv_v_v(DisasContext *s, arg_vmv_v_v *a)
 {
     REQUIRE_RVV;
-    if (vext_check_isa_ill(s) &&
-        vext_check_reg(s, a->rd, false) &&
-        vext_check_reg(s, a->rs1, false)) {
+    VEXT_CHECK_ISA_ILL(s);
+    /* vmv.v.v has rs2 = 0 and vm = 1 */
+    VEXT_CHECK_SSS(s, a->rd, a->rs1, 0, 1, true);
 
-        if (s->vl_eq_vlmax) {
-            tcg_gen_gvec_mov(s->sew, vreg_ofs(s, a->rd),
-                             vreg_ofs(s, a->rs1),
-                             MAXSZ(s), MAXSZ(s));
-            mark_vs_dirty(s);
-        } else {
-            uint32_t data = 0;
-            data = FIELD_DP32(data, VDATA, LMUL, s->lmul);
-            data = FIELD_DP32(data, VDATA, VTA, s->vta);
-            static gen_helper_gvec_2_ptr * const fns[4] = {
-                gen_helper_vmv_v_v_b, gen_helper_vmv_v_v_h,
-                gen_helper_vmv_v_v_w, gen_helper_vmv_v_v_d,
-            };
-            TCGLabel *over = gen_new_label();
-            tcg_gen_brcondi_tl(TCG_COND_EQ, cpu_vl, 0, over);
+    if (s->vl_eq_vlmax) {
+        tcg_gen_gvec_mov(s->sew, vreg_ofs(s, a->rd),
+                         vreg_ofs(s, a->rs1),
+                         MAXSZ(s), MAXSZ(s));
+    } else {
+        uint32_t data = 0;
+        data = FIELD_DP32(data, VDATA, LMUL, s->lmul);
+        data = FIELD_DP32(data, VDATA, VTA, s->vta);
+        static gen_helper_gvec_2_ptr * const fns[4] = {
+            gen_helper_vmv_v_v_b, gen_helper_vmv_v_v_h,
+            gen_helper_vmv_v_v_w, gen_helper_vmv_v_v_d,
+        };
+        TCGLabel *over = gen_new_label();
+        tcg_gen_brcondi_tl(TCG_COND_EQ, cpu_vl, 0, over);
 
-            tcg_gen_gvec_2_ptr(vreg_ofs(s, a->rd), vreg_ofs(s, a->rs1),
-                               cpu_env, 0, s->vlen / 8, data, fns[s->sew]);
-            mark_vs_dirty(s);
-            gen_set_label(over);
-        }
-        return true;
+        tcg_gen_gvec_2_ptr(vreg_ofs(s, a->rd), vreg_ofs(s, a->rs1),
+                           cpu_env, 0, s->vlen / 8, data, fns[s->sew]);
+        gen_set_label(over);
     }
-    return false;
+    return true;
 }
 
 typedef void gen_helper_vmv_vx(TCGv_ptr, TCGv_i64, TCGv_env, TCGv_i32);
 static bool trans_vmv_v_x(DisasContext *s, arg_vmv_v_x *a)
 {
     REQUIRE_RVV;
-    if (vext_check_isa_ill(s) &&
-        vext_check_reg(s, a->rd, false)) {
+    VEXT_CHECK_ISA_ILL(s);
+    /* vmv.v.x has rs2 = 0 and vm = 1 */
+    VEXT_CHECK_SSS(s, a->rd, a->rs1, 0, 1, false);
+    TCGv s1;
+    TCGLabel *over = gen_new_label();
+    tcg_gen_brcondi_tl(TCG_COND_EQ, cpu_vl, 0, over);
 
-        TCGv s1;
-        TCGLabel *over = gen_new_label();
-        tcg_gen_brcondi_tl(TCG_COND_EQ, cpu_vl, 0, over);
+    s1 = tcg_temp_new();
+    gen_get_gpr(s1, a->rs1);
 
-        s1 = tcg_temp_new();
-        gen_get_gpr(s1, a->rs1);
+    if (s->vl_eq_vlmax) {
+        tcg_gen_gvec_dup_tl(s->sew, vreg_ofs(s, a->rd),
+                            MAXSZ(s), MAXSZ(s), s1);
+    } else {
+        TCGv_i32 desc ;
+        TCGv_i64 s1_i64 = tcg_temp_new_i64();
+        TCGv_ptr dest = tcg_temp_new_ptr();
+        uint32_t data = 0;
+        data = FIELD_DP32(data, VDATA, LMUL, s->lmul);
+        data = FIELD_DP32(data, VDATA, VTA, s->vta);
+        static gen_helper_vmv_vx * const fns[4] = {
+            gen_helper_vmv_v_x_b, gen_helper_vmv_v_x_h,
+            gen_helper_vmv_v_x_w, gen_helper_vmv_v_x_d,
+        };
 
-        if (s->vl_eq_vlmax) {
-#ifdef TARGET_RISCV64
-            tcg_gen_gvec_dup_i64(s->sew, vreg_ofs(s, a->rd),
-                                 MAXSZ(s), MAXSZ(s), s1);
-#else
-            tcg_gen_gvec_dup_i32(s->sew, vreg_ofs(s, a->rd),
-                                 MAXSZ(s), MAXSZ(s), s1);
-#endif
-        } else {
-            TCGv_i32 desc ;
-            TCGv_i64 s1_i64 = tcg_temp_new_i64();
-            TCGv_ptr dest = tcg_temp_new_ptr();
-            uint32_t data = 0;
-            data = FIELD_DP32(data, VDATA, LMUL, s->lmul);
-            data = FIELD_DP32(data, VDATA, VTA, s->vta);
-            static gen_helper_vmv_vx * const fns[4] = {
-                gen_helper_vmv_v_x_b, gen_helper_vmv_v_x_h,
-                gen_helper_vmv_v_x_w, gen_helper_vmv_v_x_d,
-            };
+        tcg_gen_ext_tl_i64(s1_i64, s1);
+        desc = tcg_const_i32(simd_desc(0, s->vlen / 8, data));
+        tcg_gen_addi_ptr(dest, cpu_env, vreg_ofs(s, a->rd));
+        fns[s->sew](dest, s1_i64, cpu_env, desc);
 
-            tcg_gen_ext_tl_i64(s1_i64, s1);
-            desc = tcg_const_i32(simd_desc(0, s->vlen / 8, data));
-            tcg_gen_addi_ptr(dest, cpu_env, vreg_ofs(s, a->rd));
-            fns[s->sew](dest, s1_i64, cpu_env, desc);
-
-            tcg_temp_free_ptr(dest);
-            tcg_temp_free_i32(desc);
-            tcg_temp_free_i64(s1_i64);
-        }
-
-        tcg_temp_free(s1);
-        mark_vs_dirty(s);
-        gen_set_label(over);
-        return true;
+        tcg_temp_free_ptr(dest);
+        tcg_temp_free_i32(desc);
+        tcg_temp_free_i64(s1_i64);
     }
-    return false;
+
+    tcg_temp_free(s1);
+    gen_set_label(over);
+    return true;
 }
 
 static bool trans_vmv_v_i(DisasContext *s, arg_vmv_v_i *a)
 {
     REQUIRE_RVV;
-    if (vext_check_isa_ill(s) &&
-        vext_check_reg(s, a->rd, false)) {
+    VEXT_CHECK_ISA_ILL(s);
+    /* vmv.v.i has rs2 = 0 and vm = 1 */
+    VEXT_CHECK_SSS(s, a->rd, a->rs1, 0, 1, false);
 
-        int64_t simm = sextract64(a->rs1, 0, 5);
-        if (s->vl_eq_vlmax) {
-            switch (s->sew) {
-            case MO_8:
-                tcg_gen_gvec_dup8i(vreg_ofs(s, a->rd),
-                                   MAXSZ(s), MAXSZ(s), simm);
-                break;
-            case MO_16:
-                tcg_gen_gvec_dup16i(vreg_ofs(s, a->rd),
-                                    MAXSZ(s), MAXSZ(s), simm);
-                break;
-            case MO_32:
-                tcg_gen_gvec_dup32i(vreg_ofs(s, a->rd),
-                                    MAXSZ(s), MAXSZ(s), simm);
-                break;
-            case MO_64:
-                tcg_gen_gvec_dup64i(vreg_ofs(s, a->rd),
-                                    MAXSZ(s), MAXSZ(s), simm);
-                break;
-            default:
-                g_assert_not_reached();
-                break;
-            }
-            mark_vs_dirty(s);
-        } else {
-            TCGv_i32 desc;
-            TCGv_i64 s1;
-            TCGv_ptr dest;
-            uint32_t data = 0;
-            data = FIELD_DP32(data, VDATA, LMUL, s->lmul);
-            data = FIELD_DP32(data, VDATA, VTA, s->vta);
-            data = FIELD_DP32(data, VDATA, VMA, s->vma);
-            static gen_helper_vmv_vx * const fns[4] = {
-                gen_helper_vmv_v_x_b, gen_helper_vmv_v_x_h,
-                gen_helper_vmv_v_x_w, gen_helper_vmv_v_x_d,
-            };
-            TCGLabel *over = gen_new_label();
-            tcg_gen_brcondi_tl(TCG_COND_EQ, cpu_vl, 0, over);
+    int64_t simm = sextract64(a->rs1, 0, 5);
+    if (s->vl_eq_vlmax) {
+        tcg_gen_gvec_dup_imm(s->sew, vreg_ofs(s, a->rd),
+                             MAXSZ(s), MAXSZ(s), simm);
+    } else {
+        TCGv_i32 desc;
+        TCGv_i64 s1;
+        TCGv_ptr dest;
+        uint32_t data = 0;
+        data = FIELD_DP32(data, VDATA, LMUL, s->lmul);
+        data = FIELD_DP32(data, VDATA, VTA, s->vta);
+        data = FIELD_DP32(data, VDATA, VMA, s->vma);
+        static gen_helper_vmv_vx * const fns[4] = {
+            gen_helper_vmv_v_x_b, gen_helper_vmv_v_x_h,
+            gen_helper_vmv_v_x_w, gen_helper_vmv_v_x_d,
+        };
+        TCGLabel *over = gen_new_label();
+        tcg_gen_brcondi_tl(TCG_COND_EQ, cpu_vl, 0, over);
 
-            s1 = tcg_const_i64(simm);
-            dest = tcg_temp_new_ptr();
-            desc = tcg_const_i32(simd_desc(0, s->vlen / 8, data));
-            tcg_gen_addi_ptr(dest, cpu_env, vreg_ofs(s, a->rd));
-            fns[s->sew](dest, s1, cpu_env, desc);
+        s1 = tcg_const_i64(simm);
+        dest = tcg_temp_new_ptr();
+        desc = tcg_const_i32(simd_desc(0, s->vlen / 8, data));
+        tcg_gen_addi_ptr(dest, cpu_env, vreg_ofs(s, a->rd));
+        fns[s->sew](dest, s1, cpu_env, desc);
 
-            tcg_temp_free_ptr(dest);
-            tcg_temp_free_i32(desc);
-            tcg_temp_free_i64(s1);
-            mark_vs_dirty(s);
-            gen_set_label(over);
-        }
-        return true;
+        tcg_temp_free_ptr(dest);
+        tcg_temp_free_i32(desc);
+        tcg_temp_free_i64(s1);
+        gen_set_label(over);
     }
-    return false;
+    return true;
 }
 
+/* Vector Integer Merge Instructions */
 GEN_OPIVV_TRANS(vmerge_vvm, opivv_vadc_check)
 GEN_OPIVX_TRANS(vmerge_vxm, opivx_vadc_check)
 GEN_OPIVI_TRANS(vmerge_vim, 0, vmerge_vxm, opivx_vadc_check)
@@ -3198,38 +3166,14 @@ static bool trans_vfmv_f_s(DisasContext *s, arg_vfmv_f_s *a)
 static bool trans_vfmv_s_f(DisasContext *s, arg_vfmv_s_f *a)
 {
     REQUIRE_RVV;
-<<<<<<< HEAD
-    if (!s->vill && has_ext(s, RVF) && (s->sew != 0)) {
-        TCGv_i64 t1;
-        /* The instructions ignore LMUL and vector register group. */
-        uint32_t vlmax = s->vlen >> 3;
-=======
     VEXT_CHECK_ISA_ILL(s);
     require(has_ext(s, RVF));
     require(s->sew != 0);
->>>>>>> c2651a1327... target/riscv: rvv-0.9: floating-point scalar move instructions
 
     /* The instructions ignore LMUL and vector register group. */
     TCGv_i64 t1;
     TCGLabel *over = gen_new_label();
 
-<<<<<<< HEAD
-        /* zeroed all elements */
-        tcg_gen_gvec_dup64i(vreg_ofs(s, a->rd), vlmax, vlmax, 0);
-
-        /* NaN-box f[rs1] as necessary for SEW */
-        t1 = tcg_temp_new_i64();
-        if (s->sew == MO_64 && !has_ext(s, RVD)) {
-            tcg_gen_ori_i64(t1, cpu_fpr[a->rs1], 0xffffffff00000000ULL);
-        } else {
-            tcg_gen_mov_i64(t1, cpu_fpr[a->rs1]);
-        }
-        vec_element_storei(s, a->rd, 0, t1);
-        tcg_temp_free_i64(t1);
-        mark_vs_dirty(s);
-        gen_set_label(over);
-        return true;
-=======
     /* if vl == 0, skip vector register write back */
     tcg_gen_brcondi_tl(TCG_COND_EQ, cpu_vl, 0, over);
 
@@ -3239,7 +3183,6 @@ static bool trans_vfmv_s_f(DisasContext *s, arg_vfmv_s_f *a)
         tcg_gen_ori_i64(t1, cpu_fpr[a->rs1], MAKE_64BIT_MASK(32, 32));
     } else {
         tcg_gen_mov_i64(t1, cpu_fpr[a->rs1]);
->>>>>>> c2651a1327... target/riscv: rvv-0.9: floating-point scalar move instructions
     }
     vec_element_storei(s, a->rd, 0, t1);
     tcg_temp_free_i64(t1);
