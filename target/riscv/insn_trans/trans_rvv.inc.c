@@ -2771,6 +2771,7 @@ GEN_OPFVV_WIDEN_TRANS(vfwredsum_vs, reduction_check)
 static bool trans_##NAME(DisasContext *s, arg_r *a)                \
 {                                                                  \
     REQUIRE_RVV;                                                   \
+<<<<<<< HEAD
     if (vext_check_isa_ill(s)) {                                   \
         uint32_t data = 0;                                         \
         gen_helper_gvec_4_ptr *fn = gen_helper_##NAME;             \
@@ -2788,6 +2789,23 @@ static bool trans_##NAME(DisasContext *s, arg_r *a)                \
         return true;                                               \
     }                                                              \
     return false;                                                  \
+=======
+    VEXT_CHECK_ISA_ILL(s);                                         \
+                                                                   \
+    uint32_t data = 0;                                             \
+    gen_helper_gvec_4_ptr *fn = gen_helper_##NAME;                 \
+    TCGLabel *over = gen_new_label();                              \
+    tcg_gen_brcondi_tl(TCG_COND_EQ, cpu_vl, 0, over);              \
+                                                                   \
+    data = FIELD_DP32(data, VDATA, LMUL, s->lmul);                 \
+    data = FIELD_DP32(data, VDATA, VMA, s->vma);                   \
+    tcg_gen_gvec_4_ptr(vreg_ofs(s, a->rd), vreg_ofs(s, 0),         \
+                       vreg_ofs(s, a->rs1),                        \
+                       vreg_ofs(s, a->rs2), cpu_env, 0,            \
+                       s->vlen / 8, data, fn);                     \
+    gen_set_label(over);                                           \
+    return true;                                                   \
+>>>>>>> e0db39a398... target/riscv: rvv-0.9: mask-register logical instructions
 }
 
 GEN_MM_TRANS(vmand_mm)
