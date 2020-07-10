@@ -380,6 +380,18 @@ static uint32_t vreg_ofs(DisasContext *s, int reg)
 } while (0)
 
 /*
+ * Check function for vector slide instructions.
+ */
+#define VEXT_CHECK_SLIDE(s, rd, rs2, vm, is_over) do { \
+    require_align(rs2, s->flmul);                      \
+    require_align(rd, s->flmul);                       \
+    require_vm(vm, rd);                                \
+    if (is_over) {                                     \
+        require(rd != rs2);                            \
+    }                                                  \
+} while (0)
+
+/*
  * Check function for vector integer extension instructions.
  */
 #define VEXT_CHECK_EXT(s, rd, rs2, vm, div) do {                 \
@@ -2771,25 +2783,6 @@ GEN_OPFVV_WIDEN_TRANS(vfwredsum_vs, reduction_check)
 static bool trans_##NAME(DisasContext *s, arg_r *a)                \
 {                                                                  \
     REQUIRE_RVV;                                                   \
-<<<<<<< HEAD
-    if (vext_check_isa_ill(s)) {                                   \
-        uint32_t data = 0;                                         \
-        gen_helper_gvec_4_ptr *fn = gen_helper_##NAME;             \
-        TCGLabel *over = gen_new_label();                          \
-        tcg_gen_brcondi_tl(TCG_COND_EQ, cpu_vl, 0, over);          \
-                                                                   \
-        data = FIELD_DP32(data, VDATA, LMUL, s->lmul);             \
-        data = FIELD_DP32(data, VDATA, VMA, s->vma);               \
-        tcg_gen_gvec_4_ptr(vreg_ofs(s, a->rd), vreg_ofs(s, 0),     \
-                           vreg_ofs(s, a->rs1),                    \
-                           vreg_ofs(s, a->rs2), cpu_env, 0,        \
-                           s->vlen / 8, data, fn);                 \
-        mark_vs_dirty(s);                                        \
-        gen_set_label(over);                                       \
-        return true;                                               \
-    }                                                              \
-    return false;                                                  \
-=======
     VEXT_CHECK_ISA_ILL(s);                                         \
                                                                    \
     uint32_t data = 0;                                             \
@@ -2805,7 +2798,6 @@ static bool trans_##NAME(DisasContext *s, arg_r *a)                \
                        s->vlen / 8, data, fn);                     \
     gen_set_label(over);                                           \
     return true;                                                   \
->>>>>>> e0db39a398... target/riscv: rvv-0.9: mask-register logical instructions
 }
 
 GEN_MM_TRANS(vmand_mm)
@@ -3234,20 +3226,26 @@ static bool trans_vfmv_s_f(DisasContext *s, arg_vfmv_s_f *a)
 static bool slideup_check(DisasContext *s, arg_rmrr *a)
 {
     REQUIRE_RVV;
-    return (vext_check_isa_ill(s) &&
-            vext_check_overlap_mask(s, a->rd, a->vm, true) &&
-            vext_check_reg(s, a->rd, false) &&
-            vext_check_reg(s, a->rs2, false) &&
-            (a->rd != a->rs2));
+    VEXT_CHECK_ISA_ILL(s);
+    VEXT_CHECK_SLIDE(s, a->rd, a->rs2, a->vm, true);
+    return true;
 }
 
 GEN_OPIVX_TRANS(vslideup_vx, slideup_check)
 GEN_OPIVX_TRANS(vslide1up_vx, slideup_check)
 GEN_OPIVI_TRANS(vslideup_vi, 1, vslideup_vx, slideup_check)
 
-GEN_OPIVX_TRANS(vslidedown_vx, opivx_check)
-GEN_OPIVX_TRANS(vslide1down_vx, opivx_check)
-GEN_OPIVI_TRANS(vslidedown_vi, 1, vslidedown_vx, opivx_check)
+static bool slidedown_check(DisasContext *s, arg_rmrr *a)
+{
+    REQUIRE_RVV;
+    VEXT_CHECK_ISA_ILL(s);
+    VEXT_CHECK_SLIDE(s, a->rd, a->rs2, a->vm, false);
+    return true;
+}
+
+GEN_OPIVX_TRANS(vslidedown_vx, slidedown_check)
+GEN_OPIVX_TRANS(vslide1down_vx, slidedown_check)
+GEN_OPIVI_TRANS(vslidedown_vi, 1, vslidedown_vx, slidedown_check)
 
 /* Vector Register Gather Instruction */
 static bool vrgather_vv_check(DisasContext *s, arg_rmrr *a)
