@@ -3074,40 +3074,43 @@ done:
 static bool trans_vfmv_f_s(DisasContext *s, arg_vfmv_f_s *a)
 {
     REQUIRE_RVV;
-    if (!s->vill && has_ext(s, RVF) &&
-        (s->mstatus_fs != 0) && (s->sew != 0)) {
-        unsigned int ofs = (8 << s->sew);
-        unsigned int len = 64 - ofs;
-        TCGv_i64 t_nan;
+    VEXT_CHECK_ISA_ILL(s);
+    require(has_ext(s, RVF));
+    require(s->mstatus_fs != 0);
+    require(s->sew != 0);
 
-        vec_element_loadi(s, cpu_fpr[a->rd], a->rs2, 0);
-        /* NaN-box f[rd] as necessary for SEW */
-        if (len) {
-            t_nan = tcg_const_i64(UINT64_MAX);
-            tcg_gen_deposit_i64(cpu_fpr[a->rd], cpu_fpr[a->rd],
-                                t_nan, ofs, len);
-            tcg_temp_free_i64(t_nan);
-        }
+    unsigned int len = 8 << s->sew;
 
-        mark_fs_dirty(s);
-        return true;
+    vec_element_loadi(s, cpu_fpr[a->rd], a->rs2, 0, false);
+    if (len < 64) {
+        tcg_gen_ori_i64(cpu_fpr[a->rd], cpu_fpr[a->rd],
+                        MAKE_64BIT_MASK(len, 64 - len));
     }
-    return false;
+
+    mark_fs_dirty(s);
+    return true;
 }
 
 /* vfmv.s.f vd, rs1 # vd[0] = rs1 (vs2=0) */
 static bool trans_vfmv_s_f(DisasContext *s, arg_vfmv_s_f *a)
 {
     REQUIRE_RVV;
+<<<<<<< HEAD
     if (!s->vill && has_ext(s, RVF) && (s->sew != 0)) {
         TCGv_i64 t1;
         /* The instructions ignore LMUL and vector register group. */
         uint32_t vlmax = s->vlen >> 3;
+=======
+    VEXT_CHECK_ISA_ILL(s);
+    require(has_ext(s, RVF));
+    require(s->sew != 0);
+>>>>>>> c2651a1327... target/riscv: rvv-0.9: floating-point scalar move instructions
 
-        /* if vl == 0, skip vector register write back */
-        TCGLabel *over = gen_new_label();
-        tcg_gen_brcondi_tl(TCG_COND_EQ, cpu_vl, 0, over);
+    /* The instructions ignore LMUL and vector register group. */
+    TCGv_i64 t1;
+    TCGLabel *over = gen_new_label();
 
+<<<<<<< HEAD
         /* zeroed all elements */
         tcg_gen_gvec_dup64i(vreg_ofs(s, a->rd), vlmax, vlmax, 0);
 
@@ -3123,8 +3126,22 @@ static bool trans_vfmv_s_f(DisasContext *s, arg_vfmv_s_f *a)
         mark_vs_dirty(s);
         gen_set_label(over);
         return true;
+=======
+    /* if vl == 0, skip vector register write back */
+    tcg_gen_brcondi_tl(TCG_COND_EQ, cpu_vl, 0, over);
+
+    /* NaN-box f[rs1] as necessary for SEW */
+    t1 = tcg_temp_new_i64();
+    if (s->sew == MO_64 && !has_ext(s, RVD)) {
+        tcg_gen_ori_i64(t1, cpu_fpr[a->rs1], MAKE_64BIT_MASK(32, 32));
+    } else {
+        tcg_gen_mov_i64(t1, cpu_fpr[a->rs1]);
+>>>>>>> c2651a1327... target/riscv: rvv-0.9: floating-point scalar move instructions
     }
-    return false;
+    vec_element_storei(s, a->rd, 0, t1);
+    tcg_temp_free_i64(t1);
+    gen_set_label(over);
+    return true;
 }
 
 /* Vector Slide Instructions */
