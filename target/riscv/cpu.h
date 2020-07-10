@@ -118,6 +118,7 @@ struct CPURISCVState {
     target_ulong vlenb;
     target_ulong vstart;
     target_ulong vtype;
+    target_ulong vlenb;
 
     target_ulong pc;
     target_ulong load_res;
