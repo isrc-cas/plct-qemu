@@ -381,9 +381,9 @@
 #define MSTATUS_SPIE        0x00000020
 #define MSTATUS_MPIE        0x00000080
 #define MSTATUS_SPP         0x00000100
+#define MSTATUS_VS          0x00000600
 #define MSTATUS_MPP         0x00001800
 #define MSTATUS_FS          0x00006000
-#define MSTATUS_VS          0x01800000
 #define MSTATUS_XS          0x00018000
 #define MSTATUS_MPRV        0x00020000
 #define MSTATUS_PUM         0x00040000 /* until: priv-1.9.1 */
