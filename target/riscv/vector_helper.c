@@ -201,10 +201,10 @@ static void vext_clear(void *tail, uint32_t vta, uint32_t cnt, uint32_t tot)
     if (cnt % 8) {
         part1 = 8 - (cnt % 8);
         part2 = tot - cnt - part1;
-        memset(tail & ~(7ULL), 0, part1);
-        memset((tail + 8) & ~(7ULL), 0, part2);
+        memset(tail & ~(7ULL), 0xff, part1);
+        memset((tail + 8) & ~(7ULL), 0xff, part2);
     } else {
-        memset(tail, 0, part2);
+        memset(tail, 0xff, part2);
     }
 }
 #else
@@ -215,7 +215,7 @@ static void vext_clear(void *tail, uint32_t vta, uint32_t cnt, uint32_t tot)
         return;
     }
 
-    memset(tail, 0, tot - cnt);
+    memset(tail, 0xff, tot - cnt);
 }
 #endif
 
@@ -1341,7 +1341,7 @@ void HELPER(NAME)(void *vd, void *v0, void *vs1, void *vs2,     \
     }                                                           \
     if (vta == 1) {                                             \
         for (; i < vlmax; i++) {                                \
-            vext_set_elem_mask(vd, i, 0);                       \
+            vext_set_elem_mask(vd, i, 1);                       \
         }                                                       \
     }                                                           \
 }
@@ -1375,7 +1375,7 @@ void HELPER(NAME)(void *vd, void *v0, target_ulong s1,          \
     }                                                           \
     if (vta == 1) {                                             \
         for (; i < vlmax; i++) {                                \
-            vext_set_elem_mask(vd, i, 0);                       \
+            vext_set_elem_mask(vd, i, 1);                       \
         }                                                       \
     }                                                           \
 }
@@ -1561,7 +1561,7 @@ void HELPER(NAME)(void *vd, void *v0, void *vs1, void *vs2,      \
     }                                                            \
     if (vta == 1) {                                              \
         for (; i < vlmax; i++) {                                 \
-            vext_set_elem_mask(vd, i, 0);                        \
+            vext_set_elem_mask(vd, i, 1);                        \
         }                                                        \
     }                                                            \
 }
@@ -1616,7 +1616,7 @@ void HELPER(NAME)(void *vd, void *v0, target_ulong s1, void *vs2, \
     }                                                             \
     if (vta == 1) {                                               \
         for (; i < vlmax; i++) {                                  \
-            vext_set_elem_mask(vd, i, 0);                         \
+            vext_set_elem_mask(vd, i, 1);                         \
         }                                                         \
     }                                                             \
 }
@@ -3964,7 +3964,7 @@ void HELPER(NAME)(void *vd, void *v0, void *vs1, void *vs2,      \
     }                                                            \
     if (vta == 1) {                                              \
         for (; i < vlmax; i++) {                                 \
-            vext_set_elem_mask(vd, i, 0);                        \
+            vext_set_elem_mask(vd, i, 1);                        \
         }                                                        \
     }                                                            \
 }
@@ -3993,7 +3993,7 @@ void HELPER(NAME)(void *vd, void *v0, uint64_t s1, void *vs2,       \
     }                                                               \
     if (vta == 1) {                                                 \
         for (; i < vlmax; i++) {                                    \
-            vext_set_elem_mask(vd, i, 0);                           \
+            vext_set_elem_mask(vd, i, 1);                           \
         }                                                           \
     }                                                               \
 }
@@ -4777,7 +4777,7 @@ void HELPER(NAME)(void *vd, void *v0, void *vs1,          \
     }                                                     \
     if (vta == 1) {                                       \
         for (; i < vlmax; i++) {                          \
-            vext_set_elem_mask(vd, i, 0);                 \
+            vext_set_elem_mask(vd, i, 1);                 \
         }                                                 \
     }                                                     \
 }
