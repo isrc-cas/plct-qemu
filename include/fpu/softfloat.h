@@ -85,12 +85,12 @@ this code that are retained.
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point ordering relations
 *----------------------------------------------------------------------------*/
-enum {
+typedef enum {
     float_relation_less      = -1,
     float_relation_equal     =  0,
     float_relation_greater   =  1,
     float_relation_unordered =  2
-};
+} FloatRelation;
 
 #include "fpu/softfloat-types.h"
 #include "fpu/softfloat-helpers.h"
@@ -252,8 +252,8 @@ int float16_le_quiet(float16, float16, float_status *status);
 int float16_lt_quiet(float16, float16, float_status *status);
 int float16_unordered_quiet(float16, float16, float_status *status);
 
-int float16_is_quiet_nan(float16, float_status *status);
-int float16_is_signaling_nan(float16, float_status *status);
+bool float16_is_quiet_nan(float16, float_status *status);
+bool float16_is_signaling_nan(float16, float_status *status);
 float16 float16_silence_nan(float16, float_status *status);
 
 static inline int float16_is_any_nan(float16 a)
@@ -319,9 +319,9 @@ float16 float16_default_nan(float_status *status);
 | Software IEC/IEEE single-precision conversion routines.
 *----------------------------------------------------------------------------*/
 
-int16_t float32_to_int16_scalbn(float32, int, int, float_status *status);
-int32_t float32_to_int32_scalbn(float32, int, int, float_status *status);
-int64_t float32_to_int64_scalbn(float32, int, int, float_status *status);
+int16_t float32_to_int16_scalbn(float32, FloatRoundMode, int, float_status *status);
+int32_t float32_to_int32_scalbn(float32, FloatRoundMode, int, float_status *status);
+int64_t float32_to_int64_scalbn(float32, FloatRoundMode, int, float_status *status);
 
 int16_t float32_to_int16(float32, float_status *status);
 int32_t float32_to_int32(float32, float_status *status);
@@ -331,9 +331,9 @@ int16_t float32_to_int16_round_to_zero(float32, float_status *status);
 int32_t float32_to_int32_round_to_zero(float32, float_status *status);
 int64_t float32_to_int64_round_to_zero(float32, float_status *status);
 
-uint16_t float32_to_uint16_scalbn(float32, int, int, float_status *status);
-uint32_t float32_to_uint32_scalbn(float32, int, int, float_status *status);
-uint64_t float32_to_uint64_scalbn(float32, int, int, float_status *status);
+uint16_t float32_to_uint16_scalbn(float32, FloatRoundMode, int, float_status *status);
+uint32_t float32_to_uint32_scalbn(float32, FloatRoundMode, int, float_status *status);
+uint64_t float32_to_uint64_scalbn(float32, FloatRoundMode, int, float_status *status);
 
 uint16_t float32_to_uint16(float32, float_status *status);
 uint32_t float32_to_uint32(float32, float_status *status);
@@ -478,9 +478,9 @@ float32 float32_default_nan(float_status *status);
 | Software IEC/IEEE double-precision conversion routines.
 *----------------------------------------------------------------------------*/
 
-int16_t float64_to_int16_scalbn(float64, int, int, float_status *status);
-int32_t float64_to_int32_scalbn(float64, int, int, float_status *status);
-int64_t float64_to_int64_scalbn(float64, int, int, float_status *status);
+int16_t float64_to_int16_scalbn(float64, FloatRoundMode, int, float_status *status);
+int32_t float64_to_int32_scalbn(float64, FloatRoundMode, int, float_status *status);
+int64_t float64_to_int64_scalbn(float64, FloatRoundMode, int, float_status *status);
 
 int16_t float64_to_int16(float64, float_status *status);
 int32_t float64_to_int32(float64, float_status *status);
@@ -490,9 +490,9 @@ int16_t float64_to_int16_round_to_zero(float64, float_status *status);
 int32_t float64_to_int32_round_to_zero(float64, float_status *status);
 int64_t float64_to_int64_round_to_zero(float64, float_status *status);
 
-uint16_t float64_to_uint16_scalbn(float64, int, int, float_status *status);
-uint32_t float64_to_uint32_scalbn(float64, int, int, float_status *status);
-uint64_t float64_to_uint64_scalbn(float64, int, int, float_status *status);
+uint16_t float64_to_uint16_scalbn(float64, FloatRoundMode, int, float_status *status);
+uint32_t float64_to_uint32_scalbn(float64, FloatRoundMode, int, float_status *status);
+uint64_t float64_to_uint64_scalbn(float64, FloatRoundMode, int, float_status *status);
 
 uint16_t float64_to_uint16(float64, float_status *status);
 uint32_t float64_to_uint32(float64, float_status *status);

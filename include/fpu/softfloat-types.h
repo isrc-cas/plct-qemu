@@ -131,7 +131,7 @@ enum {
  *Software IEC/IEEE floating-point rounding mode.
  */
 
-enum {
+typedef enum {
     float_round_nearest_even = 0,
     float_round_down         = 1,
     float_round_up           = 2,
@@ -139,7 +139,7 @@ enum {
     float_round_ties_away    = 4,
     /* Not an IEEE rounding mode: round to the closest odd mantissa value */
     float_round_to_odd       = 5,
-};
+} FloatRoundMode;
 
 /*
  * Software IEC/IEEE floating-point exception flags.
@@ -165,7 +165,7 @@ enum {
 
 typedef struct float_status {
     signed char float_detect_tininess;
-    signed char float_rounding_mode;
+    FloatRoundMode float_rounding_mode;
     uint8_t     float_exception_flags;
     signed char floatx80_rounding_precision;
     /* should denormalised results go to zero and set the inexact flag? */

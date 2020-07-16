@@ -801,6 +801,8 @@ static FloatParts round_canonical(FloatParts p, float_status *s,
                 case float_round_to_odd:
                     inc = frac & frac_lsb ? 0 : round_mask;
                     break;
+                default:
+                    break;
                 }
                 flags |= float_flag_inexact;
                 frac += inc;
@@ -2187,56 +2189,56 @@ int16_t float16_to_int16_scalbn(float16 a, FloatRoundMode rmode, int scale,
                                  rmode, scale, INT16_MIN, INT16_MAX, s);
 }
 
-int32_t float16_to_int32_scalbn(float16 a, int rmode, int scale,
+int32_t float16_to_int32_scalbn(float16 a, FloatRoundMode rmode, int scale,
                                 float_status *s)
 {
     return round_to_int_and_pack(float16_unpack_canonical(a, s),
                                  rmode, scale, INT32_MIN, INT32_MAX, s);
 }
 
-int64_t float16_to_int64_scalbn(float16 a, int rmode, int scale,
+int64_t float16_to_int64_scalbn(float16 a, FloatRoundMode rmode, int scale,
                                 float_status *s)
 {
     return round_to_int_and_pack(float16_unpack_canonical(a, s),
                                  rmode, scale, INT64_MIN, INT64_MAX, s);
 }
 
-int16_t float32_to_int16_scalbn(float32 a, int rmode, int scale,
+int16_t float32_to_int16_scalbn(float32 a, FloatRoundMode rmode, int scale,
                                 float_status *s)
 {
     return round_to_int_and_pack(float32_unpack_canonical(a, s),
                                  rmode, scale, INT16_MIN, INT16_MAX, s);
 }
 
-int32_t float32_to_int32_scalbn(float32 a, int rmode, int scale,
+int32_t float32_to_int32_scalbn(float32 a, FloatRoundMode rmode, int scale,
                                 float_status *s)
 {
     return round_to_int_and_pack(float32_unpack_canonical(a, s),
                                  rmode, scale, INT32_MIN, INT32_MAX, s);
 }
 
-int64_t float32_to_int64_scalbn(float32 a, int rmode, int scale,
+int64_t float32_to_int64_scalbn(float32 a, FloatRoundMode rmode, int scale,
                                 float_status *s)
 {
     return round_to_int_and_pack(float32_unpack_canonical(a, s),
                                  rmode, scale, INT64_MIN, INT64_MAX, s);
 }
 
-int16_t float64_to_int16_scalbn(float64 a, int rmode, int scale,
+int16_t float64_to_int16_scalbn(float64 a, FloatRoundMode rmode, int scale,
                                 float_status *s)
 {
     return round_to_int_and_pack(float64_unpack_canonical(a, s),
                                  rmode, scale, INT16_MIN, INT16_MAX, s);
 }
 
-int32_t float64_to_int32_scalbn(float64 a, int rmode, int scale,
+int32_t float64_to_int32_scalbn(float64 a, FloatRoundMode rmode, int scale,
                                 float_status *s)
 {
     return round_to_int_and_pack(float64_unpack_canonical(a, s),
                                  rmode, scale, INT32_MIN, INT32_MAX, s);
 }
 
-int64_t float64_to_int64_scalbn(float64 a, int rmode, int scale,
+int64_t float64_to_int64_scalbn(float64 a, FloatRoundMode rmode, int scale,
                                 float_status *s)
 {
     return round_to_int_and_pack(float64_unpack_canonical(a, s),
@@ -2411,56 +2413,56 @@ uint16_t float16_to_uint16_scalbn(float16 a, FloatRoundMode rmode, int scale,
                                   rmode, scale, UINT16_MAX, s);
 }
 
-uint32_t float16_to_uint32_scalbn(float16 a, int rmode, int scale,
+uint32_t float16_to_uint32_scalbn(float16 a, FloatRoundMode rmode, int scale,
                                   float_status *s)
 {
     return round_to_uint_and_pack(float16_unpack_canonical(a, s),
                                   rmode, scale, UINT32_MAX, s);
 }
 
-uint64_t float16_to_uint64_scalbn(float16 a, int rmode, int scale,
+uint64_t float16_to_uint64_scalbn(float16 a, FloatRoundMode rmode, int scale,
                                   float_status *s)
 {
     return round_to_uint_and_pack(float16_unpack_canonical(a, s),
                                   rmode, scale, UINT64_MAX, s);
 }
 
-uint16_t float32_to_uint16_scalbn(float32 a, int rmode, int scale,
+uint16_t float32_to_uint16_scalbn(float32 a, FloatRoundMode rmode, int scale,
                                   float_status *s)
 {
     return round_to_uint_and_pack(float32_unpack_canonical(a, s),
                                   rmode, scale, UINT16_MAX, s);
 }
 
-uint32_t float32_to_uint32_scalbn(float32 a, int rmode, int scale,
+uint32_t float32_to_uint32_scalbn(float32 a, FloatRoundMode rmode, int scale,
                                   float_status *s)
 {
     return round_to_uint_and_pack(float32_unpack_canonical(a, s),
                                   rmode, scale, UINT32_MAX, s);
 }
 
-uint64_t float32_to_uint64_scalbn(float32 a, int rmode, int scale,
+uint64_t float32_to_uint64_scalbn(float32 a, FloatRoundMode rmode, int scale,
                                   float_status *s)
 {
     return round_to_uint_and_pack(float32_unpack_canonical(a, s),
                                   rmode, scale, UINT64_MAX, s);
 }
 
-uint16_t float64_to_uint16_scalbn(float64 a, int rmode, int scale,
+uint16_t float64_to_uint16_scalbn(float64 a, FloatRoundMode rmode, int scale,
                                   float_status *s)
 {
     return round_to_uint_and_pack(float64_unpack_canonical(a, s),
                                   rmode, scale, UINT16_MAX, s);
 }
 
-uint32_t float64_to_uint32_scalbn(float64 a, int rmode, int scale,
+uint32_t float64_to_uint32_scalbn(float64 a, FloatRoundMode rmode, int scale,
                                   float_status *s)
 {
     return round_to_uint_and_pack(float64_unpack_canonical(a, s),
                                   rmode, scale, UINT32_MAX, s);
 }
 
-uint64_t float64_to_uint64_scalbn(float64 a, int rmode, int scale,
+uint64_t float64_to_uint64_scalbn(float64 a, FloatRoundMode rmode, int scale,
                                   float_status *s)
 {
     return round_to_uint_and_pack(float64_unpack_canonical(a, s),
@@ -6051,6 +6053,10 @@ floatx80 floatx80_round_to_int(floatx80 a, float_status *status)
             return
                   aSign ? packFloatx80( 1, 0, 0 )
                 : packFloatx80( 0, 0x3FFF, UINT64_C(0x8000000000000000));
+        case float_round_to_zero:
+            break;
+        default:
+            g_assert_not_reached();
         }
         return packFloatx80( aSign, 0, 0 );
     }
@@ -7375,6 +7381,8 @@ float128 float128_round_to_int(float128 a, float_status *status)
 
             case float_round_to_odd:
                 return packFloat128(aSign, 0x3FFF, 0, 0);
+            case float_round_to_zero:
+                break;
             }
             return packFloat128( aSign, 0, 0, 0 );
         }

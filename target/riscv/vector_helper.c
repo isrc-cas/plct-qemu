@@ -605,7 +605,8 @@ vext_ldff(void *vd, void *v0, target_ulong base,
             remain = nf * esz;
             while (remain > 0) {
                 offset = -(addr | TARGET_PAGE_MASK);
-                host = tlb_vaddr_to_host(env, addr, MMU_DATA_LOAD, mmuidx);
+                host = tlb_vaddr_to_host(env, addr, MMU_DATA_LOAD,
+                                         cpu_mmu_index(env, false));
                 if (host) {
 #ifdef CONFIG_USER_ONLY
                     if (page_check_range(addr, nf * esz, PAGE_READ) < 0) {
