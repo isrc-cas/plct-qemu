@@ -55,23 +55,23 @@ void helper_set_rounding_mode(CPURISCVState *env, uint32_t rm)
 {
     int softrm;
 
-    if (rm == 7) {
+    if (rm == FRM_DYN) {
         rm = env->frm;
     }
     switch (rm) {
-    case 0:
+    case FRM_RNE:
         softrm = float_round_nearest_even;
         break;
-    case 1:
+    case FRM_RTZ:
         softrm = float_round_to_zero;
         break;
-    case 2:
+    case FRM_RDN:
         softrm = float_round_down;
         break;
-    case 3:
+    case FRM_RUP:
         softrm = float_round_up;
         break;
-    case 4:
+    case FRM_RMM:
         softrm = float_round_ties_away;
         break;
     default:

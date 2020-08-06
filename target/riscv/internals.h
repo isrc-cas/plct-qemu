@@ -38,6 +38,15 @@ target_ulong fclass_d(uint64_t frs1);
 #define SEW32 2
 #define SEW64 3
 
+enum {
+    FRM_RNE = 0,    /* Round to Nearest, ties to Even */
+    FRM_RTZ = 1,    /* Round towards Zero */
+    FRM_RDN = 2,    /* Round Down */
+    FRM_RUP = 3,    /* Round Up */
+    FRM_RMM = 4,    /* Round to Nearest, ties to Max Magnitude */
+    FRM_DYN = 7,    /* Dynamic rounding mode */
+};
+
 static inline uint64_t nanbox_s(float32 f)
 {
     return f | MAKE_64BIT_MASK(32, 32);
