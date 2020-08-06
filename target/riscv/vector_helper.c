@@ -3975,27 +3975,23 @@ GEN_VEXT_VF(vfsgnjx_vf_w, 4, 4)
 GEN_VEXT_VF(vfsgnjx_vf_d, 8, 8)
 
 /* Vector Floating-Point Compare Instructions */
-#define GEN_VEXT_CMP_VV_ENV(NAME, ETYPE, H, DO_OP)            \
-void HELPER(NAME)(void *vd, void *v0, void *vs1, void *vs2,   \
-                  CPURISCVState *env, uint32_t desc)          \
-{                                                             \
-    uint32_t vm = vext_vm(desc);                              \
-    uint32_t vl = env->vl;                                    \
-    uint32_t vlmax = vext_maxsz(desc) / sizeof(ETYPE);        \
-    uint32_t i;                                               \
-                                                              \
-    for (i = 0; i < vl; i++) {                                \
-        ETYPE s1 = *((ETYPE *)vs1 + H(i));                    \
-        ETYPE s2 = *((ETYPE *)vs2 + H(i));                    \
-        if (!vm && !vext_elem_mask(v0, i)) {                  \
-            continue;                                         \
-        }                                                     \
-        vext_set_elem_mask(vd, i,                             \
-                           DO_OP(s2, s1, &env->fp_status));   \
-    }                                                         \
-    for (; i < vlmax; i++) {                                  \
-        vext_set_elem_mask(vd, i, 0);                         \
-    }                                                         \
+#define GEN_VEXT_CMP_VV_ENV(NAME, ETYPE, H, DO_OP)          \
+void HELPER(NAME)(void *vd, void *v0, void *vs1, void *vs2, \
+                  CPURISCVState *env, uint32_t desc)        \
+{                                                           \
+    uint32_t vm = vext_vm(desc);                            \
+    uint32_t vl = env->vl;                                  \
+    uint32_t i;                                             \
+                                                            \
+    for (i = 0; i < vl; i++) {                              \
+        ETYPE s1 = *((ETYPE *)vs1 + H(i));                  \
+        ETYPE s2 = *((ETYPE *)vs2 + H(i));                  \
+        if (!vm && !vext_elem_mask(v0, i)) {                \
+            continue;                                       \
+        }                                                   \
+        vext_set_elem_mask(vd, i,                           \
+                           DO_OP(s2, s1, &env->fp_status)); \
+    }                                                       \
 }
 
 GEN_VEXT_CMP_VV_ENV(vmfeq_vv_h, uint16_t, H2, float16_eq_quiet)
@@ -4008,7 +4004,6 @@ void HELPER(NAME)(void *vd, void *v0, uint64_t s1, void *vs2,       \
 {                                                                   \
     uint32_t vm = vext_vm(desc);                                    \
     uint32_t vl = env->vl;                                          \
-    uint32_t vlmax = vext_max_elems(desc, sizeof(ETYPE), false);    \
     uint32_t i;                                                     \
                                                                     \
     for (i = 0; i < vl; i++) {                                      \
@@ -4018,9 +4013,6 @@ void HELPER(NAME)(void *vd, void *v0, uint64_t s1, void *vs2,       \
         }                                                           \
         vext_set_elem_mask(vd, i,                                   \
                            DO_OP(s2, (ETYPE)s1, &env->fp_status));  \
-    }                                                               \
-    for (; i < vlmax; i++) {                                        \
-        vext_set_elem_mask(vd, i, 0);                               \
     }                                                               \
 }
 
