@@ -45,6 +45,7 @@ enum {
     FRM_RUP = 3,    /* Round Up */
     FRM_RMM = 4,    /* Round to Nearest, ties to Max Magnitude */
     FRM_DYN = 7,    /* Dynamic rounding mode */
+    FRM_ROD = 8,    /* Round to Odd */
 };
 
 static inline uint64_t nanbox_s(float32 f)
