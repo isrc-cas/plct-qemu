@@ -4042,6 +4042,28 @@ GEN_VEXT_V_ENV(vfcvt_f_x_v_h, 2, 2)
 GEN_VEXT_V_ENV(vfcvt_f_x_v_w, 4, 4)
 GEN_VEXT_V_ENV(vfcvt_f_x_v_d, 8, 8)
 
+/*
+ * vfcvt.rtz.xu.f.v vd, vs2, vm
+ * Convert float to unsigned integer, truncating.
+ */
+RVVCALL(OPFVV1, vfcvt_rtz_xu_f_v_h, OP_UU_H, H2, H2, float16_to_uint16)
+RVVCALL(OPFVV1, vfcvt_rtz_xu_f_v_w, OP_UU_W, H4, H4, float32_to_uint32)
+RVVCALL(OPFVV1, vfcvt_rtz_xu_f_v_d, OP_UU_D, H8, H8, float64_to_uint64)
+GEN_VEXT_V_ENV(vfcvt_rtz_xu_f_v_h, 2, 2)
+GEN_VEXT_V_ENV(vfcvt_rtz_xu_f_v_w, 4, 4)
+GEN_VEXT_V_ENV(vfcvt_rtz_xu_f_v_d, 8, 8)
+
+/*
+ * vfcvt.rtz.x.f.v  vd, vs2, vm
+ * Convert float to signed integer, truncating.
+ */
+RVVCALL(OPFVV1, vfcvt_rtz_x_f_v_h, OP_UU_H, H2, H2, float16_to_int16)
+RVVCALL(OPFVV1, vfcvt_rtz_x_f_v_w, OP_UU_W, H4, H4, float32_to_int32)
+RVVCALL(OPFVV1, vfcvt_rtz_x_f_v_d, OP_UU_D, H8, H8, float64_to_int64)
+GEN_VEXT_V_ENV(vfcvt_rtz_x_f_v_h, 2, 2)
+GEN_VEXT_V_ENV(vfcvt_rtz_x_f_v_w, 4, 4)
+GEN_VEXT_V_ENV(vfcvt_rtz_x_f_v_d, 8, 8)
+
 /* Widening Floating-Point/Integer Type-Convert Instructions */
 /* (TD, T2, TX2) */
 #define WOP_UU_H uint32_t, uint16_t, uint16_t
