@@ -285,6 +285,7 @@ typedef struct RISCVCPU {
         bool ext_counters;
         bool ext_ifencei;
         bool ext_icsr;
+        bool ext_vqmac;
 
         char *priv_spec;
         char *user_spec;

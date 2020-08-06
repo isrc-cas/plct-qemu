@@ -64,6 +64,7 @@ typedef struct DisasContext {
     uint8_t sew;
     uint16_t vlen;
     bool vl_eq_vlmax;
+    bool ext_vqmac;
 } DisasContext;
 
 #ifdef TARGET_RISCV64
@@ -859,6 +860,7 @@ static void riscv_tr_init_disas_context(DisasContextBase *dcbase, CPUState *cs)
     ctx->misa = env->misa;
     ctx->frm = -1;  /* unknown rounding mode */
     ctx->ext_ifencei = cpu->cfg.ext_ifencei;
+    ctx->ext_vqmac = cpu->cfg.ext_vqmac;
     ctx->vlen = cpu->cfg.vlen;
     ctx->vill = FIELD_EX32(tb_flags, TB_FLAGS, VILL);
     ctx->sew = FIELD_EX32(tb_flags, TB_FLAGS, SEW);
