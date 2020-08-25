@@ -521,13 +521,30 @@ static bool trans_fence_i(DisasContext *ctx, arg_fence_i *a)
     tcg_temp_free(rs1_pass); \
 } while (0)
 
+#define RISCV_OP_CSR_POST2 do {\
+    exit_tb(ctx); \
+    ctx->base.is_jmp = DISAS_NORETURN; \
+    tcg_temp_free(source1); \
+    tcg_temp_free(csr_store); \
+    tcg_temp_free(dest); \
+    tcg_temp_free(rs1_pass); \
+} while (0)
 
 static bool trans_csrrw(DisasContext *ctx, arg_csrrw *a)
 {
     TCGv source1, csr_store, dest, rs1_pass;
     RISCV_OP_CSR_PRE;
-    gen_helper_csrrw(dest, cpu_env, source1, csr_store);
-    RISCV_OP_CSR_POST;
+    if(a->csr == 0x7ed)
+    {
+        gen_helper_csrrw(cpu_pc, cpu_env, source1, csr_store);
+        RISCV_OP_CSR_POST2;
+    }  
+    else
+    {
+        gen_helper_csrrw(dest, cpu_env, source1, csr_store);
+        RISCV_OP_CSR_POST;
+    }
+    
     return true;
 }
 

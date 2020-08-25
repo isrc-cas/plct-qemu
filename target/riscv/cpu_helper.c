@@ -25,6 +25,7 @@
 #include "tcg/tcg-op.h"
 #include "trace.h"
 
+
 int riscv_cpu_mmu_index(CPURISCVState *env, bool ifetch)
 {
 #ifdef CONFIG_USER_ONLY
@@ -35,6 +36,18 @@ int riscv_cpu_mmu_index(CPURISCVState *env, bool ifetch)
 }
 
 #ifndef CONFIG_USER_ONLY
+static int riscv_cpu_local_irq_mode_enabled(CPUState *cs, int excode)
+{
+    RISCVCPU *cpu = RISCV_CPU(cs);
+    CPURISCVState *env = &cpu->env;
+    if(cs->exception_index != EXCP_NONE && excode  == (env->mcause & 0x3FF))
+    {
+        return false;
+    }
+
+    return env->priv < PRV_M ||  (env->priv == PRV_M && get_field(env->mstatus, MSTATUS_MIE));
+}
+
 static int riscv_cpu_local_irq_pending(CPURISCVState *env)
 {
     target_ulong irqs;
@@ -78,14 +91,29 @@ static int riscv_cpu_local_irq_pending(CPURISCVState *env)
 
 bool riscv_cpu_exec_interrupt(CPUState *cs, int interrupt_request)
 {
+
 #if !defined(CONFIG_USER_ONLY)
     if (interrupt_request & CPU_INTERRUPT_HARD) {
         RISCVCPU *cpu = RISCV_CPU(cs);
         CPURISCVState *env = &cpu->env;
+
         int interruptno = riscv_cpu_local_irq_pending(env);
         if (interruptno >= 0) {
             cs->exception_index = RISCV_EXCP_INT_FLAG | interruptno;
             riscv_cpu_do_interrupt(cs);
+            return true;
+        }
+    }
+
+    if (interrupt_request & CPU_INTERRUPT_ECLIC) {
+        RISCVCPU *cpu = RISCV_CPU(cs);
+        CPURISCVState *env = &cpu->env;
+        int exccode = env->exccode & 0xFFF;
+        int enabled = riscv_cpu_local_irq_mode_enabled(cs, exccode);
+        if( enabled && env->exccode ){
+            cs->exception_index = RISCV_EXCP_INT_ECLIC |  env->exccode;
+            riscv_cpu_do_interrupt(cs);
+
             return true;
         }
     }
@@ -256,6 +284,30 @@ uint32_t riscv_cpu_update_mip(RISCVCPU *cpu, uint32_t mask, uint32_t value)
     }
 
     return old;
+}
+
+void riscv_cpu_eclic_interrupt(RISCVCPU *cpu, int exccode)
+{
+    CPURISCVState *env = &cpu->env;
+    bool locked = false;
+
+    env->exccode = exccode;
+
+    if (!qemu_mutex_iothread_locked()) {
+        locked = true;
+        qemu_mutex_lock_iothread();
+    }
+
+    if (exccode != -1) {
+        cpu_interrupt(CPU(cpu), CPU_INTERRUPT_ECLIC);
+    } else {
+        cpu_reset_interrupt(CPU(cpu), CPU_INTERRUPT_ECLIC);
+    }
+
+    if (locked) {
+        qemu_mutex_unlock_iothread();
+    }
+
 }
 
 void riscv_cpu_set_rdtime_fn(CPURISCVState *env, uint64_t (*fn)(void))
@@ -666,6 +718,9 @@ void riscv_cpu_do_transaction_failed(CPUState *cs, hwaddr physaddr,
     }
 
     env->badaddr = addr;
+
+    qemu_log(">> riscv cpu do transaction failed   %lx  %lx  %x\n", physaddr,  addr,  size);
+
     riscv_raise_exception(&cpu->env, cs->exception_index, retaddr);
 }
 
@@ -834,29 +889,30 @@ bool riscv_cpu_tlb_fill(CPUState *cs, vaddr address, int size,
 /*
  * Handle Traps
  *
- * Adapted from Spike's processor_t::take_trap.
+ * Adapted from Spike's procinterrupt_requestessor_t::take_trap.
  *
  */
 void riscv_cpu_do_interrupt(CPUState *cs)
 {
 #if !defined(CONFIG_USER_ONLY)
-
     RISCVCPU *cpu = RISCV_CPU(cs);
     CPURISCVState *env = &cpu->env;
     bool force_hs_execp = riscv_cpu_force_hs_excep_enabled(env);
     target_ulong s;
-
     /* cs->exception is 32-bits wide unlike mcause which is XLEN-bits wide
      * so we mask off the MSB and separate into trap type and cause.
      */
     bool async = !!(cs->exception_index & RISCV_EXCP_INT_FLAG);
+    bool eclic_flag = !!(cs->exception_index & RISCV_EXCP_INT_ECLIC);  //TODO: eclic support
+    target_ulong newpc = 0;
     target_ulong cause = cs->exception_index & RISCV_EXCP_INT_MASK;
     target_ulong deleg = async ? env->mideleg : env->medeleg;
     target_ulong tval = 0;
     target_ulong htval = 0;
     target_ulong mtval2 = 0;
+    bool mode = false;
 
-    if (!async) {
+    if (! (async || eclic_flag)) {
         /* set tval to badaddr for traps with address information */
         switch (cause) {
         case RISCV_EXCP_INST_GUEST_PAGE_FAULT:
@@ -892,6 +948,13 @@ void riscv_cpu_do_interrupt(CPUState *cs)
                 cause = RISCV_EXCP_U_ECALL;
             }
         }
+    }
+
+    if(eclic_flag)
+    {
+        //TODO: update env->mintstatus 
+    	mode = (cause >> 12) & 0x1;
+
     }
 
     trace_riscv_trap(env->mhartid, async, cause, env->pc, tval, cause < 23 ?
@@ -955,6 +1018,27 @@ void riscv_cpu_do_interrupt(CPUState *cs)
         riscv_cpu_set_mode(env, PRV_S);
     } else {
         /* handle the trap in M-mode */
+
+        if(eclic_flag ) {
+            if(mode)
+            {
+                uint64_t vec_addr = (cause & 0x3FF) *4 + env->mtvt;
+                cpu_physical_memory_rw(vec_addr, &newpc,  4, 0);
+            }else{
+
+				if ((env->mtvt2 & 0x1) == 0) {
+
+					newpc = env->mtvec & 0xfffffffc;
+
+				} else if ((env->mtvt2 & 0x1) == 1) {
+					newpc = env->mtvt2 & 0xfffffffc;
+				}
+            }
+        } else {
+            newpc = (env->mtvec >> 2 << 2) +
+                ((async && (env->mtvec & 3) == 1) ? cause * 4 : 0);
+        }
+
         if (riscv_has_ext(env, RVH)) {
             if (riscv_cpu_virt_enabled(env)) {
                 riscv_cpu_swap_hypervisor_regs(env);
@@ -985,11 +1069,13 @@ void riscv_cpu_do_interrupt(CPUState *cs)
         s = set_field(s, MSTATUS_MIE, 0);
         env->mstatus = s;
         env->mcause = cause | ~(((target_ulong)-1) >> async);
+        env->mcause = set_field(env->mcause, MCAUSE_MPP, env->priv);
+        env->mcause = set_field(env->mcause, MCAUSE_MPIE, env->priv_ver >= PRIV_VERSION_1_10_0 ?
+                get_field(s, MSTATUS_MIE) : get_field(s, MSTATUS_UIE << env->priv));
         env->mepc = env->pc;
         env->mbadaddr = tval;
         env->mtval2 = mtval2;
-        env->pc = (env->mtvec >> 2 << 2) +
-            ((async && (env->mtvec & 3) == 1) ? cause * 4 : 0);
+        env->pc = newpc;   //update PC
         riscv_cpu_set_mode(env, PRV_M);
     }
 
@@ -998,7 +1084,6 @@ void riscv_cpu_do_interrupt(CPUState *cs)
      * to be yielded. Refer to the memory consistency model section of the
      * RISC-V ISA Specification.
      */
-
 #endif
     cs->exception_index = EXCP_NONE; /* mark handled to qemu */
 }
