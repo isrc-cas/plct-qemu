@@ -39,6 +39,7 @@ typedef struct ECLICPendingInterrupt {
     int level;
     int enable;
     int trigger;
+    int sig;
     QLIST_ENTRY(ECLICPendingInterrupt) next;
 } ECLICPendingInterrupt;
 
@@ -70,7 +71,7 @@ typedef struct NucLeiECLICState {
     uint8_t  *clicintie;
     uint8_t  *clicintattr;  /* shv(0) trig(1~2)*/
     uint8_t  *clicintctl;   /*  level (cliccfg.nlbits) priority( (CLICINTCTLBITS - cliccfg.nlbits)*/
-
+    ECLICPendingInterrupt *clicintlist;
     uint32_t aperture_size;
 
     QLIST_HEAD(, ECLICPendingInterrupt) pending_list;

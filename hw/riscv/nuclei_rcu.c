@@ -32,6 +32,8 @@ static uint64_t nuclei_rcu_read(void *opaque, hwaddr offset,
                                     unsigned size)
 {
     NucLeiRCUState *s = NUCLEI_RCU(opaque);
+    // CPUState *cpu = qemu_get_cpu(0);
+    // CPURISCVState *env = cpu ? cpu->env_ptr : NULL;
     uint64_t value = 0;
 
     switch (offset) {
@@ -78,6 +80,7 @@ static uint64_t nuclei_rcu_read(void *opaque, hwaddr offset,
     default:
         break;
     }
+
     return value;
 }
 

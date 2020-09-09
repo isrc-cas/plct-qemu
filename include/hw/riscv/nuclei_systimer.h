@@ -54,7 +54,11 @@ typedef struct NucLeiSYSTIMERState {
     uint32_t mstop;
     uint32_t msip;
 
+    uint64_t timebase_freq;
+
 } NucLeiSYSTIMERState;
 
-#define  NUCLEI_TIMEBASE_FREQ  27000000
+#define  NUCLEI_GD32_TIMEBASE_FREQ  (108000000*2)
+#define  NUCLEI_HBIRD_TIMEBASE_FREQ  (10000000)
+
 #endif

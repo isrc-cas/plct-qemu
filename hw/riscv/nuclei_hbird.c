@@ -134,7 +134,7 @@ static void riscv_nuclei_soc_init(Object *obj)
     sysbus_init_child_obj(obj, "timer",
                           &s->timer, sizeof(s->timer),
                           TYPE_NUCLEI_SYSTIMER);
-    
+
     sysbus_init_child_obj(obj, "riscv.nuclei.gpio",
                           &s->gpio, sizeof(s->gpio),
                           TYPE_SIFIVE_GPIO);
@@ -158,7 +158,7 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
                            memmap[NUCLEI_ROM].size, &error_fatal);
     memory_region_add_subregion(sys_mem,
         memmap[NUCLEI_ROM].base, &s->internal_rom);
-    
+
     /* MMIO */
     s->eclic = nuclei_eclic_create(memmap[NUCLEI_ECLIC].base,
         memmap[NUCLEI_ECLIC].size, HBIRD_SOC_INT_MAX);
@@ -170,6 +170,7 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
         return;
     }
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->timer), 0, memmap[NUCLEI_TIMER].base);
+    s->timer.timebase_freq = NUCLEI_HBIRD_TIMEBASE_FREQ;
 
     /* GPIO */
     object_property_set_bool(OBJECT(&s->gpio), true, "realized", &err);

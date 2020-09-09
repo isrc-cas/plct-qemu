@@ -590,6 +590,17 @@ static int write_mnxti(CPURISCVState *env, int csrno, target_ulong val)
     return 0;
 }
 
+static int rmw_mnxti(CPURISCVState *env, int csrno, target_ulong *ret_value,
+                target_ulong new_value, target_ulong write_mask)
+{
+    env->mstatus |= (new_value & write_mask) & 0b11111;
+    if (ret_value) {
+        *ret_value = 0;
+    }
+
+    return 0;
+}
+
 static int read_mintstatus(CPURISCVState *env, int csrno, target_ulong *val)
 {
     *val = env->mintstatus;
@@ -645,7 +656,8 @@ static int rmw_mscratchcswl(CPURISCVState *env, int csrno, target_ulong *ret_val
                 target_ulong new_value, target_ulong write_mask)
 {
     target_ulong t;
-    if(get_field(env->mcause, MCAUSE_MPIL)  != get_field(env->mintstatus, MINTSTATUS_MIL))
+    if( (get_field(env->mcause, MCAUSE_MPIL) == 0) 
+        != (get_field(env->mintstatus, MINTSTATUS_MIL) == 0))
     {
         t = new_value;
         *ret_value = env->mscratch;
@@ -801,32 +813,14 @@ static int write_msavedcause2(CPURISCVState *env, int csrno, target_ulong val)
     return 0;
 }
 
-static int read_pushmsubm(CPURISCVState *env, int csrno, target_ulong *val)
-{
-    *val = env->pushmsubm;
-    return 0;
-}
-
-static int write_pushmsubm(CPURISCVState *env, int csrno, target_ulong val)
-{
-    env->pushmsubm = val;
-    return 0;
-}
-
 static int rmw_pushmsubm(CPURISCVState *env, int csrno, target_ulong *ret_value,
                 target_ulong new_value, target_ulong write_mask)
 {
 
-    uint64_t notify_addr = new_value*4 + env->gpr[2];
-    MemTxResult result;
+    uint64_t notify_addr = new_value * 4 + env->gpr[2];
 
-    address_space_stl_le(&address_space_memory, notify_addr, env->msubm,
-                         MEMTXATTRS_UNSPECIFIED, &result);
-    if (result != MEMTX_OK) {
-        qemu_log_mask(LOG_GUEST_ERROR, "%s: trigger failed @%"
-                      HWADDR_PRIx "\n", __func__, notify_addr);
-        return 1;
-    }
+    cpu_physical_memory_rw(notify_addr, &env->msubm,  4, 1);
+
     return 0;
 }
 
@@ -842,87 +836,39 @@ static int write_mtvt2(CPURISCVState *env, int csrno, target_ulong val)
     return 0;
 }
 
-static int read_jalmnxti(CPURISCVState *env, int csrno, target_ulong *val)
-{
-    *val = env->jalmnxti;
-    return 0;
-}
-
-static int write_jalmnxti(CPURISCVState *env, int csrno, target_ulong val)
-{
-    env->jalmnxti = val;
-    return 0;
-}
-
 static int rmw_jalmnxti(CPURISCVState *env, int csrno, target_ulong *ret_value,
                 target_ulong new_value, target_ulong write_mask)
 {
     target_ulong addr;
-    uint64_t vec_addr = (env->mcause & 0xfff) *4 + env->mtvt;
-    cpu_physical_memory_rw(vec_addr, &addr,  4, 0);
 
-   // env->mepc =  env->pc + 4;   //todo
-    env->gpr[1] = env->pc + 4;  //ret use
-    env->gpr[5] = env->pc + 4;  //link reg
-    *ret_value = addr;
-     //env->mstatus = set_field(env->mstatus, MSTATUS_MIE, 1); //todo
-    return 0;
-}
-
-static int read_pushmcause(CPURISCVState *env, int csrno, target_ulong *val)
-{
-    target_ulong value;
-    uint64_t addr = (*val) *4 + env->gpr[2] ;
-    cpu_physical_memory_rw(addr, &value,  4, 0);
-
-    env->mcause = value;
-
-    return 0;
-}
-
-static int write_pushmcause(CPURISCVState *env, int csrno, target_ulong val)
-{
-    target_ulong value =  env->mcause;
-    uint64_t addr = (val) *4 + env->gpr[2] ;
-    cpu_physical_memory_rw(addr, &value,  4, 1);
+    if (env->irq_pending) {
+    	uint64_t vec_addr = (env->mcause & 0x3FF) *4 + env->mtvt;
+    	cpu_physical_memory_rw(vec_addr, &addr,  4, 0);
+    	env->gpr[1] = env->pc + 4;  //ret use
+    	env->gpr[5] = env->pc + 4;  //link reg
+    	*ret_value = addr;
+    	env->mstatus = set_field(env->mstatus, MSTATUS_MIE, 1);
+    	riscv_cpu_eclic_int_handler_start(env->eclic, env->mcause & 0x3ff);
+    } else
+    	*ret_value = env->pc + 4;
     return 0;
 }
 
 static int rmw_pushmcause(CPURISCVState *env, int csrno, target_ulong *ret_value,
                 target_ulong new_value, target_ulong write_mask)
 {
-    uint64_t notify_addr = new_value*4 + env->gpr[2];
+    uint64_t notify_addr = new_value * 4 + env->gpr[2];
 
     cpu_physical_memory_rw(notify_addr, &env->mcause,  4, 1);
 
     return 0;
 }
 
-static int read_pushmepc(CPURISCVState *env, int csrno, target_ulong *val)
-{
-    *val = env->pushmepc;
-    return 0;
-}
-
-static int write_pushmepc(CPURISCVState *env, int csrno, target_ulong val)
-{
-    env->pushmepc = val;
-    return 0;
-}
-
 static int rmw_pushmepc(CPURISCVState *env, int csrno, target_ulong *ret_value,
                 target_ulong new_value, target_ulong write_mask)
 {
-    uint64_t notify_addr = new_value*4 + env->gpr[2];
-    MemTxResult result;
-
-    address_space_stl_le(&address_space_memory, notify_addr, env->mepc,
-                         MEMTXATTRS_UNSPECIFIED, &result);
-    if (result != MEMTX_OK) {
-        qemu_log_mask(LOG_GUEST_ERROR, "%s: trigger failed @%"
-                      HWADDR_PRIx "\n", __func__, notify_addr);
-        return 1;
-    }
+    uint64_t notify_addr = new_value * 4 + env->gpr[2];
+    cpu_physical_memory_rw(notify_addr, &env->mepc, 4, 1);
     return 0;
 }
 
@@ -1723,7 +1669,7 @@ static riscv_csr_operations csr_ops[CSR_TABLE_SIZE] = {
     [CSR_MCOUNTEREN] =          { any,  read_mcounteren,  write_mcounteren  },
 
     [CSR_MTVT] =                { any,  read_mtvt,        write_mtvt        },
-    [CSR_MNXTI] =               { any,  read_mnxti,       write_mnxti       },
+    [CSR_MNXTI] =               { any,  read_mnxti,       write_mnxti, rmw_mnxti},
     [CSR_MINTSTATUS] =          { any,  read_mintstatus,  write_mintstatus  },
     [CSR_MSCRATCHCSW] =         { any,  read_mscratchcsw, write_mscratchcsw, rmw_mscratchcsw},
     [CSR_MSCRATCHCSWL] =        { any,  read_mscratchcswl, write_mscratchcswl,  rmw_mscratchcswl},
@@ -1739,11 +1685,11 @@ static riscv_csr_operations csr_ops[CSR_TABLE_SIZE] = {
     [CSR_MSAVECAUSE2] =         { any,  read_msavecause2, write_msavecause2 },
     [CSR_MSAVEDCAUSE1] =        { any,  read_msavedcause1, write_msavedcause1 },
     [CSR_MSAVEDCAUSE2] =        { any,  read_msavedcause2, write_msavedcause2 },
-    [CSR_PUSHMSUBM] =           { any,  read_pushmsubm,   write_pushmsubm, rmw_pushmsubm },
+    [CSR_PUSHMSUBM] =           { any,  NULL,   NULL, rmw_pushmsubm },
     [CSR_MTVT2] =               { any,  read_mtvt2,       write_mtvt2       },
-    [CSR_JALMNXTI] =            { any,  read_jalmnxti,    write_jalmnxti,  rmw_jalmnxti   },
-    [CSR_PUSHMCAUSE] =          { any,  read_pushmcause,  write_pushmcause , rmw_pushmcause },
-    [CSR_PUSHMEPC] =            { any,  read_pushmepc,    write_pushmepc,  rmw_pushmepc },
+    [CSR_JALMNXTI] =            { any,  NULL,    NULL,  rmw_jalmnxti },
+    [CSR_PUSHMCAUSE] =          { any,  NULL,  NULL , rmw_pushmcause },
+    [CSR_PUSHMEPC] =            { any,  NULL,    NULL,  rmw_pushmepc },
     [CSR_WFE] =                 { any,  read_wfe,         write_wfe         },
     [CSR_SLEEPVALUE] =          { any,  read_sleepvalue,  write_sleepvalue  },
     [CSR_TXEVT] =               { any,  read_txevt,       write_txevt       },

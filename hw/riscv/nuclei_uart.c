@@ -34,19 +34,42 @@
  *
  * Transmit FIFO using "qemu/fifo8.h"
  */
+static uint64_t uart_ip(NucLeiUARTState *s)
+{
+    uint64_t ret = 0;
+
+    uint64_t txcnt = NUCLEI_UART_GET_TXCNT(s->txctrl);
+    uint64_t rxcnt = NUCLEI_UART_GET_RXCNT(s->rxctrl);
+
+    if (txcnt != 0) {
+        ret |= NUCLEI_UART_IP_TXWM;
+    }
+    if (s->rx_fifo_len > rxcnt) {
+        ret |= NUCLEI_UART_IP_RXWM;
+    }
+
+    return ret;
+}
 
 static void update_irq(NucLeiUARTState *s)
 {
-    // int cond = 0;
-    // if ((s->ie & NUCLEI_UART_IE_TXWM) ||
-    //     ((s->ie & NUCLEI_UART_IE_RXWM) && s->rx_fifo_len)) {
-    //     cond = 1;
-    // }
-    // if (cond) {
-    //     qemu_irq_raise(s->irq);
-    // } else {
-    //     qemu_irq_lower(s->irq);
-    // }
+    int cond = 0;
+    s->txctrl |=  0x1;
+    if (s->rx_fifo_len)
+        s->rxctrl &= ~0x1;
+     else
+        s->rxctrl |= 0x1;
+
+    if ((s->ie & NUCLEI_UART_IE_TXWM) ||
+        ((s->ie & NUCLEI_UART_IE_RXWM) && s->rx_fifo_len)) {
+        cond = 1;
+    }
+
+    if (cond ) {
+        qemu_irq_raise(s->irq);
+    } else  {
+        qemu_irq_lower(s->irq);
+    }
 }
 
 static uint64_t
@@ -59,8 +82,7 @@ uart_read(void *opaque, hwaddr offset, unsigned int size)
     switch (offset)
     {
     case NUCLEI_UART_REG_TXDATA:
-        value = s->rxdata;
-        break;
+        return  0;
     case NUCLEI_UART_REG_RXDATA:
         if (s->rx_fifo_len) {
             fifo_val = s->rx_fifo[0];
@@ -68,10 +90,9 @@ uart_read(void *opaque, hwaddr offset, unsigned int size)
             s->rx_fifo_len--;
             qemu_chr_fe_accept_input(&s->chr);
             update_irq(s);
-            return fifo_val;
+            return fifo_val ;
         }
-        value = 0x0;
-        break;
+        return 0x80000000;
     case NUCLEI_UART_REG_TXCTRL:
         value = s->txctrl;
         break;
@@ -82,7 +103,7 @@ uart_read(void *opaque, hwaddr offset, unsigned int size)
         value = s->ie;
         break;
     case NUCLEI_UART_REG_IP:
-        value = s->ip;
+        value = uart_ip(s);
         break;
     case NUCLEI_UART_REG_DIV:
         value = s->div;
@@ -185,6 +206,6 @@ NucLeiUARTState *nuclei_uart_create(MemoryRegion *address_space, hwaddr base,  u
     memory_region_init_io(&s->mmio, NULL, &uart_ops, s,
                           TYPE_NUCLEI_UART, size);
     memory_region_add_subregion(address_space, base, &s->mmio);
- 
+
     return s;
 }

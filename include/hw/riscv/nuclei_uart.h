@@ -39,6 +39,9 @@
 #define NUCLEI_UART_REG_IP         0x014
 #define NUCLEI_UART_REG_DIV        0x018
 
+#define NUCLEI_UART_GET_TXCNT(txctrl)   (txctrl & 0x1)
+#define NUCLEI_UART_GET_RXCNT(rxctrl)   (rxctrl & 0x1)
+
 enum {
     NUCLEI_UART_IE_TXWM       = 1, /* Transmit watermark interrupt enable */
     NUCLEI_UART_IE_RXWM       = 2  /* Receive watermark interrupt enable */

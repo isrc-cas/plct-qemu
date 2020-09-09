@@ -36,11 +36,14 @@ int riscv_cpu_mmu_index(CPURISCVState *env, bool ifetch)
 }
 
 #ifndef CONFIG_USER_ONLY
-static int riscv_cpu_local_irq_mode_enabled(CPUState *cs, int excode)
+static int riscv_cpu_local_irq_mode_enabled(CPUState *cs, int excode, int level)
 {
     RISCVCPU *cpu = RISCV_CPU(cs);
     CPURISCVState *env = &cpu->env;
-    if(cs->exception_index != EXCP_NONE && excode  == (env->mcause & 0x3FF))
+
+    target_ulong mintstatus_mil = get_field(env->mintstatus, MINTSTATUS_MIL);
+
+    if(mintstatus_mil >= level)
     {
         return false;
     }
@@ -108,12 +111,14 @@ bool riscv_cpu_exec_interrupt(CPUState *cs, int interrupt_request)
     if (interrupt_request & CPU_INTERRUPT_ECLIC) {
         RISCVCPU *cpu = RISCV_CPU(cs);
         CPURISCVState *env = &cpu->env;
-        int exccode = env->exccode & 0xFFF;
-        int enabled = riscv_cpu_local_irq_mode_enabled(cs, exccode);
-        if( enabled && env->exccode ){
+
+        int exccode = env->exccode & 0x3FF;
+        int level = (env->exccode >> 13) & 0xFF;
+
+        int enabled = riscv_cpu_local_irq_mode_enabled(cs, exccode, level);   
+        if(enabled && env->exccode ){
             cs->exception_index = RISCV_EXCP_INT_ECLIC |  env->exccode;
             riscv_cpu_do_interrupt(cs);
-
             return true;
         }
     }
@@ -292,15 +297,18 @@ void riscv_cpu_eclic_interrupt(RISCVCPU *cpu, int exccode)
     bool locked = false;
 
     env->exccode = exccode;
-
+    
     if (!qemu_mutex_iothread_locked()) {
         locked = true;
         qemu_mutex_lock_iothread();
     }
 
     if (exccode != -1) {
+    	env->irq_pending = true;
         cpu_interrupt(CPU(cpu), CPU_INTERRUPT_ECLIC);
+
     } else {
+    	env->irq_pending = false;
         cpu_reset_interrupt(CPU(cpu), CPU_INTERRUPT_ECLIC);
     }
 
@@ -719,8 +727,6 @@ void riscv_cpu_do_transaction_failed(CPUState *cs, hwaddr physaddr,
 
     env->badaddr = addr;
 
-    qemu_log(">> riscv cpu do transaction failed   %lx  %lx  %x\n", physaddr,  addr,  size);
-
     riscv_raise_exception(&cpu->env, cs->exception_index, retaddr);
 }
 
@@ -894,11 +900,13 @@ bool riscv_cpu_tlb_fill(CPUState *cs, vaddr address, int size,
  */
 void riscv_cpu_do_interrupt(CPUState *cs)
 {
+
 #if !defined(CONFIG_USER_ONLY)
     RISCVCPU *cpu = RISCV_CPU(cs);
     CPURISCVState *env = &cpu->env;
     bool force_hs_execp = riscv_cpu_force_hs_excep_enabled(env);
     target_ulong s;
+
     /* cs->exception is 32-bits wide unlike mcause which is XLEN-bits wide
      * so we mask off the MSB and separate into trap type and cause.
      */
@@ -911,6 +919,7 @@ void riscv_cpu_do_interrupt(CPUState *cs)
     target_ulong htval = 0;
     target_ulong mtval2 = 0;
     bool mode = false;
+    uint8_t level = 0;
 
     if (! (async || eclic_flag)) {
         /* set tval to badaddr for traps with address information */
@@ -952,11 +961,22 @@ void riscv_cpu_do_interrupt(CPUState *cs)
 
     if(eclic_flag)
     {
-        //TODO: update env->mintstatus 
-    	mode = (cause >> 12) & 0x1;
+        mode = (cause >> 12) & 0x1;
+        level = (cause >> 13) & 0xFF;
+        cause &= 0x3ff;
 
+        cause |= get_field(env->mstatus, MSTATUS_MPP) << 28;
+        cause |= get_field(env->mintstatus, MINTSTATUS_MIL) << 16;
+        cause |= get_field(env->mstatus, MSTATUS_MPIE) << 27;
+        cause = set_field(cause, MCAUSE_MPP, PRV_M);
+        cause = set_field(cause, MCAUSE_INTERRUPT, 1);
+
+        env->mintstatus = set_field(env->mintstatus, MINTSTATUS_MIL, level);  
+    }else{
+        cause = set_field(cause, MCAUSE_INTERRUPT, 0);
     }
 
+    
     trace_riscv_trap(env->mhartid, async, cause, env->pc, tval, cause < 23 ?
         (async ? riscv_intr_names : riscv_excp_names)[cause] : "(unknown)");
 
@@ -1023,17 +1043,15 @@ void riscv_cpu_do_interrupt(CPUState *cs)
             if(mode)
             {
                 uint64_t vec_addr = (cause & 0x3FF) *4 + env->mtvt;
-                cpu_physical_memory_rw(vec_addr, &newpc,  4, 0);
+                cpu_physical_memory_rw(vec_addr, &newpc,  4, 0);   
             }else{
-
-				if ((env->mtvt2 & 0x1) == 0) {
-
-					newpc = env->mtvec & 0xfffffffc;
-
-				} else if ((env->mtvt2 & 0x1) == 1) {
-					newpc = env->mtvt2 & 0xfffffffc;
-				}
+                if ((env->mtvt2 & 0x1) == 0) {
+                    newpc = env->mtvec & 0xfffffffc;
+                } else if ((env->mtvt2 & 0x1) == 1) {
+                    newpc = env->mtvt2 & 0xfffffffc;
+                }
             }
+            
         } else {
             newpc = (env->mtvec >> 2 << 2) +
                 ((async && (env->mtvec & 3) == 1) ? cause * 4 : 0);
@@ -1069,14 +1087,12 @@ void riscv_cpu_do_interrupt(CPUState *cs)
         s = set_field(s, MSTATUS_MIE, 0);
         env->mstatus = s;
         env->mcause = cause | ~(((target_ulong)-1) >> async);
-        env->mcause = set_field(env->mcause, MCAUSE_MPP, env->priv);
-        env->mcause = set_field(env->mcause, MCAUSE_MPIE, env->priv_ver >= PRIV_VERSION_1_10_0 ?
-                get_field(s, MSTATUS_MIE) : get_field(s, MSTATUS_UIE << env->priv));
         env->mepc = env->pc;
         env->mbadaddr = tval;
         env->mtval2 = mtval2;
         env->pc = newpc;   //update PC
         riscv_cpu_set_mode(env, PRV_M);
+
     }
 
     /* NOTE: it is not necessary to yield load reservations here. It is only
@@ -1084,6 +1100,9 @@ void riscv_cpu_do_interrupt(CPUState *cs)
      * to be yielded. Refer to the memory consistency model section of the
      * RISC-V ISA Specification.
      */
+
+    if (eclic_flag && mode)
+        riscv_cpu_eclic_int_handler_start(env->eclic, cause & 0x3ff);
 #endif
     cs->exception_index = EXCP_NONE; /* mark handled to qemu */
 }

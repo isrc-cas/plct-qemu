@@ -267,6 +267,7 @@ struct CPURISCVState {
     QEMUTimer *timer; /* Internal timer */
     QEMUTimer *mtimer; /* Nuclei Internal timer */
     void *eclic;
+    bool irq_pending;
 };
 
 #define RISCV_CPU_CLASS(klass) \
@@ -380,6 +381,7 @@ void riscv_cpu_swap_hypervisor_regs(CPURISCVState *env);
 int riscv_cpu_claim_interrupts(RISCVCPU *cpu, uint32_t interrupts);
 uint32_t riscv_cpu_update_mip(RISCVCPU *cpu, uint32_t mask, uint32_t value);
 void riscv_cpu_eclic_interrupt(RISCVCPU *cpu, int intinfo);
+void riscv_cpu_eclic_int_handler_start(void *eclic, int irq);
 #define BOOL_TO_MASK(x) (-!!(x)) /* helper for riscv_cpu_update_mip value */
 void riscv_cpu_set_rdtime_fn(CPURISCVState *env, uint64_t (*fn)(void));
 #endif

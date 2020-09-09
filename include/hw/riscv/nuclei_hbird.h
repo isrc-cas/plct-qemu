@@ -50,7 +50,7 @@ typedef struct NucleiHBSoCState {
     NucLeiSYSTIMERState timer;
     NucLeiUARTState uart;
     SIFIVEGPIOState gpio;
-   
+
 } NucleiHBSoCState;
 
 typedef struct {

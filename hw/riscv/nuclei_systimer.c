@@ -17,8 +17,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 #include "qemu/osdep.h"
 #include "qemu/log.h"
 #include "qemu/timer.h"
@@ -29,27 +27,29 @@
 #include "migration/vmstate.h"
 #include "trace.h"
 
-static uint64_t cpu_riscv_read_rtc(void)
+static uint64_t cpu_riscv_read_rtc(uint64_t timebase_freq)
 {
     return muldiv64(qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL),
-        NUCLEI_TIMEBASE_FREQ, NANOSECONDS_PER_SECOND);
+        timebase_freq, NANOSECONDS_PER_SECOND);
 }
 
 static void nuclei_timer_update_compare(NucLeiSYSTIMERState *s)
 {
     CPUState *cpu = qemu_get_cpu(0);
     CPURISCVState *env = cpu ? cpu->env_ptr : NULL;
-    uint64_t cmp, cur, diff;
-    cur = cpu_riscv_read_rtc();
-    s->mtime_lo = cur & 0xffffffff;
-    s->mtime_hi = (cur >> 32) & 0xffffffff;
+    uint64_t cmp, real_time;
+    int64_t diff;
 
-    cmp = (uint64_t)s->mtimecmp_lo | ((uint64_t)s->mtimecmp_hi<<32);
-    diff = cmp - cur;
+    real_time =  s->mtime_lo | ((uint64_t)s->mtime_hi << 32);
 
-    env->mtimer->expire_time  |= (uint64_t) ((uint64_t)s->mtime_hi << 32) |  s->mtime_lo;
+    env->mtimer->expire_time  = real_time;
 
-    if (cur >= cmp) {
+    cmp = (uint64_t)s->mtimecmp_lo | ((uint64_t)s->mtimecmp_hi <<32);
+    env->mtimecmp =  cmp;
+
+    diff = cmp - real_time;
+
+    if ( real_time >= cmp) {
         qemu_set_irq(*(s->timer_irq), 1);
     }
     else {
@@ -58,8 +58,7 @@ static void nuclei_timer_update_compare(NucLeiSYSTIMERState *s)
         if (s->mtimecmp_hi != 0xffffffff) {
             // set up future timer interrupt
             uint64_t next_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
-                muldiv64(diff, NANOSECONDS_PER_SECOND, NUCLEI_TIMEBASE_FREQ);
-
+                muldiv64(diff, NANOSECONDS_PER_SECOND, s->timebase_freq);
             timer_mod(env->mtimer, next_ns);
 	    }
     }
@@ -86,11 +85,12 @@ static uint64_t nuclei_timer_read(void *opaque, hwaddr offset,
 
     switch (offset) {
     case NUCLEI_SYSTIMER_REG_MTIMELO:
-        s->mtime_lo = cpu_riscv_read_rtc() & 0xffffffff;
+        value = cpu_riscv_read_rtc(s->timebase_freq);
+        s->mtime_lo =  value & 0xffffffff;
+        s->mtime_hi = (value >> 32) & 0xffffffff;
         value = s->mtime_lo;
         break;
     case NUCLEI_SYSTIMER_REG_MTIMEHI:
-        s->mtime_hi = (cpu_riscv_read_rtc() >> 32) & 0xffffffff;
         value =  s->mtime_hi;
         break;
     case NUCLEI_SYSTIMER_REG_MTIMECMPLO:
@@ -113,7 +113,7 @@ static uint64_t nuclei_timer_read(void *opaque, hwaddr offset,
         break;
     }
 
-    return value;
+    return (value & 0xFFFFFFFF);
 }
 
 static void nuclei_timer_write(void *opaque, hwaddr offset,
@@ -154,14 +154,12 @@ static void nuclei_timer_write(void *opaque, hwaddr offset,
     case NUCLEI_SYSTIMER_REG_MSIP:
         s->msip = value;
         if ((s->msip & 0x1) == 1) {
-            // riscv_cpu_update_mip(RISCV_CPU(cpu), MIP_MTIP, BOOL_TO_MASK(1));
-            //printf("[NUCLEI Timer]: soft_irq int\n");
-            fflush(stdout);
-
             qemu_set_irq(*(s->soft_irq), 1);
         }else{
-        	qemu_set_irq(*(s->soft_irq), 0);
+            //riscv_cpu_eclic_interrupt(riscv_cpu, -1);
+            qemu_set_irq(*(s->soft_irq), 0);
         }
+
         break;
     default:
         break;
@@ -177,8 +175,6 @@ static const MemoryRegionOps nuclei_timer_ops = {
         .max_access_size = 4,
     },
 };
-
-
 
 static void nuclei_timer_realize(DeviceState *dev, Error **errp)
 {

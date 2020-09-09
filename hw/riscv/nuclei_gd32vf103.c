@@ -55,7 +55,7 @@ static const struct MemmapEntry {
     [GD32VF103_RCU]        = { 0x40021000,     0x400 },
     [GD32VF103_DMA1]       = { 0x40020400,     0x400 },
     [GD32VF103_DMA0]       = { 0x40020000,     0x400 },
-     [GD32VF103_UART4]     = { 0x40005000,     0x400 },
+    [GD32VF103_UART4]     = { 0x40005000,     0x400 },
     [GD32VF103_USART0]     = { 0x40013800,     0x400 },
     [GD32VF103_SRAM]       = { 0x20000000,     0x18000 },
     [GD32VF103_OB]         = { 0x1FFFF800,     0x10 },
@@ -107,21 +107,21 @@ static void nuclei_board_init(MachineState *machine)
     memory_region_add_subregion(system_memory, 
     memmap[GD32VF103_SRAM].base, &s->soc.sram);
 
-     /* reset vector */
+    /* reset vector */
     uint32_t reset_vec[8] = {
-        0x00000297,                  /* 1:  auipc  t0, %pcrel_hi(dtb) */
-        0x02028593,                  /*     addi   a1, t0, %pcrel_lo(1b) */
-        0xf1402573,                  /*     csrr   a0, mhartid  */
+        0x00000297,                    /* 1:  auipc  t0, %pcrel_hi(dtb) */
+        0x02028593,                    /*     addi   a1, t0, %pcrel_lo(1b) */
+        0xf1402573,                    /*     csrr   a0, mhartid  */
 #if defined(TARGET_RISCV32)
-        0x0182a283,                  /*     lw     t0, 24(t0) */
+        0x0182a283,                    /*     lw     t0, 24(t0) */
 #elif defined(TARGET_RISCV64)
-        0x0182b283,                  /*     ld     t0, 24(t0) */
+        0x0182b283,                    /*     ld     t0, 24(t0) */
 #endif
-        0x00028067,                  /*     jr     t0 */
+        0x00028067,                    /*     jr     t0 */
         0x00000000,
-        memmap[GD32VF103_MAINFLASH].base,     /* start: .dword DRAM_BASE */
+        memmap[GD32VF103_MAINFLASH].base, /* start: .dword */
         0x00000000,
-                                     /* dtb: */
+                                       /* dtb: */
     };
 
     /* copy in the reset vector in little_endian byte order */
@@ -129,7 +129,7 @@ static void nuclei_board_init(MachineState *machine)
         reset_vec[i] = cpu_to_le32(reset_vec[i]);
     }
     rom_add_blob_fixed_as("mrom.reset", reset_vec, sizeof(reset_vec),
-                          memmap[GD32VF103_MFOL].base, &address_space_memory);
+                          memmap[GD32VF103_MFOL].base + 0x1000, &address_space_memory);
 
     /* boot rom */
     if (machine->kernel_filename) {
@@ -200,7 +200,7 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
                            memmap[GD32VF103_MFOL].size, &error_fatal);
     memory_region_add_subregion(sys_mem,
         memmap[GD32VF103_MFOL].base, &s->internal_rom);
-    
+
     /* MMIO */
      s->eclic = nuclei_eclic_create(memmap[GD32VF103_ECLIC].base,
          memmap[GD32VF103_ECLIC].size, GD32VF103_SOC_INT_MAX);
@@ -212,6 +212,7 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
         return;
     }
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->systimer), 0, memmap[GD32VF103_SYSTIMER].base);
+    s->systimer.timebase_freq = NUCLEI_GD32_TIMEBASE_FREQ;
 
     /* Timer*/
     object_property_set_bool(OBJECT(&s->timer), true, "realized", &err);
@@ -255,7 +256,7 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
                     serial_hd(0),
                     nuclei_eclic_get_irq(DEVICE(s->eclic),
                     GD32VF103_UART4_IRQn));
-    
+
     s->systimer.soft_irq = &(s->eclic->irqs[Internal_SysTimerSW_IRQn]);
     s->systimer.timer_irq = &(s->eclic->irqs[Internal_SysTimer_IRQn]);
 
