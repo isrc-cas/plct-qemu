@@ -248,4 +248,30 @@
   <reg name="mucounteren" bitsize="64"/>
   <reg name="mscounteren" bitsize="64"/>
   <reg name="mhcounteren" bitsize="64"/>
+  <reg name="mnxti" bitsize="64"/>
+  <reg name="mintstatus" bitsize="64"/>
+  <reg name="mscratchcsw" bitsize="64"/>
+  <reg name="mscratchcswl" bitsize="64"/>
+  <reg name="mnvec" bitsize="64"/>
+  <reg name="msubm" bitsize="64"/>
+  <reg name="mdcause" bitsize="64"/>
+  <reg name="mcache_ctl" bitsize="64"/>
+  <reg name="mmisc_ctl" bitsize="64"/>
+  <reg name="msavestatus" bitsize="64"/>
+  <reg name="msaveepc1" bitsize="64"/>
+  <reg name="msavecause1" bitsize="64"/>
+  <reg name="msaveepc2" bitsize="64"/>
+  <reg name="msavecause2" bitsize="64"/>
+  <reg name="msavedcause1" bitsize="64"/>
+  <reg name="msavedcause2" bitsize="64"/>
+  <reg name="pushmsubm" bitsize="64"/>
+  <reg name="mtvt2" bitsize="64"/>
+  <reg name="jalmnxti" bitsize="64"/>
+  <reg name="pushmcause" bitsize="64"/>
+  <reg name="pushmepc" bitsize="64"/>
+  <reg name="ucode" bitsize="64"/>
+  <reg name="wfe" bitsize="64"/>
+  <reg name="sleepvalue" bitsize="64"/>
+  <reg name="txevt" bitsize="64"/>
+
 </feature>
