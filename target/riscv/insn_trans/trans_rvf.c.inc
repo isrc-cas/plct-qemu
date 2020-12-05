@@ -21,6 +21,10 @@
 #define REQUIRE_FPU do {\
     if (ctx->mstatus_fs == 0) \
         return false;                       \
+    if (ctx->mstatus_fs == 0) { \
+        if (!ctx->ext_zfinx) \
+            return false; \
+    } \
 } while (0)
 
 static bool trans_flw(DisasContext *ctx, arg_flw *a)
@@ -104,8 +108,16 @@ static bool trans_fadd_s(DisasContext *ctx, arg_fadd_s *a)
     REQUIRE_EXT(ctx, RVF);
 
     gen_set_rm(ctx, a->rm);
-    gen_helper_fadd_s(cpu_fpr[a->rd], cpu_env,
+    if (ctx->ext_zfinx) {
+        gen_nanbox_s(cpu_gpr[a->rs1], cpu_gpr[a->rs1]);
+        gen_nanbox_s(cpu_gpr[a->rs2], cpu_gpr[a->rs2]);
+        gen_helper_fadd_s(cpu_gpr[a->rd], cpu_env,
+                      cpu_gpr[a->rs1], cpu_gpr[a->rs2]);
+    }
+    else {
+        gen_helper_fadd_s(cpu_fpr[a->rd], cpu_env,
                       cpu_fpr[a->rs1], cpu_fpr[a->rs2]);
+    }
     mark_fs_dirty(ctx);
     return true;
 }
