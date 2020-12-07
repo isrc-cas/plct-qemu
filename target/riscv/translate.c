@@ -57,6 +57,8 @@ typedef struct DisasContext {
     int frm;
     bool ext_ifencei;
     bool hlsx;
+    /* zfinx extension */
+    bool ext_zfinx;
     /* vector extension */
     bool vill;
     uint8_t lmul;
@@ -807,6 +809,7 @@ static void riscv_tr_init_disas_context(DisasContextBase *dcbase, CPUState *cs)
     ctx->misa = env->misa;
     ctx->frm = -1;  /* unknown rounding mode */
     ctx->ext_ifencei = cpu->cfg.ext_ifencei;
+    ctx->ext_zfinx = cpu->cfg.ext_zfinx;
     ctx->vlen = cpu->cfg.vlen;
     ctx->hlsx = FIELD_EX32(tb_flags, TB_FLAGS, HLSX);
     ctx->vill = FIELD_EX32(tb_flags, TB_FLAGS, VILL);

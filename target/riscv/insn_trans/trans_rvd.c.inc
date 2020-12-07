@@ -241,7 +241,13 @@ static bool trans_fcvt_d_s(DisasContext *ctx, arg_fcvt_d_s *a)
     REQUIRE_EXT(ctx, RVD);
 
     gen_set_rm(ctx, a->rm);
-    gen_helper_fcvt_d_s(cpu_fpr[a->rd], cpu_env, cpu_fpr[a->rs1]);
+    if(ctx->ext_zfinx) {
+        gen_nanbox_s(cpu_gpr[a->rs1], cpu_gpr[a->rs1]);
+        gen_helper_fcvt_d_s(cpu_gpr[a->rd], cpu_env, cpu_gpr[a->rs1]);
+    }
+    else {
+         gen_helper_fcvt_d_s(cpu_fpr[a->rd], cpu_env, cpu_fpr[a->rs1]);
+    }
 
     mark_fs_dirty(ctx);
     return true;
