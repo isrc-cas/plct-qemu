@@ -97,8 +97,14 @@ static bool trans_fadd_d(DisasContext *ctx, arg_fadd_d *a)
     REQUIRE_EXT(ctx, RVD);
 
     gen_set_rm(ctx, a->rm);
-    gen_helper_fadd_d(cpu_fpr[a->rd], cpu_env,
+    if(ctx->ext_zfinx) {
+        gen_helper_fadd_d(cpu_gpr[a->rd], cpu_env,
+                      cpu_gpr[a->rs1], cpu_gpr[a->rs2]);    
+    }
+    else {
+        gen_helper_fadd_d(cpu_fpr[a->rd], cpu_env,
                       cpu_fpr[a->rs1], cpu_fpr[a->rs2]);
+    }
 
     mark_fs_dirty(ctx);
     return true;
@@ -110,8 +116,14 @@ static bool trans_fsub_d(DisasContext *ctx, arg_fsub_d *a)
     REQUIRE_EXT(ctx, RVD);
 
     gen_set_rm(ctx, a->rm);
-    gen_helper_fsub_d(cpu_fpr[a->rd], cpu_env,
+    if(ctx->ext_zfinx) {
+        gen_helper_fsub_d(cpu_gpr[a->rd], cpu_env,
+                      cpu_gpr[a->rs1], cpu_gpr[a->rs2]);
+    }
+    else {
+        gen_helper_fsub_d(cpu_fpr[a->rd], cpu_env,
                       cpu_fpr[a->rs1], cpu_fpr[a->rs2]);
+    }
 
     mark_fs_dirty(ctx);
     return true;
@@ -123,8 +135,14 @@ static bool trans_fmul_d(DisasContext *ctx, arg_fmul_d *a)
     REQUIRE_EXT(ctx, RVD);
 
     gen_set_rm(ctx, a->rm);
-    gen_helper_fmul_d(cpu_fpr[a->rd], cpu_env,
+    if(ctx->ext_zfinx) {
+        gen_helper_fmul_d(cpu_gpr[a->rd], cpu_env,
+                      cpu_gpr[a->rs1], cpu_gpr[a->rs2]);
+    }
+    else {
+        gen_helper_fmul_d(cpu_fpr[a->rd], cpu_env,
                       cpu_fpr[a->rs1], cpu_fpr[a->rs2]);
+    }
 
     mark_fs_dirty(ctx);
     return true;
@@ -136,8 +154,14 @@ static bool trans_fdiv_d(DisasContext *ctx, arg_fdiv_d *a)
     REQUIRE_EXT(ctx, RVD);
 
     gen_set_rm(ctx, a->rm);
-    gen_helper_fdiv_d(cpu_fpr[a->rd], cpu_env,
+    if(ctx->ext_zfinx) {
+        gen_helper_fdiv_d(cpu_gpr[a->rd], cpu_env,
+                      cpu_gpr[a->rs1], cpu_gpr[a->rs2]);
+    }
+    else {
+        gen_helper_fdiv_d(cpu_fpr[a->rd], cpu_env,
                       cpu_fpr[a->rs1], cpu_fpr[a->rs2]);
+    }
 
     mark_fs_dirty(ctx);
     return true;
