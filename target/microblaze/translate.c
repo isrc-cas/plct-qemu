@@ -1926,7 +1926,7 @@ void mb_cpu_dump_state(CPUState *cs, FILE *f, int flags)
     qemu_fprintf(f, "\n");
 }
 
-void mb_tcg_init(void)
+void mb_tcg_init(CPUState *cpu)
 {
 #define R(X)  { &cpu_R[X], offsetof(CPUMBState, regs[X]), "r" #X }
 #define SP(X) { &cpu_##X, offsetof(CPUMBState, X), #X }

@@ -65,7 +65,7 @@ static TCGv store_dummy;
 
 #include "exec/gen-icount.h"
 
-void m68k_tcg_init(void)
+void m68k_tcg_init(CPUState *cpu)
 {
     char *p;
     int i;

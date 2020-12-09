@@ -433,7 +433,7 @@ enum {
     IR_ZERO = 31,
 };
 
-void alpha_translate_init(void);
+void alpha_translate_init(CPUState *cpu);
 
 #define ALPHA_CPU_TYPE_SUFFIX "-" TYPE_ALPHA_CPU
 #define ALPHA_CPU_TYPE_NAME(model) model ALPHA_CPU_TYPE_SUFFIX

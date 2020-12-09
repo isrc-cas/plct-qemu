@@ -47,9 +47,12 @@ static inline uint64_t nanbox_s(float32 f)
     return f | MAKE_64BIT_MASK(32, 32);
 }
 
-static inline float32 check_nanbox_s(uint64_t f)
+static inline float32 check_nanbox_s(uint64_t f, bool ext_zfinx)
 {
     uint64_t mask = MAKE_64BIT_MASK(32, 32);
+
+    if(ext_zfinx)
+        return (uint32_t)(f | mask);
 
     if (likely((f & mask) == mask)) {
         return (uint32_t)f;

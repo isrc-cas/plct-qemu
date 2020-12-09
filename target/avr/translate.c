@@ -128,7 +128,7 @@ struct DisasContext {
     bool free_skip_var0;
 };
 
-void avr_cpu_tcg_init(void)
+void avr_cpu_tcg_init(CPUState *cpu)
 {
     int i;
 

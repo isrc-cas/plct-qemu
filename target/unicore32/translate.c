@@ -70,7 +70,7 @@ static const char *regnames[] = {
       "r24", "r25", "r26", "r27", "r28", "r29", "r30", "pc" };
 
 /* initialize TCG globals.  */
-void uc32_translate_init(void)
+void uc32_translate_init(CPUState *cpu)
 {
     int i;
 

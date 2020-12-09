@@ -3338,7 +3338,7 @@ void cris_cpu_dump_state(CPUState *cs, FILE *f, int flags)
 
 }
 
-void cris_initialize_tcg(void)
+void cris_initialize_tcg(CPUState *cpu)
 {
     int i;
 

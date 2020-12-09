@@ -283,6 +283,7 @@ struct RISCVCPU {
         bool ext_counters;
         bool ext_ifencei;
         bool ext_icsr;
+        bool ext_zfinx;
 
         char *priv_spec;
         char *user_spec;
@@ -354,7 +355,7 @@ void riscv_cpu_set_rdtime_fn(CPURISCVState *env, uint64_t (*fn)(uint32_t),
 #endif
 void riscv_cpu_set_mode(CPURISCVState *env, target_ulong newpriv);
 
-void riscv_translate_init(void);
+void riscv_translate_init(CPUState *cs);
 int riscv_cpu_signal_handler(int host_signum, void *pinfo, void *puc);
 void QEMU_NORETURN riscv_raise_exception(CPURISCVState *env,
                                          uint32_t exception, uintptr_t pc);

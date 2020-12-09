@@ -90,7 +90,7 @@ void moxie_cpu_dump_state(CPUState *cs, FILE *f, int flags)
     }
 }
 
-void moxie_translate_init(void)
+void moxie_translate_init(CPUState *cpu)
 {
     int i;
     static const char * const gregnames[16] = {

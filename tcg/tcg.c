@@ -1217,7 +1217,6 @@ TCGTemp *tcg_global_mem_new_internal(TCGType type, TCGv_ptr base,
     if (TCG_TARGET_REG_BITS == 32 && type == TCG_TYPE_I64) {
         TCGTemp *ts2 = tcg_global_alloc(s);
         char buf[64];
-
         ts->base_type = TCG_TYPE_I64;
         ts->type = TCG_TYPE_I32;
         ts->indirect_reg = indirect_reg;

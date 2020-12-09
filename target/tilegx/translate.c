@@ -2424,7 +2424,7 @@ void restore_state_to_opc(CPUTLGState *env, TranslationBlock *tb,
     env->pc = data[0];
 }
 
-void tilegx_tcg_init(void)
+void tilegx_tcg_init(CPUState *cpu)
 {
     int i;
 

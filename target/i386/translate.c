@@ -8370,7 +8370,7 @@ static target_ulong disas_insn(DisasContext *s, CPUState *cpu)
     return s->pc;
 }
 
-void tcg_x86_init(void)
+void tcg_x86_init(CPUState *cpu)
 {
     static const char reg_names[CPU_NB_REGS][4] = {
 #ifdef TARGET_X86_64

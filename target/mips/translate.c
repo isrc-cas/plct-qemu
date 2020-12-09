@@ -31676,7 +31676,7 @@ void mips_cpu_dump_state(CPUState *cs, FILE *f, int flags)
     }
 }
 
-void mips_tcg_init(void)
+void mips_tcg_init(CPUState *cpu)
 {
     int i;
 

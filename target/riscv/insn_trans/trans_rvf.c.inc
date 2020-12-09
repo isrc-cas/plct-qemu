@@ -20,7 +20,8 @@
 
 #define REQUIRE_FPU do {\
     if (ctx->mstatus_fs == 0) \
-        return false;                       \
+        if (!ctx->ext_zfinx) \
+            return false; \
 } while (0)
 
 static bool trans_flw(DisasContext *ctx, arg_flw *a)

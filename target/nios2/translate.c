@@ -935,7 +935,7 @@ void nios2_cpu_dump_state(CPUState *cs, FILE *f, int flags)
     qemu_fprintf(f, "\n\n");
 }
 
-void nios2_tcg_init(void)
+void nios2_tcg_init(CPUState *cpu)
 {
     int i;
 

@@ -162,7 +162,7 @@ static inline void cpu_get_tb_cpu_state(CPUUniCore32State *env, target_ulong *pc
 bool uc32_cpu_tlb_fill(CPUState *cs, vaddr address, int size,
                        MMUAccessType access_type, int mmu_idx,
                        bool probe, uintptr_t retaddr);
-void uc32_translate_init(void);
+void uc32_translate_init(CPUState *cpu);
 void switch_mode(CPUUniCore32State *, int);
 
 #endif /* UNICORE32_CPU_H */

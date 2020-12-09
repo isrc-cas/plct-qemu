@@ -180,7 +180,7 @@ void cpu_exec_realizefn(CPUState *cpu, Error **errp)
 
     if (tcg_enabled() && !tcg_target_initialized) {
         tcg_target_initialized = true;
-        cc->tcg_initialize();
+        cc->tcg_initialize(cpu);
     }
     tlb_init(cpu);
 

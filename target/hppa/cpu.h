@@ -239,7 +239,7 @@ static inline int cpu_mmu_index(CPUHPPAState *env, bool ifetch)
 #endif
 }
 
-void hppa_translate_init(void);
+void hppa_translate_init(CPUState *cpu);
 
 #define CPU_RESOLVING_TYPE TYPE_HPPA_CPU
 

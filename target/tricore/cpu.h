@@ -388,7 +388,7 @@ enum {
 };
 
 void cpu_state_reset(CPUTriCoreState *s);
-void tricore_tcg_init(void);
+void tricore_tcg_init(CPUState *cpu);
 int cpu_tricore_signal_handler(int host_signum, void *pinfo, void *puc);
 
 static inline void cpu_get_tb_cpu_state(CPUTriCoreState *env, target_ulong *pc,

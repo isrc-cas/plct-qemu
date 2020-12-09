@@ -2406,7 +2406,7 @@ void restore_state_to_opc(CPURXState *env, TranslationBlock *tb,
     cpu_##sym = tcg_global_mem_new_i32(cpu_env, \
                                        offsetof(CPURXState, sym), name)
 
-void rx_translate_init(void)
+void rx_translate_init(CPUState *cpu)
 {
     static const char * const regnames[NUM_REGS] = {
         "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7",

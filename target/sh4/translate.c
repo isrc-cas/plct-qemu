@@ -74,7 +74,7 @@ static TCGv cpu_flags, cpu_delayed_pc, cpu_delayed_cond;
 
 #include "exec/gen-icount.h"
 
-void sh4_translate_init(void)
+void sh4_translate_init(CPUState *cpu)
 {
     int i;
     static const char * const gregnames[24] = {
