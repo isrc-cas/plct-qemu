@@ -444,7 +444,20 @@ static void mark_fs_dirty(DisasContext *ctx)
     tcg_temp_free(tmp);
 }
 #else
-static inline void mark_fs_dirty(DisasContext *ctx) { }
+static inline void mark_fs_dirty(DisasContext *ctx)
+{
+    if (ctx->ext_zfinx) {
+        int i;
+        for(i = 1; i < 32; i++)
+        {
+#ifdef TARGET_RISCV64
+            tcg_gen_discard_i64(cpu_gpr[i]);
+#else
+            tcg_gen_discard_i32(cpu_gpr[i]);
+#endif
+        }
+    }
+}
 #endif
 
 #if !defined(TARGET_RISCV64)
