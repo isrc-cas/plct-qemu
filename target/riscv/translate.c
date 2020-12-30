@@ -220,8 +220,11 @@ static void gen_goto_tb(DisasContext *ctx, int n, target_ulong dest)
 /* Wrapper for getting reg values - need to check of reg is zero since
  * cpu_gpr[0] is not actually allocated
  */
-static inline void gen_get_gpr(TCGv t, int reg_num)
+static inline void gen_get_gpr(TCGv t, int reg_num, bool ext_zfinx)
 {
+    if (ext_zfinx) {
+        tcg_gen_sync_i64(cpu_fpr[reg_num]);
+    }
     if (reg_num == 0) {
         tcg_gen_movi_tl(t, 0);
     } else {
@@ -234,8 +237,12 @@ static inline void gen_get_gpr(TCGv t, int reg_num)
  * since we usually avoid calling the OP_TYPE_gen function if we see a write to
  * $zero
  */
-static inline void gen_set_gpr(int reg_num_dst, TCGv t)
+static inline void gen_set_gpr(int reg_num_dst, TCGv t, bool ext_zfinx)
 {
+    if (ext_zfinx) {
+        tcg_gen_sync_i64(cpu_fpr[reg_num_dst]);
+        tcg_gen_discard_i64(cpu_fpr[reg_num_dst]);
+    }
     if (reg_num_dst != 0) {
         tcg_gen_mov_tl(cpu_gpr[reg_num_dst], t);
     }
@@ -390,7 +397,7 @@ static void gen_load_c(DisasContext *ctx, uint32_t opc, int rd, int rs1,
 {
     TCGv t0 = tcg_temp_new();
     TCGv t1 = tcg_temp_new();
-    gen_get_gpr(t0, rs1);
+    gen_get_gpr(t0, rs1, ctx->ext_zfinx);
     tcg_gen_addi_tl(t0, t0, imm);
     int memop = tcg_memop_lookup[(opc >> 12) & 0x7];
 
@@ -400,7 +407,7 @@ static void gen_load_c(DisasContext *ctx, uint32_t opc, int rd, int rs1,
     }
 
     tcg_gen_qemu_ld_tl(t1, t0, ctx->mem_idx, memop);
-    gen_set_gpr(rd, t1);
+    gen_set_gpr(rd, t1, ctx->ext_zfinx);
     tcg_temp_free(t0);
     tcg_temp_free(t1);
 }
@@ -410,9 +417,9 @@ static void gen_store_c(DisasContext *ctx, uint32_t opc, int rs1, int rs2,
 {
     TCGv t0 = tcg_temp_new();
     TCGv dat = tcg_temp_new();
-    gen_get_gpr(t0, rs1);
+    gen_get_gpr(t0, rs1, ctx->ext_zfinx);
     tcg_gen_addi_tl(t0, t0, imm);
-    gen_get_gpr(dat, rs2);
+    gen_get_gpr(dat, rs2, ctx->ext_zfinx);
     int memop = tcg_memop_lookup[(opc >> 12) & 0x7];
 
     if (memop < 0) {
@@ -454,16 +461,18 @@ static void mark_fs_dirty(DisasContext *ctx)
     tcg_temp_free(tmp);
 }
 #else
-static inline void mark_fs_dirty(DisasContext *ctx)
-{
-    if (ctx->ext_zfinx) {
+static inline void mark_fs_dirty(DisasContext *ctx) {
+    if(ctx->ext_zfinx)
+    {
         int i;
-        for(i = 1; i < 32; i++)
+        for (i = 1; i < 32; i++)
         {
 #ifdef TARGET_RISCV64
-            tcg_gen_discard_i64(cpu_gpr[i]);
+        tcg_gen_sync_i64(cpu_gpr[i]);
+        tcg_gen_discard_i64(cpu_gpr[i]);
 #else
-            tcg_gen_discard_i32(cpu_gpr[i]);
+        tcg_gen_sync_i32(cpu_gpr[i]);
+        tcg_gen_discard_i32(cpu_gpr[i]);
 #endif
         }
     }
@@ -482,7 +491,7 @@ static void gen_fp_load(DisasContext *ctx, uint32_t opc, int rd,
     }
 
     t0 = tcg_temp_new();
-    gen_get_gpr(t0, rs1);
+    gen_get_gpr(t0, rs1, ctx->ext_zfinx);
     tcg_gen_addi_tl(t0, t0, imm);
 
     switch (opc) {
@@ -521,7 +530,7 @@ static void gen_fp_store(DisasContext *ctx, uint32_t opc, int rs1,
     }
 
     t0 = tcg_temp_new();
-    gen_get_gpr(t0, rs1);
+    gen_get_gpr(t0, rs1, ctx->ext_zfinx);
     tcg_gen_addi_tl(t0, t0, imm);
 
     switch (opc) {
@@ -645,11 +654,11 @@ static bool gen_arith_imm_fn(DisasContext *ctx, arg_i *a,
     TCGv source1;
     source1 = tcg_temp_new();
 
-    gen_get_gpr(source1, a->rs1);
+    gen_get_gpr(source1, a->rs1, ctx->ext_zfinx);
 
     (*func)(source1, source1, a->imm);
 
-    gen_set_gpr(a->rd, source1);
+    gen_set_gpr(a->rd, source1, ctx->ext_zfinx);
     tcg_temp_free(source1);
     return true;
 }
@@ -661,12 +670,12 @@ static bool gen_arith_imm_tl(DisasContext *ctx, arg_i *a,
     source1 = tcg_temp_new();
     source2 = tcg_temp_new();
 
-    gen_get_gpr(source1, a->rs1);
+    gen_get_gpr(source1, a->rs1, ctx->ext_zfinx);
     tcg_gen_movi_tl(source2, a->imm);
 
     (*func)(source1, source1, source2);
 
-    gen_set_gpr(a->rd, source1);
+    gen_set_gpr(a->rd, source1, ctx->ext_zfinx);
     tcg_temp_free(source1);
     tcg_temp_free(source2);
     return true;
@@ -698,15 +707,15 @@ static bool gen_arith_div_w(DisasContext *ctx, arg_r *a,
     source1 = tcg_temp_new();
     source2 = tcg_temp_new();
 
-    gen_get_gpr(source1, a->rs1);
-    gen_get_gpr(source2, a->rs2);
+    gen_get_gpr(source1, a->rs1, ctx->ext_zfinx);
+    gen_get_gpr(source2, a->rs2, ctx->zfinx);
     tcg_gen_ext32s_tl(source1, source1);
     tcg_gen_ext32s_tl(source2, source2);
 
     (*func)(source1, source1, source2);
 
     tcg_gen_ext32s_tl(source1, source1);
-    gen_set_gpr(a->rd, source1);
+    gen_set_gpr(a->rd, source1, ctx->ext_zfinx);
     tcg_temp_free(source1);
     tcg_temp_free(source2);
     return true;
@@ -719,15 +728,15 @@ static bool gen_arith_div_uw(DisasContext *ctx, arg_r *a,
     source1 = tcg_temp_new();
     source2 = tcg_temp_new();
 
-    gen_get_gpr(source1, a->rs1);
-    gen_get_gpr(source2, a->rs2);
+    gen_get_gpr(source1, a->rs1, ctx->ext_zfinx);
+    gen_get_gpr(source2, a->rs2, ctx->ext_zfinx);
     tcg_gen_ext32u_tl(source1, source1);
     tcg_gen_ext32u_tl(source2, source2);
 
     (*func)(source1, source1, source2);
 
     tcg_gen_ext32s_tl(source1, source1);
-    gen_set_gpr(a->rd, source1);
+    gen_set_gpr(a->rd, source1, ctx->ext_zfinx);
     tcg_temp_free(source1);
     tcg_temp_free(source2);
     return true;
@@ -742,12 +751,12 @@ static bool gen_arith(DisasContext *ctx, arg_r *a,
     source1 = tcg_temp_new();
     source2 = tcg_temp_new();
 
-    gen_get_gpr(source1, a->rs1);
-    gen_get_gpr(source2, a->rs2);
+    gen_get_gpr(source1, a->rs1, ctx->ext_zfinx);
+    gen_get_gpr(source2, a->rs2, ctx->ext_zfinx);
 
     (*func)(source1, source1, source2);
 
-    gen_set_gpr(a->rd, source1);
+    gen_set_gpr(a->rd, source1, ctx->ext_zfinx);
     tcg_temp_free(source1);
     tcg_temp_free(source2);
     return true;
@@ -759,13 +768,13 @@ static bool gen_shift(DisasContext *ctx, arg_r *a,
     TCGv source1 = tcg_temp_new();
     TCGv source2 = tcg_temp_new();
 
-    gen_get_gpr(source1, a->rs1);
-    gen_get_gpr(source2, a->rs2);
+    gen_get_gpr(source1, a->rs1, ctx->ext_zfinx);
+    gen_get_gpr(source2, a->rs2, ctx->ext_zfinx);
 
     tcg_gen_andi_tl(source2, source2, TARGET_LONG_BITS - 1);
     (*func)(source1, source1, source2);
 
-    gen_set_gpr(a->rd, source1);
+    gen_set_gpr(a->rd, source1, ctx->ext_zfinx);
     tcg_temp_free(source1);
     tcg_temp_free(source2);
     return true;
