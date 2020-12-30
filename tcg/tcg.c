@@ -1412,6 +1412,7 @@ bool tcg_op_supported(TCGOpcode op)
 
     switch (op) {
     case INDEX_op_discard:
+    case INDEX_op_sync:
     case INDEX_op_set_label:
     case INDEX_op_call:
     case INDEX_op_br:
@@ -2694,6 +2695,13 @@ static void liveness_pass_1(TCGContext *s)
             ts = arg_temp(op->args[0]);
             ts->state = TS_DEAD;
             la_reset_pref(ts);
+            break;
+        case INDEX_op_sync:
+            ts = arg_temp(op->args[0]);
+            if (ts->state == TS_DEAD) {
+                la_reset_pref(ts);
+            }
+            ts->state |= TS_MEM;
             break;
 
         case INDEX_op_add2_i32:
@@ -4266,6 +4274,10 @@ int tcg_gen_code(TCGContext *s, TranslationBlock *tb)
             break;
         case INDEX_op_discard:
             temp_dead(s, arg_temp(op->args[0]));
+            break;
+        case INDEX_op_sync:
+            tcg_debug_assert(arg_temp(op->args[0])->val_type == TEMP_VAL_MEM
+                             || arg_temp(op->args[0])->mem_coherent);
             break;
         case INDEX_op_set_label:
             tcg_reg_alloc_bb_end(s, s->reserved_regs);
