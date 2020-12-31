@@ -117,11 +117,9 @@ static void gen_check_nanbox_s(TCGv_i64 out, TCGv_i64 in, bool ext_zfinx)
     TCGv_i64 t_nan = tcg_const_i64(0xffffffff7fc00000ull);
 
     if(ext_zfinx) {
-        TCGv_i64 mask = tcg_const_i64(0xffffffff00000000ull);
         TCGv_i64 temp = tcg_temp_new_i64();
-        tcg_gen_or_i64(temp, mask, in);
+        tcg_gen_or_i64(temp, t_max, in);
         tcg_gen_mov_i64(out, temp);
-        tcg_temp_free_i64(mask);
         tcg_temp_free_i64(temp);
     }
     else {
