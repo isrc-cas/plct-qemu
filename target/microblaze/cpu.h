@@ -370,7 +370,7 @@ static inline void mb_cpu_write_msr(CPUMBState *env, uint32_t val)
     env->msr = val & ~(MSR_C | MSR_CC | MSR_PVR);
 }
 
-void mb_tcg_init(CPUState *cpu);
+void mb_tcg_init(void);
 /* you can call this signal handler from your SIGBUS and SIGSEGV
    signal handlers to inform the virtual CPU of exceptions. non zero
    is returned if the signal was handled by the virtual CPU.  */

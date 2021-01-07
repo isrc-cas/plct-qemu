@@ -8943,7 +8943,7 @@ static void tricore_tcg_init_csfr(void)
                           offsetof(CPUTriCoreState, ICR), "ICR");
 }
 
-void tricore_tcg_init(CPUState *cpu)
+void tricore_tcg_init(void)
 {
     int i;
 

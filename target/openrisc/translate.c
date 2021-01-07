@@ -81,7 +81,7 @@ static TCGv_i32 fpcsr;
 static TCGv_i64 cpu_mac;        /* MACHI:MACLO */
 static TCGv_i32 cpu_dflag;
 
-void openrisc_translate_init(CPUState *cpu)
+void openrisc_translate_init(void)
 {
     static const char * const regnames[] = {
         "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",

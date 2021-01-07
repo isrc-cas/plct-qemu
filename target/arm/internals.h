@@ -169,7 +169,7 @@ static inline int r14_bank_number(int mode)
 }
 
 void arm_cpu_register_gdb_regs_for_features(ARMCPU *cpu);
-void arm_translate_init(CPUState *cpu);
+void arm_translate_init(void);
 
 enum arm_fprounding {
     FPROUNDING_TIEEVEN,

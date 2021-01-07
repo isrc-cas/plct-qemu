@@ -142,7 +142,7 @@ typedef TileGXCPU ArchCPU;
 
 #include "exec/cpu-all.h"
 
-void tilegx_tcg_init(CPUState *cpu);
+void tilegx_tcg_init(void);
 int cpu_tilegx_signal_handler(int host_signum, void *pinfo, void *puc);
 
 #define CPU_RESOLVING_TYPE TYPE_TILEGX_CPU

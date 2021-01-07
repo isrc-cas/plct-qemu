@@ -940,10 +940,10 @@ void gen_intermediate_code(CPUState *cs, TranslationBlock *tb, int max_insns)
     translator_loop(&riscv_tr_ops, &ctx.base, cs, tb, max_insns);
 }
 
-void riscv_translate_init(CPUState *cs)
+void riscv_translate_init(void)
 {
     int i;
-    RISCVCPU *cpu = RISCV_CPU(cs);
+    RISCVCPU *cpu = RISCV_CPU(current_cpu);
     bool ext_zfinx = &cpu->cfg.ext_zfinx;
 
     /* cpu_gpr[0] is a placeholder for the zero register. Do not use it. */

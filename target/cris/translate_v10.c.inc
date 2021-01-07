@@ -1265,7 +1265,7 @@ static unsigned int crisv10_decoder(CPUCRISState *env, DisasContext *dc)
     return insn_len;
 }
 
-void cris_initialize_crisv10_tcg(CPUState *cpu)
+void cris_initialize_crisv10_tcg(void)
 {
     int i;
 

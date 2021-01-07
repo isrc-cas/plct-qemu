@@ -131,7 +131,7 @@ int rx_cpu_gdb_read_register(CPUState *cpu, GByteArray *buf, int reg);
 int rx_cpu_gdb_write_register(CPUState *cpu, uint8_t *buf, int reg);
 hwaddr rx_cpu_get_phys_page_debug(CPUState *cpu, vaddr addr);
 
-void rx_translate_init(CPUState *cpu);
+void rx_translate_init(void);
 int cpu_rx_signal_handler(int host_signum, void *pinfo,
                            void *puc);
 

@@ -191,7 +191,7 @@ struct Nios2CPU {
 };
 
 
-void nios2_tcg_init(CPUState *cpu);
+void nios2_tcg_init(void);
 void nios2_cpu_do_interrupt(CPUState *cs);
 int cpu_nios2_signal_handler(int host_signum, void *pinfo, void *puc);
 void dump_mmu(CPUNios2State *env);
