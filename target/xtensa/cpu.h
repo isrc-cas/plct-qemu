@@ -603,7 +603,7 @@ void xtensa_cpu_do_unaligned_access(CPUState *cpu, vaddr addr,
     XTENSA_CPU_TYPE_NAME(XTENSA_DEFAULT_CPU_NOMMU_MODEL)
 
 void xtensa_collect_sr_names(const XtensaConfig *config);
-void xtensa_translate_init(CPUState *cpu);
+void xtensa_translate_init(void);
 void **xtensa_get_regfile_by_name(const char *name, int entries, int bits);
 void xtensa_breakpoint_handler(CPUState *cs);
 void xtensa_register_core(XtensaConfigList *node);

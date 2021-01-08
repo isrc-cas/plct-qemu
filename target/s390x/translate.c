@@ -198,7 +198,7 @@ static TCGv_i64 cc_vr;
 static char cpu_reg_names[16][4];
 static TCGv_i64 regs[16];
 
-void s390x_translate_init(CPUState *cpu)
+void s390x_translate_init(void)
 {
     int i;
 

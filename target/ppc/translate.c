@@ -76,7 +76,7 @@ static TCGv_i32 cpu_access_type;
 
 #include "exec/gen-icount.h"
 
-void ppc_translate_init(CPUState *cpu)
+void ppc_translate_init(void)
 {
     int i;
     char *p;

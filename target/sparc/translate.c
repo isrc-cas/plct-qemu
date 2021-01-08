@@ -5955,7 +5955,7 @@ void gen_intermediate_code(CPUState *cs, TranslationBlock *tb, int max_insns)
     translator_loop(&sparc_tr_ops, &dc.base, cs, tb, max_insns);
 }
 
-void sparc_tcg_init(CPUState *cpu)
+void sparc_tcg_init(void)
 {
     static const char gregnames[32][4] = {
         "g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7",

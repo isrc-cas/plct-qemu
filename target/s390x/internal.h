@@ -379,7 +379,7 @@ void handle_diag_308(CPUS390XState *env, uint64_t r1, uint64_t r3,
 
 
 /* translate.c */
-void s390x_translate_init(CPUState *cpu);
+void s390x_translate_init(void);
 
 
 /* sigp.c */

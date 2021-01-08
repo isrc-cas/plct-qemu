@@ -182,7 +182,7 @@ static inline int avr_cpu_mmu_index(CPUAVRState *env, bool ifetch)
     return ifetch ? MMU_CODE_IDX : MMU_DATA_IDX;
 }
 
-void avr_cpu_tcg_init(CPUState *cpu);
+void avr_cpu_tcg_init(void);
 
 void avr_cpu_list(void);
 int cpu_avr_exec(CPUState *cpu);

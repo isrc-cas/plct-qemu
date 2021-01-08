@@ -205,8 +205,8 @@ int cris_cpu_gdb_write_register(CPUState *cpu, uint8_t *buf, int reg);
 int cpu_cris_signal_handler(int host_signum, void *pinfo,
                            void *puc);
 
-void cris_initialize_tcg(CPUState *cpu);
-void cris_initialize_crisv10_tcg(CPUState *cpu);
+void cris_initialize_tcg(void);
+void cris_initialize_crisv10_tcg(void);
 
 /* Instead of computing the condition codes after each CRIS instruction,
  * QEMU just stores one operand (called CC_SRC), the result

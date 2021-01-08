@@ -1184,7 +1184,7 @@ void restore_state_to_opc(CPULM32State *env, TranslationBlock *tb,
     env->pc = data[0];
 }
 
-void lm32_translate_init(CPUState *cpu)
+void lm32_translate_init(void)
 {
     int i;
 

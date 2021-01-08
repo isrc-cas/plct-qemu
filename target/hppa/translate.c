@@ -365,7 +365,7 @@ static TCGv_reg cpu_psw_cb_msb;
 
 #include "exec/gen-icount.h"
 
-void hppa_translate_init(CPUState *cpu)
+void hppa_translate_init(void)
 {
 #define DEF_VAR(V)  { &cpu_##V, #V, offsetof(CPUHPPAState, V) }
 

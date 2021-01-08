@@ -91,7 +91,7 @@ static TCGv cpu_pal_ir[31];
 
 #include "exec/gen-icount.h"
 
-void alpha_translate_init(CPUState *cpu)
+void alpha_translate_init(void)
 {
 #define DEF_VAR(V)  { &cpu_##V, #V, offsetof(CPUAlphaState, V) }
 

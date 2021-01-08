@@ -597,7 +597,7 @@ int sparc_cpu_memory_rw_debug(CPUState *cpu, vaddr addr,
 
 
 /* translate.c */
-void sparc_tcg_init(CPUState *cpu);
+void sparc_tcg_init(void);
 
 /* cpu-exec.c */
 

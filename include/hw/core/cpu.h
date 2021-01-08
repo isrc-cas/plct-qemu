@@ -221,7 +221,7 @@ struct CPUClass {
 
     void (*disas_set_info)(CPUState *cpu, disassemble_info *info);
     vaddr (*adjust_watchpoint_address)(CPUState *cpu, vaddr addr, int len);
-    void (*tcg_initialize)(CPUState *cpu);
+    void (*tcg_initialize)(void);
 
     const char *deprecation_note;
     /* Keep non-pointer data at the end to minimize holes.  */

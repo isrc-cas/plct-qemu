@@ -129,7 +129,7 @@ void xtensa_collect_sr_names(const XtensaConfig *config)
     }
 }
 
-void xtensa_translate_init(CPUState *cpu)
+void xtensa_translate_init(void)
 {
     static const char * const regnames[] = {
         "ar0", "ar1", "ar2", "ar3",

@@ -78,7 +78,7 @@ typedef void NeonGenThreeOpEnvFn(TCGv_i32, TCGv_env, TCGv_i32,
 typedef void VFPGenFixPointFn(TCGv_i32, TCGv_i32, TCGv_i32, TCGv_ptr);
 
 /* initialize TCG globals.  */
-void arm_translate_init(CPUState *cpu)
+void arm_translate_init(void)
 {
     int i;
 
