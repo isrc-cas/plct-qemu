@@ -459,8 +459,10 @@ static inline void mark_fs_dirty(DisasContext *ctx) {
         for (i = 1; i < 32; i++)
         {
 #ifdef TARGET_RISCV64
+        tcg_gen_sync_i64(cpu_gpr[i]);
         tcg_gen_discard_i64(cpu_gpr[i]);
 #else
+        tcg_gen_sync_i32(cpu_gpr[i]);
         tcg_gen_discard_i32(cpu_gpr[i]);
 #endif
         }
