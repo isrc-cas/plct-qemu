@@ -28,7 +28,7 @@ static bool trans_flw(DisasContext *ctx, arg_flw *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
 
     TCGv t0 = tcg_temp_new();
@@ -65,7 +65,7 @@ static bool trans_fmadd_s(DisasContext *ctx, arg_fmadd_s *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
     REQUIRE_SYNC(ctx, a->rs2);
     REQUIRE_SYNC(ctx, a->rs3);
@@ -81,7 +81,7 @@ static bool trans_fmsub_s(DisasContext *ctx, arg_fmsub_s *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
     REQUIRE_SYNC(ctx, a->rs2);
     REQUIRE_SYNC(ctx, a->rs3);
@@ -97,7 +97,7 @@ static bool trans_fnmsub_s(DisasContext *ctx, arg_fnmsub_s *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
     REQUIRE_SYNC(ctx, a->rs2);
     REQUIRE_SYNC(ctx, a->rs3);
@@ -114,7 +114,7 @@ static bool trans_fnmadd_s(DisasContext *ctx, arg_fnmadd_s *a)
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
     gen_set_rm(ctx, a->rm);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
     REQUIRE_SYNC(ctx, a->rs2);
     REQUIRE_SYNC(ctx, a->rs3);
@@ -129,7 +129,7 @@ static bool trans_fadd_s(DisasContext *ctx, arg_fadd_s *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
     REQUIRE_SYNC(ctx, a->rs2);
 
@@ -144,7 +144,7 @@ static bool trans_fsub_s(DisasContext *ctx, arg_fsub_s *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
     REQUIRE_SYNC(ctx, a->rs2);
 
@@ -159,7 +159,7 @@ static bool trans_fmul_s(DisasContext *ctx, arg_fmul_s *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
     REQUIRE_SYNC(ctx, a->rs2);
 
@@ -174,7 +174,7 @@ static bool trans_fdiv_s(DisasContext *ctx, arg_fdiv_s *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
     REQUIRE_SYNC(ctx, a->rs2);
 
@@ -189,7 +189,7 @@ static bool trans_fsqrt_s(DisasContext *ctx, arg_fsqrt_s *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
 
     gen_set_rm(ctx, a->rm);
@@ -202,7 +202,7 @@ static bool trans_fsgnj_s(DisasContext *ctx, arg_fsgnj_s *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
     REQUIRE_SYNC(ctx, a->rs2);
 
@@ -230,7 +230,7 @@ static bool trans_fsgnjn_s(DisasContext *ctx, arg_fsgnjn_s *a)
 
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
     REQUIRE_SYNC(ctx, a->rs2);
 
@@ -267,7 +267,7 @@ static bool trans_fsgnjx_s(DisasContext *ctx, arg_fsgnjx_s *a)
 
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
     REQUIRE_SYNC(ctx, a->rs2);
 
@@ -299,7 +299,7 @@ static bool trans_fmin_s(DisasContext *ctx, arg_fmin_s *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
     REQUIRE_SYNC(ctx, a->rs2);
 
@@ -313,7 +313,7 @@ static bool trans_fmax_s(DisasContext *ctx, arg_fmax_s *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
     REQUIRE_SYNC(ctx, a->rs2);
 
@@ -440,7 +440,7 @@ static bool trans_fcvt_s_w(DisasContext *ctx, arg_fcvt_s_w *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
 
     TCGv t0 = tcg_temp_new();
@@ -459,7 +459,7 @@ static bool trans_fcvt_s_wu(DisasContext *ctx, arg_fcvt_s_wu *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
 
     TCGv t0 = tcg_temp_new();
@@ -479,7 +479,7 @@ static bool trans_fmv_w_x(DisasContext *ctx, arg_fmv_w_x *a)
     /* NOTE: This was FMV.S.X in an earlier version of the ISA spec! */
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
 
     TCGv t0 = tcg_temp_new();
@@ -529,7 +529,7 @@ static bool trans_fcvt_s_l(DisasContext *ctx, arg_fcvt_s_l *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
 
     TCGv t0 = tcg_temp_new();
@@ -547,7 +547,7 @@ static bool trans_fcvt_s_lu(DisasContext *ctx, arg_fcvt_s_lu *a)
 {
     REQUIRE_FPU;
     REQUIRE_EXT(ctx, RVF);
-    REQUIRE_SYNC(ctx, a->rd);
+
     REQUIRE_SYNC(ctx, a->rs1);
 
     TCGv t0 = tcg_temp_new();
