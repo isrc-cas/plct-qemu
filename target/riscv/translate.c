@@ -459,10 +459,8 @@ static inline void mark_fs_dirty(DisasContext *ctx) {
         for (i = 1; i < 32; i++)
         {
 #ifdef TARGET_RISCV64
-        tcg_gen_sync_i64(cpu_gpr[i]);
         tcg_gen_discard_i64(cpu_gpr[i]);
 #else
-        tcg_gen_sync_i32(cpu_gpr[i]);
         tcg_gen_discard_i32(cpu_gpr[i]);
 #endif
         }
@@ -625,12 +623,19 @@ EX_SH(12)
     }                              \
 } while (0)
 
+#ifdef TARGET_RISCV64
 #define REQUIRE_SYNC(ctx, index) do {        \
     if (ctx->ext_zfinx) {                    \
-        tcg_gen_sync_i64(cpu_fpr[index]);    \
-        tcg_gen_discard_i64(cpu_fpr[index]); \
+        tcg_gen_sync_i64(cpu_gpr[index]);    \
     }                                        \
 } while (0)
+#else
+#define REQUIRE_SYNC(ctx, index) do {        \
+    if (ctx->ext_zfinx) {                    \
+        tcg_gen_sync_i32(cpu_gpr[index]);    \
+    }                                        \
+} while (0)
+#endif
 
 static int ex_rvc_register(DisasContext *ctx, int reg)
 {
