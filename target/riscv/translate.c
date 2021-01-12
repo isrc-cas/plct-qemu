@@ -822,6 +822,9 @@ static bool gen_shift(DisasContext *ctx, arg_r *a,
 static void decode_opc(CPURISCVState *env, DisasContext *ctx, uint16_t opcode)
 {
     /* check for compressed insn */
+#if !defined(CONFIG_USER_ONLY)
+    gen_helper_update_insnret(cpu_env);
+#endif
     if (extract16(opcode, 0, 2) != 3) {
         if (!has_ext(ctx, RVC)) {
             gen_exception_illegal(ctx);

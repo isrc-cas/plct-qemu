@@ -374,7 +374,9 @@ static int write_vcsr(CPURISCVState *env, int csrno, target_ulong val)
 static int read_instret(CPURISCVState *env, int csrno, target_ulong *val)
 {
 #if !defined(CONFIG_USER_ONLY)
-    if (icount_enabled()) {
+    *val = env->insnret;
+    return 0;
+    if (use_icount) {
         *val = icount_get();
     } else {
         *val = cpu_get_host_ticks();
@@ -388,6 +390,8 @@ static int read_instret(CPURISCVState *env, int csrno, target_ulong *val)
 static int read_instreth(CPURISCVState *env, int csrno, target_ulong *val)
 {
 #if !defined(CONFIG_USER_ONLY)
+    *val = (env->insnret) >> 32;
+    return 0;
     if (icount_enabled()) {
         *val = icount_get() >> 32;
     } else {

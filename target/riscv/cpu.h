@@ -170,6 +170,11 @@ struct CPURISCVState {
 
     target_ulong mip;
 
+    uint64_t insnret;
+
+#ifdef TARGET_RISCV32
+    target_ulong mstatush;
+#endif
     uint32_t miclaim;
 
     target_ulong mie;

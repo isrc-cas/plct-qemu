@@ -241,4 +241,9 @@ target_ulong helper_hyp_hlvx_wu(CPURISCVState *env, target_ulong address)
     return cpu_ldl_mmuidx_ra(env, address, mmu_idx, GETPC());
 }
 
+void helper_update_insnret(CPURISCVState *env)
+{
+    env->insnret++;
+}
+
 #endif /* !CONFIG_USER_ONLY */

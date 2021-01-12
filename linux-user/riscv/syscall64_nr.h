@@ -304,4 +304,14 @@
 #define TARGET_NR_faccessat2 439
 #define TARGET_NR_syscalls 440
 
+//old system call
+#define TARGET_NR_open 1024
+#define TARGET_NR_link 1025
+#define TARGET_NR_unlink 1026
+#define TARGET_NR_mkdir 1030
+#define TARGET_NR_access 1033
+#define TARGET_NR_stat 1038
+#define TARGET_NR_lstat 1039
+#define TARGET_NR_time 1062
+
 #endif /* LINUX_USER_RISCV_SYSCALL64_NR_H */
