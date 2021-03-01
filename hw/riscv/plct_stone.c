@@ -765,7 +765,7 @@ static void plct_stone_soc_realize(DeviceState *dev, Error **errp)
 {
     MachineState *machine = MACHINE(qdev_get_machine());
     PLCTStoneSoCState *s = RISCV_PLCT_STONE_SOC(dev);
-    const struct MemmapEntry *memmap = plct_machine_memmap;
+    const struct MemmapEntry *memmap = plct_stone_memmap;
     // MemoryRegion *system_memory = get_system_memory();
     // MemoryRegion *mask_rom = g_new(MemoryRegion, 1);
     char *plic_hart_config, *soc_name;
