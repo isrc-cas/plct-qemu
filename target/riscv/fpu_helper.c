@@ -28,7 +28,7 @@ static bool get_ext_zfinx_enable(CPURISCVState *env)
 {
     CPUState *cs = env_cpu(env);
     RISCVCPU *cpu = RISCV_CPU(cs);
-    return &cpu->cfg.ext_zfinx;
+    return cpu->cfg.ext_zfinx;
 }
 
 target_ulong riscv_cpu_get_fflags(CPURISCVState *env)

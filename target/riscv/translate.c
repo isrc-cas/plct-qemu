@@ -950,8 +950,8 @@ void gen_intermediate_code(CPUState *cs, TranslationBlock *tb, int max_insns)
 void riscv_translate_init(void)
 {
     int i;
-    RISCVCPU *cpu = RISCV_CPU(current_cpu);
-    bool ext_zfinx = &cpu->cfg.ext_zfinx;
+    RISCVCPU *cpu = RISCV_CPU(qemu_get_cpu(0));
+    bool ext_zfinx = cpu->cfg.ext_zfinx;
 
     /* cpu_gpr[0] is a placeholder for the zero register. Do not use it. */
     /* Use the gen_set_gpr and gen_get_gpr helper functions when accessing */
