@@ -56,6 +56,7 @@ typedef struct DisasContext {
        to reset this known value.  */
     int frm;
     bool ext_ifencei;
+    bool ext_zfinx;
     bool hlsx;
     /* vector extension */
     bool vill;
@@ -111,12 +112,20 @@ static void gen_nanbox_s(TCGv_i64 out, TCGv_i64 in)
  *
  * Here, the result is always nan-boxed, even the canonical nan.
  */
-static void gen_check_nanbox_s(TCGv_i64 out, TCGv_i64 in)
+static void gen_check_nanbox_s(TCGv_i64 out, TCGv_i64 in, bool ext_zfinx)
 {
     TCGv_i64 t_max = tcg_const_i64(0xffffffff00000000ull);
     TCGv_i64 t_nan = tcg_const_i64(0xffffffff7fc00000ull);
 
-    tcg_gen_movcond_i64(TCG_COND_GEU, out, in, t_max, in, t_nan);
+    if(ext_zfinx) {
+        TCGv_i64 temp = tcg_temp_new_i64();
+        tcg_gen_or_i64(temp, t_max, in);
+        tcg_gen_mov_i64(out, temp);
+        tcg_temp_free_i64(temp);
+    }
+    else {
+        tcg_gen_movcond_i64(TCG_COND_GEU, out, in, t_max, in, t_nan);
+    }
     tcg_temp_free_i64(t_max);
     tcg_temp_free_i64(t_nan);
 }
@@ -444,7 +453,22 @@ static void mark_fs_dirty(DisasContext *ctx)
     tcg_temp_free(tmp);
 }
 #else
-static inline void mark_fs_dirty(DisasContext *ctx) { }
+static inline void mark_fs_dirty(DisasContext *ctx) {
+    if(ctx->ext_zfinx)
+    {
+        int i;
+        for (i = 1; i < 32; i++)
+        {
+#ifdef TARGET_RISCV64
+        tcg_gen_sync_i64(cpu_gpr[i]);
+        tcg_gen_discard_i64(cpu_gpr[i]);
+#else
+        tcg_gen_sync_i32(cpu_gpr[i]);
+        tcg_gen_discard_i32(cpu_gpr[i]);
+#endif
+        }
+    }
+}
 #endif
 
 #if !defined(TARGET_RISCV64)
@@ -601,6 +625,20 @@ EX_SH(12)
         return false;              \
     }                              \
 } while (0)
+
+#ifdef TARGET_RISCV64
+#define REQUIRE_SYNC(ctx, index) do {        \
+    if (ctx->ext_zfinx) {                    \
+        tcg_gen_sync_i64(cpu_gpr[index]);    \
+    }                                        \
+} while (0)
+#else
+#define REQUIRE_SYNC(ctx, index) do {        \
+    if (ctx->ext_zfinx) {                    \
+        tcg_gen_sync_i32(cpu_gpr[index]);    \
+    }                                        \
+} while (0)
+#endif
 
 static int ex_rvc_register(DisasContext *ctx, int reg)
 {
@@ -817,6 +855,7 @@ static void riscv_tr_init_disas_context(DisasContextBase *dcbase, CPUState *cs)
     ctx->misa = env->misa;
     ctx->frm = -1;  /* unknown rounding mode */
     ctx->ext_ifencei = cpu->cfg.ext_ifencei;
+    ctx->ext_zfinx = cpu->cfg.ext_zfinx;
     ctx->vlen = cpu->cfg.vlen;
     ctx->hlsx = FIELD_EX32(tb_flags, TB_FLAGS, HLSX);
     ctx->vill = FIELD_EX32(tb_flags, TB_FLAGS, VILL);
@@ -922,6 +961,8 @@ void gen_intermediate_code(CPUState *cs, TranslationBlock *tb, int max_insns)
 void riscv_translate_init(void)
 {
     int i;
+    RISCVCPU *cpu = RISCV_CPU(qemu_get_cpu(0));
+    bool ext_zfinx = cpu->cfg.ext_zfinx;
 
     /* cpu_gpr[0] is a placeholder for the zero register. Do not use it. */
     /* Use the gen_set_gpr and gen_get_gpr helper functions when accessing */
@@ -933,9 +974,25 @@ void riscv_translate_init(void)
             offsetof(CPURISCVState, gpr[i]), riscv_int_regnames[i]);
     }
 
-    for (i = 0; i < 32; i++) {
-        cpu_fpr[i] = tcg_global_mem_new_i64(cpu_env,
+    if(!ext_zfinx)
+    {
+        for (i = 0; i < 32; i++) {
+            cpu_fpr[i] = tcg_global_mem_new_i64(cpu_env,
             offsetof(CPURISCVState, fpr[i]), riscv_fpr_regnames[i]);
+        }
+    } else {
+#ifdef TARGET_RISCV64
+        for (i = 0; i < 32; i++) {
+            cpu_fpr[i] = cpu_gpr[i];
+        }
+#else
+        for (i = 0; i < 32; i++) {
+                cpu_fpr[i] = tcg_global_mem_new_i64(cpu_env,
+                    offsetof(CPURISCVState, gpr[i]), riscv_int_regnames[i]);
+                // *((TCGv_i32*)(&cpu_fpr[i] + 4)) = (TCGv_i32)tcg_global_mem_new_i64(cpu_env,
+                //     offsetof(CPURISCVState, gpr[i+1]), riscv_int_regnames[i]);
+        }
+#endif
     }
 
     cpu_pc = tcg_global_mem_new(cpu_env, offsetof(CPURISCVState, pc), "pc");

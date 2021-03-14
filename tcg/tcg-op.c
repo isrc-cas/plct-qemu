@@ -1084,6 +1084,12 @@ void tcg_gen_discard_i64(TCGv_i64 arg)
     tcg_gen_discard_i32(TCGV_HIGH(arg));
 }
 
+void tcg_gen_sync_i64(TCGv_i64 arg)
+{
+    tcg_gen_sync_i32(TCGV_LOW(arg));
+    tcg_gen_sync_i32(TCGV_HIGH(arg));
+}
+
 void tcg_gen_mov_i64(TCGv_i64 ret, TCGv_i64 arg)
 {
     TCGTemp *ts = tcgv_i64_temp(arg);
