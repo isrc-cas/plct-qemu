@@ -22,6 +22,8 @@
 #include "cpu.h"
 #include "qemu/main-loop.h"
 #include "exec/exec-all.h"
+#include "qemu/guest-random.h"
+#include "qapi/error.h"
 
 /* CSR function table public API */
 void riscv_get_csr_ops(int csrno, riscv_csr_operations *ops)
@@ -135,6 +137,11 @@ static int ctr32(CPURISCVState *env, int csrno)
     }
 
     return ctr(env, csrno);
+}
+
+static int kmode(CPURISCVState *env, int csrno)
+{
+    return -!riscv_has_ext(env, RVK);
 }
 
 #if !defined(CONFIG_USER_ONLY)
@@ -1369,6 +1376,48 @@ int riscv_csrrw_debug(CPURISCVState *env, int csrno, target_ulong *ret_value,
     return ret;
 }
 
+/* Crypto Extension */
+static int read_mentropy(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = 0;
+    uint32_t return_status = get_field(env->mnoise, K_EXT_NOISE_TEST) ? K_EXT_OPST_BIST : K_EXT_OPST_ES16;
+    *val = (*val) | return_status;
+    if(return_status == K_EXT_OPST_ES16) {
+        uint16_t random_number;
+        Error *err = NULL;
+        if (qemu_guest_getrandom(&random_number, sizeof(random_number), &err) < 0) {
+            qemu_log_mask(LOG_UNIMP, "darn: Crypto failure: %s",
+                          error_get_pretty(err));
+            error_free(err);
+            return -1;
+        }
+        *val = (*val) | random_number;
+    } else if(return_status == K_EXT_OPST_BIST) {
+        // Do nothing
+    } else if(return_status == K_EXT_OPST_WAIT) {
+        // Do nothing
+    } else if(return_status == K_EXT_OPST_DEAD) {
+        // Do nothing
+    }
+    return 0;
+}
+
+static int read_mnoise(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = 0;
+    if(get_field(env->mnoise, K_EXT_NOISE_TEST) == 1) {
+        *val |= 0x1 << 31;
+    }
+    return 0;
+}
+
+static int write_mnoise(CPURISCVState *env, int csrno, target_ulong val)
+{
+    int new_noisemode = (val >> 31) & 0x1;
+    val = set_field(env->mnoise, K_EXT_NOISE_TEST, new_noisemode == 1);
+    return 0;
+}
+
 /* Control and Status Register function table */
 riscv_csr_operations csr_ops[CSR_TABLE_SIZE] = {
     /* User Floating-Point CSRs */
@@ -1393,6 +1442,10 @@ riscv_csr_operations csr_ops[CSR_TABLE_SIZE] = {
      */
     [CSR_TIME]  = { "time",  ctr,   read_time  },
     [CSR_TIMEH] = { "timeh", ctr32, read_timeh },
+
+    /* Crypto Extension */
+    [CSR_MENTROPY] = { "mentropy", kmode, read_mentropy},
+    [CSR_MNOISE]   = { "mnoise",   kmode, read_mnoise,  write_mnoise},
 
 #if !defined(CONFIG_USER_ONLY)
     /* Machine Timers and Counters */

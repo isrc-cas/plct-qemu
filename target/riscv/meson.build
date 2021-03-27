@@ -22,7 +22,9 @@ riscv_ss.add(files(
   'op_helper.c',
   'vector_helper.c',
   'packed_helper.c',
+  'bitmanip_helper.c',
   'translate.c',
+  'crypto_helper.c',
 ))
 
 riscv_softmmu_ss = ss.source_set()
