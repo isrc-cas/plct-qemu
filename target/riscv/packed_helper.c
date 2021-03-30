@@ -3529,7 +3529,7 @@ static inline void do_kdmabb16(CPURISCVState *env, void *vd, void *va,
     } else {
         m0 = (int32_t)a[H2(i)] * b[H2(i)] << 1;
     }
-    d[H4(i / 2)] = sadd32(env, 0, c[H4(i)], m0);
+    d[H4(i / 2)] = sadd32(env, 0, c[H4(i / 2)], m0);
 }
 
 RVPR_ACC(kdmabb16, 2, 2);
@@ -3548,7 +3548,7 @@ static inline void do_kdmabt16(CPURISCVState *env, void *vd, void *va,
     } else {
         m0 = (int32_t)a[H2(i)] * b[H2(i + 1)] << 1;
     }
-    d[H4(i / 2)] = sadd32(env, 0, c[H4(i)], m0);
+    d[H4(i / 2)] = sadd32(env, 0, c[H4(i / 2)], m0);
 }
 
 RVPR_ACC(kdmabt16, 2, 2);
@@ -3567,7 +3567,7 @@ static inline void do_kdmatt16(CPURISCVState *env, void *vd, void *va,
     } else {
         m0 = (int32_t)a[H2(i + 1)] * b[H2(i + 1)] << 1;
     }
-    *d = sadd32(env, 0, c[H4(i)], m0);
+    *d = sadd32(env, 0, c[H4(i / 2)], m0);
 }
 
 RVPR_ACC(kdmatt16, 2, 2);
