@@ -17,6 +17,7 @@
 QEMU_PLUGIN_EXPORT int qemu_plugin_version = QEMU_PLUGIN_VERSION;
 
 static uint64_t insn_count;
+static uint64_t vaddr_insn_count;
 static bool do_inline;
 
 static void vcpu_insn_exec_before(unsigned int cpu_index, void *udata)
@@ -39,6 +40,8 @@ static void vcpu_tb_trans(qemu_plugin_id_t id, struct qemu_plugin_tb *tb)
 
     for (i = 0; i < n; i++) {
         struct qemu_plugin_insn *insn = qemu_plugin_tb_get_insn(tb, i);
+        vaddr_insn_count++;
+        printf("vaddr  %ld :%lx\n", vaddr_insn_count, qemu_plugin_insn_vaddr(insn));
 
         if (do_inline) {
             qemu_plugin_register_vcpu_insn_exec_inline(

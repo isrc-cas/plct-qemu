@@ -54,3 +54,9 @@ config SSE_TIMER
 
 config AVR_TIMER16
     bool
+
+config NUCLEI_RCU
+    bool
+
+config NUCLEI_TIMER
+    bool

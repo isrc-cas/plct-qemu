@@ -67,3 +67,9 @@ config SIFIVE_UART
 
 config GOLDFISH_TTY
     bool
+
+config NUCLEI_UART
+    bool
+
+config NUCLEI_USART
+    bool

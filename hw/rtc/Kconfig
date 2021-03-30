@@ -25,3 +25,6 @@ config SUN4V_RTC
 
 config GOLDFISH_RTC
     bool
+
+config NUCLEI_RTC
+    bool
