@@ -45,22 +45,22 @@ static const struct MemmapEntry {
     hwaddr base;
     hwaddr size;
 } nuclei_memmap[] = {
-    [NUCLEI_DEBUG] = {        0x0,     0x1000 },
-    [NUCLEI_ROM]   = {     0x1000,     0x1000 },
-    [NUCLEI_TIMER] = {  0x2000000,     0x1000 },
-    [NUCLEI_ECLIC] = {  0xc000000,    0x10000 },
-    [NUCLEI_GPIO]  = { 0x10012000,     0x1000 },
-    [NUCLEI_UART0] = { 0x10013000,     0x1000 },
-    [NUCLEI_QSPI0] = { 0x10014000,     0x1000 },
-    [NUCLEI_PWM0]  = { 0x10015000,     0x1000 },
-    [NUCLEI_UART1] = { 0x10023000,     0x1000 },
-    [NUCLEI_QSPI1] = { 0x10024000,     0x1000 },
-    [NUCLEI_PWM1]  = { 0x10025000,     0x1000 },
-    [NUCLEI_QSPI2] = { 0x10034000,     0x1000 },
-    [NUCLEI_PWM2]  = { 0x10035000,     0x1000 },
-    [NUCLEI_XIP]   = { 0x20000000, 0x10000000 },
-    [NUCLEI_ILM]   = { 0x80000000,    0x20000 },
-    [NUCLEI_DLM]   = { 0x90000000,    0x20000 },
+    [HBIRD_DEBUG] = {        0x0,     0x1000 },
+    [HBIRD_ROM]   = {     0x1000,     0x1000 },
+    [HBIRD_TIMER] = {  0x2000000,     0x1000 },
+    [HBIRD_ECLIC] = {  0xc000000,    0x10000 },
+    [HBIRD_GPIO]  = { 0x10012000,     0x1000 },
+    [HBIRD_UART0] = { 0x10013000,     0x1000 },
+    [HBIRD_QSPI0] = { 0x10014000,     0x1000 },
+    [HBIRD_PWM0]  = { 0x10015000,     0x1000 },
+    [HBIRD_UART1] = { 0x10023000,     0x1000 },
+    [HBIRD_QSPI1] = { 0x10024000,     0x1000 },
+    [HBIRD_PWM1]  = { 0x10025000,     0x1000 },
+    [HBIRD_QSPI2] = { 0x10034000,     0x1000 },
+    [HBIRD_PWM2]  = { 0x10035000,     0x1000 },
+    [HBIRD_XIP]   = { 0x20000000, 0x10000000 },
+    [HBIRD_ILM]   = { 0x80000000,    0x20000 },
+    [HBIRD_DLM]   = { 0x90000000,    0x20000 },
 };
 
 static void nuclei_board_init(MachineState *machine)
@@ -76,14 +76,14 @@ static void nuclei_board_init(MachineState *machine)
     qdev_realize(DEVICE(&s->soc), NULL, &error_abort);
 
     memory_region_init_ram(&s->soc.ilm, NULL, "riscv.nuclei.ram.ilm",
-                           memmap[NUCLEI_ILM].size, &error_fatal);
+                           memmap[HBIRD_ILM].size, &error_fatal);
     memory_region_add_subregion(system_memory, 
-    memmap[NUCLEI_ILM].base, &s->soc.ilm);
+    memmap[HBIRD_ILM].base, &s->soc.ilm);
 
     memory_region_init_ram(&s->soc.dlm, NULL, "riscv.nuclei.ram.dlm",
-                           memmap[NUCLEI_DLM].size, &error_fatal);
+                           memmap[HBIRD_DLM].size, &error_fatal);
     memory_region_add_subregion(system_memory, 
-    memmap[NUCLEI_DLM].base, &s->soc.dlm);
+    memmap[HBIRD_DLM].base, &s->soc.dlm);
 
      /* reset vector */
     uint32_t reset_vec[8] = {
@@ -97,7 +97,7 @@ static void nuclei_board_init(MachineState *machine)
 #endif
         0x00028067,                  /*     jr     t0 */
         0x00000000,
-        memmap[NUCLEI_ILM].base,     /* start: .dword DRAM_BASE */
+        memmap[HBIRD_ILM].base,     /* start: .dword DRAM_BASE */
         0x00000000,
                                      /* dtb: */
     };
@@ -107,12 +107,12 @@ static void nuclei_board_init(MachineState *machine)
         reset_vec[i] = cpu_to_le32(reset_vec[i]);
     }
     rom_add_blob_fixed_as("mrom.reset", reset_vec, sizeof(reset_vec),
-                          memmap[NUCLEI_ROM].base, &address_space_memory);
+                          memmap[HBIRD_ROM].base, &address_space_memory);
 
     /* boot rom */
     if (machine->kernel_filename) {
         riscv_load_kernel(machine->kernel_filename, 
-            memmap[NUCLEI_ILM].base,NULL);
+            memmap[HBIRD_ILM].base,NULL);
     }
 }
 
@@ -148,13 +148,13 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
 
     /* Mask ROM */
     memory_region_init_rom(&s->internal_rom, OBJECT(dev), "riscv.nuclei.irom",
-                           memmap[NUCLEI_ROM].size, &error_fatal);
+                           memmap[HBIRD_ROM].size, &error_fatal);
     memory_region_add_subregion(sys_mem,
-        memmap[NUCLEI_ROM].base, &s->internal_rom);
+        memmap[HBIRD_ROM].base, &s->internal_rom);
 
     /* MMIO */
-    s->eclic = nuclei_eclic_create(memmap[NUCLEI_ECLIC].base,
-        memmap[NUCLEI_ECLIC].size, HBIRD_SOC_INT_MAX);
+    s->eclic = nuclei_eclic_create(memmap[HBIRD_ECLIC].base,
+        memmap[HBIRD_ECLIC].size, HBIRD_SOC_INT_MAX);
 
     /* Timer*/
     sysbus_realize(SYS_BUS_DEVICE(&s->timer), &err);
@@ -162,7 +162,7 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
         error_propagate(errp, err);
         return;
     }
-    sysbus_mmio_map(SYS_BUS_DEVICE(&s->timer), 0, memmap[NUCLEI_TIMER].base);
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->timer), 0, memmap[HBIRD_TIMER].base);
     s->timer.timebase_freq = NUCLEI_HBIRD_TIMEBASE_FREQ;
 
     /* GPIO */
@@ -173,13 +173,13 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
     }
 
     /* Map GPIO registers */
-    sysbus_mmio_map(SYS_BUS_DEVICE(&s->gpio), 0, memmap[NUCLEI_GPIO].base);
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->gpio), 0, memmap[HBIRD_GPIO].base);
     /* Pass all GPIOs to the SOC layer so they are available to the board */
 
     /* Create and connect UART interrupts to the ECLIC */
     nuclei_uart_create(sys_mem,
-                    memmap[NUCLEI_UART0].base,
-                    memmap[NUCLEI_UART0].size,
+                    memmap[HBIRD_UART0].base,
+                    memmap[HBIRD_UART0].size,
                     serial_hd(0),
                     nuclei_eclic_get_irq(DEVICE(s->eclic),
                     HBIRD_SOC_INT22_IRQn));
@@ -189,9 +189,9 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
 
     /* Flash memory */
     memory_region_init_rom(&s->xip_mem, OBJECT(dev), "riscv.nuclei.xip",
-                        memmap[NUCLEI_XIP].size, &error_fatal);
-    memory_region_add_subregion(sys_mem, 
-                        memmap[NUCLEI_XIP].base, &s->xip_mem);
+                        memmap[HBIRD_XIP].size, &error_fatal);
+    memory_region_add_subregion(sys_mem,
+                        memmap[HBIRD_XIP].base, &s->xip_mem);
 
 }
 

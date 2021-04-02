@@ -30,8 +30,9 @@
 #define  INTERRUPT_SOURCE_MIN_ID         (18)
 #define  INTERRUPT_SOURCE_MAX_ID         (4096)
 
-#define NUCLEI_ECLIC(obj) \
-    OBJECT_CHECK(NucLeiECLICState, (obj), TYPE_NUCLEI_ECLIC)
+typedef struct NucLeiECLICState NucLeiECLICState;
+DECLARE_INSTANCE_CHECKER(NucLeiECLICState, NUCLEI_ECLIC,
+                         TYPE_NUCLEI_ECLIC)
 
 typedef struct ECLICPendingInterrupt {
     int irq;

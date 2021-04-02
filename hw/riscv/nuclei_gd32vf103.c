@@ -79,6 +79,8 @@ static void nuclei_board_init(MachineState *machine)
     const struct MemmapEntry *memmap = gd32vf103_memmap;
     NucleiGDState *s = g_new0(NucleiGDState, 1);
     MemoryRegion *system_memory = get_system_memory();
+    MemoryRegion *main_mem = g_new(MemoryRegion, 1);
+    s->soc.sram = *main_mem;
     int i;
 
     /* TODO: Add qtest support */
@@ -88,23 +90,23 @@ static void nuclei_board_init(MachineState *machine)
 
     memory_region_init_ram(&s->soc.main_flash, NULL, "riscv.nuclei.main_flash",
                            memmap[GD32VF103_MAINFLASH].size, &error_fatal);
-    memory_region_add_subregion(system_memory, 
+    memory_region_add_subregion(system_memory,
     memmap[GD32VF103_MAINFLASH].base, &s->soc.main_flash);
 
         memory_region_init_ram(&s->soc.boot_loader, NULL, "riscv.nuclei.boot_loader",
                            memmap[GD32VF103_BL].size, &error_fatal);
-    memory_region_add_subregion(system_memory, 
+    memory_region_add_subregion(system_memory,
     memmap[GD32VF103_BL].base, &s->soc.boot_loader);
 
         memory_region_init_ram(&s->soc.ob, NULL, "riscv.nuclei.ob",
                            memmap[GD32VF103_OB].size, &error_fatal);
-    memory_region_add_subregion(system_memory, 
-    memmap[GD32VF103_OB].base, &s->soc.ob);
+    memory_region_add_subregion(system_memory,
+                    memmap[GD32VF103_OB].base, &s->soc.ob);
 
     memory_region_init_ram(&s->soc.sram, NULL, "riscv.nuclei.sram",
                            memmap[GD32VF103_SRAM].size, &error_fatal);
-    memory_region_add_subregion(system_memory, 
-    memmap[GD32VF103_SRAM].base, &s->soc.sram);
+    memory_region_add_subregion(system_memory,
+                    memmap[GD32VF103_SRAM].base, &s->soc.sram);
 
     /* reset vector */
     uint32_t reset_vec[8] = {

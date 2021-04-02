@@ -2,6 +2,7 @@
  * NUCLEI ECLIC(Enhanced Core Local Interrupt Controller)
  *
  * Copyright (c) 2020 NucLei, Inc.
+ * Copyright (c) 2020 Gao ZhiYuan <alapha23@gmail.com>
  *
  * This provides a parameterizable interrupt controller based on NucLei's ECLIC.
  *
@@ -53,7 +54,6 @@ static uint64_t nuclei_eclic_read(void *opaque, hwaddr offset, unsigned size)
     NucLeiECLICState *eclic = NUCLEI_ECLIC(opaque);
     uint64_t value = 0;
     uint32_t id = 0;
-
     if( offset >= NUCLEI_ECLIC_REG_CLICINTIP_BASE){
         if( (offset - 0x1000)%4 == 0 )
         {
@@ -106,7 +106,6 @@ static void nuclei_eclic_write(void *opaque, hwaddr offset, uint64_t value,
 {
     NucLeiECLICState *eclic = NUCLEI_ECLIC(opaque);
     uint32_t id = 0;
-
     if(offset >= NUCLEI_ECLIC_REG_CLICINTIP_BASE) {
 
          if( (offset - 0x1000)%4 == 0 )
@@ -166,10 +165,10 @@ static const MemoryRegionOps nuclei_eclic_ops = {
     .read = nuclei_eclic_read,
     .write = nuclei_eclic_write,
     .endianness = DEVICE_LITTLE_ENDIAN,
-    .valid = {
-        .min_access_size = 4,
-        .max_access_size = 4
-    }
+    // .valid = {
+    //     .min_access_size = 4,
+    //     .max_access_size = 4
+    // }
 };
 
 static Property nuclei_eclic_properties[] = {
@@ -361,7 +360,7 @@ static void nuclei_eclic_realize(DeviceState *dev, Error **errp)
                         eclic, Internal_SysTimerSW_IRQn);
     eclic->irqs[Internal_SysTimer_IRQn] = qemu_allocate_irq(nuclei_eclic_irq,
                         eclic, Internal_SysTimer_IRQn);
-                        
+
     for (id = Internal_Reserved_Max_IRQn; id < eclic->num_sources; id++) {
         eclic->irqs[id] = qemu_allocate_irq(nuclei_eclic_irq,
                         eclic, id);
@@ -378,7 +377,7 @@ static void nuclei_eclic_class_init(ObjectClass *klass, void *data)
 
     device_class_set_props(dc, nuclei_eclic_properties);
     dc->realize = nuclei_eclic_realize;
-    
+
 }
 
 static const TypeInfo nuclei_eclic_info = {
@@ -414,10 +413,10 @@ NucLeiECLICState *nuclei_eclic_create(hwaddr addr,  uint32_t aperture_size,  uin
     env->mtimecmp = 0;
 
     DeviceState *dev = qdev_new(TYPE_NUCLEI_ECLIC);
-    SysBusDevice *s =SYS_BUS_DEVICE(dev);
     qdev_prop_set_uint32(dev, "aperture-size", aperture_size);
     qdev_prop_set_uint32(dev, "num-sources", num_sources);
-    sysbus_realize_and_unref(s, &error_fatal);
-    sysbus_mmio_map(s, 0, addr);
-    return OBJECT_CHECK(NucLeiECLICState, dev, TYPE_NUCLEI_ECLIC);
+    sysbus_realize_and_unref(SYS_BUS_DEVICE(dev), &error_fatal);
+    sysbus_mmio_map(SYS_BUS_DEVICE(dev), 0, addr);
+
+    return  OBJECT_CHECK(NucLeiECLICState, dev, TYPE_NUCLEI_ECLIC);
 }

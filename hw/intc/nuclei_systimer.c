@@ -134,14 +134,14 @@ static void nuclei_timer_write(void *opaque, hwaddr offset,
         env->mtimer->expire_time |= ((value << 32)&0xFFFFFFFF);
         break;
     case NUCLEI_SYSTIMER_REG_MTIMECMPLO:
-        s->mtimecmp_lo = value;
-        s->mtimecmp_hi = 0xFFFFFFFF;
-        env->mtimecmp  |= (value &0xFFFFFFFF); 
+        // s->mtimecmp_lo = value;
+        // s->mtimecmp_hi = 0xFFFFFFFF;
+        // env->mtimecmp  |= (value &0xFFFFFFFF); 
         nuclei_timer_update_compare(s);
         break;
     case NUCLEI_SYSTIMER_REG_MTIMECMPHI:
-        s->mtimecmp_hi = value;
-        env->mtimecmp  |= ((value << 32)&0xFFFFFFFF);
+        // s->mtimecmp_hi = value;
+        // env->mtimecmp  |= ((value << 32)&0xFFFFFFFF);
         nuclei_timer_update_compare(s);
         break;
     case NUCLEI_SYSTIMER_REG_MSFTRST:
