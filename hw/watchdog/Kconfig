@@ -21,5 +21,5 @@ config WDT_IMX2
 config WDT_SBSA
     bool
 
-config NUCLEI_WDT
+config WDT_GD32VF103
     bool

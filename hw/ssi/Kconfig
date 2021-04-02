@@ -21,6 +21,6 @@ config STM32F2XX_SPI
     bool
     select SSI
 
-config NUCLEI_SPI
+config GD32VF103_SPI
     bool
     select SSI

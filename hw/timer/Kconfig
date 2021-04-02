@@ -58,5 +58,5 @@ config AVR_TIMER16
 config NUCLEI_RCU
     bool
 
-config NUCLEI_TIMER
+config GD32VF103_TIMER
     bool

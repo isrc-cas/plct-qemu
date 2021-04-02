@@ -1,21 +1,22 @@
 /*
- * QEMU RISC-V Nuclei SoC
+ * QEMU RISC-V Nuclei  Hbird Board Compatible  with Nuclei SDK
  *
- * Copyright (c) 2020 Nuclei Limited. All rights reserved.
+ * Copyright (c) 2020  PLCT Lab
+ * Copyright (c) 2020 Gao ZhiYuan <alapha23@gmail.com>
  *
- * SPDX-License-Identifier: Apache-2.0
+ * Provides a board compatible with the Nuclei SDK:
  *
- * Licensed under the Apache License, Version 2.0 (the License); you may
- * not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2 or later, as published by the Free Software Foundation.
  *
- * www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an AS IS BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "qemu/osdep.h"
 #include "qemu/log.h"
@@ -30,7 +31,7 @@
 #include "hw/riscv/riscv_hart.h"
 #include "hw/intc/nuclei_eclic.h"
 #include "hw/char/nuclei_uart.h"
-#include "hw/riscv/nuclei_hbird.h"
+#include "hw/riscv/nuclei_n.h"
 #include "hw/riscv/boot.h"
 #include "chardev/char.h"
 #include "sysemu/arch_init.h"
@@ -197,7 +198,7 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
 
 static void nuclei_machine_init(MachineClass *mc)
 {
-    mc->desc = "RISC-V Nuclei HBird Eval Board";
+    mc->desc = "Nuclei HummingBird Evaluation Kit";
     mc->init = nuclei_board_init;
     mc->max_cpus = 1;
     mc->is_default = false;

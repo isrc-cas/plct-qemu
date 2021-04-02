@@ -26,7 +26,7 @@
 #include "hw/char/nuclei_uart.h"
 #include "hw/intc/nuclei_systimer.h"
 #include "hw/intc/nuclei_eclic.h"
-#include "hw/gpio/nuclei_gpio.h"
+#include "hw/gpio/gd32vf103_gpio.h"
 #include "hw/timer/nuclei_rcu.h"
 #include "hw/sysbus.h"
 
@@ -53,13 +53,11 @@ typedef struct NucleiGDSoCState {
     NucLeiSYSTIMERState systimer;
     NucLeiSYSTIMERState timer;
 
-    NucLeiGPIOState gpioa;
-    NucLeiGPIOState gpiob;
-    NucLeiGPIOState gpioc;
-    NucLeiGPIOState gpiod;
-    NucLeiGPIOState gpioe;
-
-    NucLeiUARTState uart;
+    GD32VF103GPIOState gpioa;
+    GD32VF103GPIOState gpiob;
+    GD32VF103GPIOState gpioc;
+    GD32VF103GPIOState gpiod;
+    GD32VF103GPIOState gpioe;
 
 } NucleiGDSoCState;
 

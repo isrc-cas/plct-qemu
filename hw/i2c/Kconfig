@@ -29,6 +29,6 @@ config MPC_I2C
     bool
     select I2C
 
-config NUCLEI_I2C
+config GD32VF103_I2C
     bool
     select I2C

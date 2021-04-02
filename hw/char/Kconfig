@@ -71,5 +71,5 @@ config GOLDFISH_TTY
 config NUCLEI_UART
     bool
 
-config NUCLEI_USART
+config GD32VF103_USART
     bool

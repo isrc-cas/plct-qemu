@@ -1,11 +1,11 @@
 /*
- * QEMU RISC-V Board Compatible with SiFive Freedom U SDK
+ * QEMU RISC-V Board Compatible with NUCLEI LINUX SDK
  *
  * Copyright (c) 2016-2017 Sagar Karandikar, sagark@eecs.berkeley.edu
  * Copyright (c) 2017 SiFive, Inc.
  * Copyright (c) 2019 Bin Meng <bmeng.cn@gmail.com>
  *
- * Provides a board compatible with the SiFive Freedom U SDK:
+ * Provides a board compatible with the  NUCLEI LINUX SDK
  *
  * 0) UART
  * 1) CLINT (Core Level Interruptor)
@@ -368,15 +368,7 @@ update_bootargs:
     }
 }
 
-// static void sifive_u_machine_reset(void *opaque, int n, int level)
-// {
-//     /* gpio pin active low triggers reset */
-//     if (!level) {
-//         qemu_system_reset_request(SHUTDOWN_CAUSE_GUEST_RESET);
-//     }
-// }
-
-static void sifive_u_machine_init(MachineState *machine)
+static void nuclei_u_machine_init(MachineState *machine)
 {
     const struct MemmapEntry *memmap = nuclei_u_memmap;
     NucLeiUState *s = RISCV_NUCLEI_U_MACHINE(machine);
@@ -579,7 +571,7 @@ static void nuclei_u_machine_class_init(ObjectClass *oc, void *data)
     MachineClass *mc = MACHINE_CLASS(oc);
 
     mc->desc = "RISC-V NUCLEI U Board";
-    mc->init = sifive_u_machine_init;
+    mc->init = nuclei_u_machine_init;
     mc->max_cpus = NUCLEI_U_MANAGEMENT_CPU_COUNT + NUCLEI_U_COMPUTE_CPU_COUNT;
     mc->min_cpus = NUCLEI_U_MANAGEMENT_CPU_COUNT + 1;
     mc->default_cpu_type = TYPE_RISCV_CPU_SIFIVE_U54;
@@ -758,7 +750,6 @@ static void nuclei_u_soc_realize(DeviceState *dev, Error **errp)
                     memmap[NUCLEI_U_SPI2_IRQ].base);
     sysbus_connect_irq(SYS_BUS_DEVICE(&s->spi2), 0,
                        qdev_get_gpio_in(DEVICE(s->plic), NUCLEI_U_SPI2_IRQ));
-    qemu_log(">> nuclei_u_soc_realize\n");
 
 }
 

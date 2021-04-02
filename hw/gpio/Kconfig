@@ -14,5 +14,5 @@ config GPIO_PWR
 config SIFIVE_GPIO
     bool
 
-config NUCLEI_GPIO
+config GD32VF103_GPIO
     bool

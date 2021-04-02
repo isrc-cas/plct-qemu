@@ -35,7 +35,7 @@ softmmu_ss.add(when: 'CONFIG_SH_SCI', if_true: files('sh_serial.c'))
 softmmu_ss.add(when: 'CONFIG_STM32F2XX_USART', if_true: files('stm32f2xx_usart.c'))
 softmmu_ss.add(when: 'CONFIG_MCHP_PFSOC_MMUART', if_true: files('mchp_pfsoc_mmuart.c'))
 softmmu_ss.add(when: 'CONFIG_NUCLEI_UART', if_true: files('nuclei_uart.c'))
-softmmu_ss.add(when: 'CONFIG_NUCLEI_USART', if_true: files('nuclei_usart.c'))
+softmmu_ss.add(when: 'CONFIG_GD32VF103_USART', if_true: files('gd32vf103_usart.c'))
 
 specific_ss.add(when: 'CONFIG_HTIF', if_true: files('riscv_htif.c'))
 specific_ss.add(when: 'CONFIG_TERMINAL3270', if_true: files('terminal3270.c'))

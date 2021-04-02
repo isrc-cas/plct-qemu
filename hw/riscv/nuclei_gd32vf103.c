@@ -1,7 +1,7 @@
 /*
  * QEMU RISC-V Nuclei  GD32VF103 Board Compatible  with Nuclei SDK
  *
- * Copyright (c) 2020  Nuclei, Inc.
+ * Copyright (c) 2020  PLCT Lab
  * Copyright (c) 2020 Gao ZhiYuan <alapha23@gmail.com>
  *
  * Provides a board compatible with the Nuclei SDK:
@@ -18,8 +18,6 @@
  * You should have received a copy of the GNU General Public License along with
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 #include "qemu/osdep.h"
 #include "qemu/log.h"
 #include "qemu/error-report.h"
@@ -32,7 +30,7 @@
 #include "hw/char/riscv_htif.h"
 #include "hw/riscv/riscv_hart.h"
 #include "hw/intc/nuclei_eclic.h"
-#include "hw/char/nuclei_usart.h"
+#include "hw/char/gd32vf103_usart.h"
 #include "hw/riscv/nuclei_gd32vf103.h"
 #include "hw/riscv/boot.h"
 #include "chardev/char.h"
@@ -163,23 +161,23 @@ static void riscv_nuclei_soc_init(Object *obj)
 
     object_initialize_child(obj, "gpioa",
                           &s->gpioa,
-                          TYPE_NUCLEI_GPIO);
+                          TYPE_GD32VF103_GPIO);
 
     object_initialize_child(obj, "gpiob",
                           &s->gpiob,
-                          TYPE_NUCLEI_GPIO);
+                          TYPE_GD32VF103_GPIO);
 
     object_initialize_child(obj, "gpioc",
                           &s->gpioc,
-                          TYPE_NUCLEI_GPIO);
+                          TYPE_GD32VF103_GPIO);
 
     object_initialize_child(obj, "gpiod",
                           &s->gpiod,
-                          TYPE_NUCLEI_GPIO);
+                          TYPE_GD32VF103_GPIO);
 
     object_initialize_child(obj, "gpioe",
                           &s->gpioe,
-                          TYPE_NUCLEI_GPIO);
+                          TYPE_GD32VF103_GPIO);
 }
 
 static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
@@ -249,8 +247,8 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->gpioe), 0, memmap[GD32VF103_GPIOE].base);
     /* Pass all GPIOs to the SOC layer so they are available to the board */
 
-    /* Create and connect UART interrupts to the ECLIC */
-    nuclei_usart_create(sys_mem,
+    /* Create and connect USART interrupts to the ECLIC */
+    gd32vf103_usart_create(sys_mem,
                     memmap[GD32VF103_UART4].base,
                     memmap[GD32VF103_UART4].size,
                     serial_hd(0),
