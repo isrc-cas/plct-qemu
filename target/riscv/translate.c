@@ -57,6 +57,7 @@ typedef struct DisasContext {
     int frm;
     bool ext_ifencei;
     bool ext_zfinx;
+    bool ext_zdinx;
     bool hlsx;
     /* vector extension */
     bool vill;
@@ -846,6 +847,7 @@ static void riscv_tr_init_disas_context(DisasContextBase *dcbase, CPUState *cs)
     ctx->frm = -1;  /* unknown rounding mode */
     ctx->ext_ifencei = cpu->cfg.ext_ifencei;
     ctx->ext_zfinx = cpu->cfg.ext_zfinx;
+    ctx->ext_zdinx = cpu->cfg.ext_zdinx;
     ctx->vlen = cpu->cfg.vlen;
     ctx->hlsx = FIELD_EX32(tb_flags, TB_FLAGS, HLSX);
     ctx->vill = FIELD_EX32(tb_flags, TB_FLAGS, VILL);
@@ -951,6 +953,7 @@ void riscv_translate_init(void)
 {
     int i;
     RISCVCPU *cpu = RISCV_CPU(qemu_get_cpu(0));
+    cpu->cfg.ext_zfinx |= cpu->cfg.ext_zdinx;
     bool ext_zfinx = cpu->cfg.ext_zfinx;
 
     /* cpu_gpr[0] is a placeholder for the zero register. Do not use it. */
