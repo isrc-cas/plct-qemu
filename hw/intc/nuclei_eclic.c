@@ -255,7 +255,7 @@ static int level_compare(NucLeiECLICState *eclic, ECLICPendingInterrupt *irq1, E
     }
 }
 
-static void nuclei_eclic_irq(void *opaque, int id, int new_intip)
+static void nuclei_eclic_irq_request(void *opaque, int id, int new_intip)
 {
     NucLeiECLICState *eclic = NUCLEI_ECLIC(opaque);
     nuclei_eclic_update_intip(eclic, id, new_intip);
@@ -290,7 +290,7 @@ static void eclic_remove_pending_list(NucLeiECLICState *eclic, int irq) {
 
 static void nuclei_eclic_update_intip(NucLeiECLICState *eclic, int irq, int new_intip)
 {
-   
+
     int old_intip = eclic->clicintlist[irq].sig;
     int trigger = (eclic->clicintattr[irq] >> 1) & 0x3;
     if (((trigger == 0) && new_intip) ||
@@ -356,15 +356,17 @@ static void nuclei_eclic_realize(DeviceState *dev, Error **errp)
     eclic->active_count = 0;
 
     /* Init ECLIC IRQ */
-    eclic->irqs[Internal_SysTimerSW_IRQn] = qemu_allocate_irq(nuclei_eclic_irq,
+    eclic->irqs[Internal_SysTimerSW_IRQn] = qemu_allocate_irq(nuclei_eclic_irq_request,
                         eclic, Internal_SysTimerSW_IRQn);
-    eclic->irqs[Internal_SysTimer_IRQn] = qemu_allocate_irq(nuclei_eclic_irq,
+    eclic->irqs[Internal_SysTimer_IRQn] = qemu_allocate_irq(nuclei_eclic_irq_request,
                         eclic, Internal_SysTimer_IRQn);
 
     for (id = Internal_Reserved_Max_IRQn; id < eclic->num_sources; id++) {
-        eclic->irqs[id] = qemu_allocate_irq(nuclei_eclic_irq,
+        eclic->irqs[id] = qemu_allocate_irq(nuclei_eclic_irq_request,
                         eclic, id);
     }
+
+    //  qdev_init_gpio_in(dev, nuclei_eclic_irq, eclic->num_sources);
 
     RISCVCPU *cpu = RISCV_CPU(qemu_get_cpu(0));
     cpu->env.eclic = eclic;
@@ -394,29 +396,25 @@ static void nuclei_eclic_register_types(void)
 
 type_init(nuclei_eclic_register_types);
 
-static void nuclei_eclic_mtimecmp_cb(void *cpu) {
+// static void nuclei_eclic_mtimecmp_cb(void *cpu) {
 
-    CPURISCVState *env = &((RISCVCPU *)cpu)->env;
-    nuclei_eclic_irq(((RISCVCPU *)cpu)->env.eclic, Internal_SysTimer_IRQn, 1);
-    timer_del(env->mtimer);
+//     CPURISCVState *env = &((RISCVCPU *)cpu)->env;
+//     nuclei_eclic_irq_request(((RISCVCPU *)cpu)->env.eclic, Internal_SysTimer_IRQn, 1);
+//     timer_del(env->mtimer);
+// }
+
+void nuclei_eclic_systimer_cb(DeviceState *dev) {
+    NucLeiECLICState *eclic = NUCLEI_ECLIC(dev);
+    nuclei_eclic_irq_request(eclic, Internal_SysTimer_IRQn, 1);
 }
 
-
-NucLeiECLICState *nuclei_eclic_create(hwaddr addr,  uint32_t aperture_size,  uint32_t num_sources)
+DeviceState *nuclei_eclic_create(hwaddr addr,  uint32_t aperture_size,  uint32_t num_sources)
 {
-    RISCVCPU *cpu = RISCV_CPU(qemu_get_cpu(0));
-    CPURISCVState *env = &cpu->env;
-
-    env->features |= (1ULL << RISCV_FEATURE_ECLIC);
-    env->mtimer = timer_new_ns(QEMU_CLOCK_VIRTUAL,
-                                   &nuclei_eclic_mtimecmp_cb, cpu);
-    env->mtimecmp = 0;
-
     DeviceState *dev = qdev_new(TYPE_NUCLEI_ECLIC);
     qdev_prop_set_uint32(dev, "aperture-size", aperture_size);
     qdev_prop_set_uint32(dev, "num-sources", num_sources);
     sysbus_realize_and_unref(SYS_BUS_DEVICE(dev), &error_fatal);
     sysbus_mmio_map(SYS_BUS_DEVICE(dev), 0, addr);
 
-    return  OBJECT_CHECK(NucLeiECLICState, dev, TYPE_NUCLEI_ECLIC);
+    return  dev;
 }

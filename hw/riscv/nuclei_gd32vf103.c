@@ -63,7 +63,7 @@ static const struct MemmapEntry {
     [GD32VF103_MFOL]       = { 0x0,     0x20000 },
     [GD32VF103_ECLIC]      = { 0xD2000000,     0x10000 },
     [GD32VF103_TIMER0]      = { 0x40012C00,     0x400 },
-    [GD32VF103_SYSTIMER]      = { 0xD1000000,     0x400 },
+    [GD32VF103_SYSTIMER]      = { 0xD1000000,     0x1000 },
     [GD32VF103_AFIO]      = { 0x40010000,     0x400 },
     [GD32VF103_GPIOA]      = { 0x40010800,     0x400 },
     [GD32VF103_GPIOB]      = { 0x40010C00,     0x400 },
@@ -144,16 +144,16 @@ static void riscv_nuclei_soc_init(Object *obj)
 
     object_initialize_child(obj, "cpus", &s->cpus, TYPE_RISCV_HART_ARRAY);
 
-    object_property_set_int(OBJECT(&s->cpus), "num-harts", ms->smp.cpus, 
+    object_property_set_int(OBJECT(&s->cpus), "num-harts", ms->smp.cpus,
                             &error_abort);
 
     object_initialize_child(obj, "timer",
                           &s->timer,
-                          TYPE_NUCLEI_SYSTIMER);
+                          TYPE_GD32VF103_TIMER);
 
-    object_initialize_child(obj, "systimer",
-                          &s->systimer,
-                          TYPE_NUCLEI_SYSTIMER);
+    // object_initialize_child(obj, "systimer",
+    //                       &s->systimer,
+    //                       TYPE_NUCLEI_SYSTIMER);
 
     object_initialize_child(obj, "rcu",
                           &s->rcu,
@@ -203,14 +203,10 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
      s->eclic = nuclei_eclic_create(memmap[GD32VF103_ECLIC].base,
          memmap[GD32VF103_ECLIC].size, GD32VF103_SOC_INT_MAX);
 
-    /* SysTimer*/
-    sysbus_realize(SYS_BUS_DEVICE(&s->systimer), &err);
-    if (err) {
-        error_propagate(errp, err);
-        return;
-    }
-    sysbus_mmio_map(SYS_BUS_DEVICE(&s->systimer), 0, memmap[GD32VF103_SYSTIMER].base);
-    s->systimer.timebase_freq = NUCLEI_GD32_TIMEBASE_FREQ;
+    nuclei_systimer_create(memmap[GD32VF103_SYSTIMER].base,
+                memmap[GD32VF103_SYSTIMER].size,
+                 s->eclic,
+                NUCLEI_GD32_TIMEBASE_FREQ);
 
     /* Timer*/
     sysbus_realize(SYS_BUS_DEVICE(&s->timer), &err);
@@ -255,8 +251,7 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
                     nuclei_eclic_get_irq(DEVICE(s->eclic),
                     GD32VF103_UART4_IRQn));
 
-    s->systimer.soft_irq = &(s->eclic->irqs[Internal_SysTimerSW_IRQn]);
-    s->systimer.timer_irq = &(s->eclic->irqs[Internal_SysTimer_IRQn]);
+
 
     /* Flash memory */
     // memory_region_init_rom(&s->xip_mem, OBJECT(dev), "riscv.nuclei.xip",

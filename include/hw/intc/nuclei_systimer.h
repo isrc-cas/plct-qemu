@@ -24,6 +24,7 @@
 
 #include "hw/sysbus.h"
 #include "hw/irq.h"
+#include "hw/intc/nuclei_eclic.h"
 
 #define TYPE_NUCLEI_SYSTIMER "riscv.nuclei.systimer"
 
@@ -47,6 +48,8 @@ typedef struct NucLeiSYSTIMERState {
     qemu_irq *timer_irq;
     qemu_irq *soft_irq;
 
+    DeviceState *eclic;
+
     uint32_t mtime_lo;
     uint32_t mtime_hi;
     uint32_t mtimecmp_lo;
@@ -54,11 +57,15 @@ typedef struct NucLeiSYSTIMERState {
     uint32_t mstop;
     uint32_t msip;
 
-    uint64_t timebase_freq;
+    uint32_t aperture_size;
+    uint32_t timebase_freq;
 
 } NucLeiSYSTIMERState;
 
 #define  NUCLEI_GD32_TIMEBASE_FREQ  (108000000*2)
 #define  NUCLEI_HBIRD_TIMEBASE_FREQ  (10000000)
+
+DeviceState *nuclei_systimer_create(hwaddr addr, hwaddr size,
+        DeviceState *eclic, uint32_t timebase_freq);
 
 #endif

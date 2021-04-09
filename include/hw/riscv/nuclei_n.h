@@ -41,13 +41,14 @@ typedef struct NucleiHBSoCState {
     /*< public >*/
     RISCVHartArrayState cpus;
 
-    NucLeiECLICState *eclic;
+    DeviceState *eclic;
     MemoryRegion ilm;
     MemoryRegion dlm;
     MemoryRegion internal_rom;
     MemoryRegion xip_mem;
 
-    NucLeiSYSTIMERState timer;
+    DeviceState *timer;
+    // NucLeiSYSTIMERState *timer;
     NucLeiUARTState uart;
     SIFIVEGPIOState gpio;
 

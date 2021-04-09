@@ -19,11 +19,14 @@
  */
 #include "qemu/osdep.h"
 #include "qemu/log.h"
+#include "qapi/error.h"
+#include "qemu/error-report.h"
 #include "qemu/timer.h"
 #include "target/riscv/cpu.h"
 #include "hw/intc/nuclei_systimer.h"
 #include "hw/intc/nuclei_eclic.h"
 #include "hw/registerfields.h"
+#include "hw/qdev-properties.h"
 #include "migration/vmstate.h"
 #include "trace.h"
 
@@ -175,12 +178,18 @@ static const MemoryRegionOps nuclei_timer_ops = {
     },
 };
 
+static Property nuclei_systimer_properties[] = {
+    DEFINE_PROP_UINT32("aperture-size", NucLeiSYSTIMERState, aperture_size, 0),
+    DEFINE_PROP_UINT32("timebase-freq", NucLeiSYSTIMERState, timebase_freq, 0),
+    DEFINE_PROP_END_OF_LIST(),
+};
+
 static void nuclei_timer_realize(DeviceState *dev, Error **errp)
 {
     NucLeiSYSTIMERState *s = NUCLEI_SYSTIMER(dev);
 
     memory_region_init_io(&s->iomem, OBJECT(dev), &nuclei_timer_ops,
-                          s,TYPE_NUCLEI_SYSTIMER, 0x1000);
+                          s,TYPE_NUCLEI_SYSTIMER, s->aperture_size);
     sysbus_init_mmio(SYS_BUS_DEVICE(dev), &s->iomem);
 }
 
@@ -189,7 +198,8 @@ static void nuclei_timer_class_init(ObjectClass *klass, void *data)
     DeviceClass *dc = DEVICE_CLASS(klass);
     dc->realize = nuclei_timer_realize;
     dc->reset = nuclei_timer_reset;
-    dc->desc = "NucLei Timer";
+    dc->desc = "NucLei Systimer Timer";
+    device_class_set_props(dc, nuclei_systimer_properties);
 }
 
 static const TypeInfo nuclei_timer_info = {
@@ -204,3 +214,35 @@ static void nuclei_timer_register_types(void)
     type_register_static(&nuclei_timer_info);
 }
 type_init(nuclei_timer_register_types);
+
+static void nuclei_mtimecmp_cb(void *opaque) {
+    RISCVCPU *cpu = RISCV_CPU(qemu_get_cpu(0));
+    CPURISCVState *env = &cpu->env;
+    // NucLeiSYSTIMERState *s = NUCLEI_SYSTIMER(opaque);
+    nuclei_eclic_systimer_cb(((RISCVCPU *)cpu)->env.eclic);
+    timer_del(env->mtimer);
+}
+
+DeviceState *nuclei_systimer_create(hwaddr addr, hwaddr size,
+        DeviceState *eclic,
+        uint32_t timebase_freq)
+{
+    RISCVCPU *cpu = RISCV_CPU(qemu_get_cpu(0));
+    CPURISCVState *env = &cpu->env;
+
+    env->features |= (1ULL << RISCV_FEATURE_ECLIC);
+    env->mtimer = timer_new_ns(QEMU_CLOCK_VIRTUAL,
+                                   &nuclei_mtimecmp_cb, cpu);
+    env->mtimecmp = 0;
+
+    DeviceState *dev = qdev_new(TYPE_NUCLEI_SYSTIMER);
+    qdev_prop_set_uint32(dev, "aperture-size", size);
+    qdev_prop_set_uint32(dev, "timebase-freq", timebase_freq);
+    sysbus_realize_and_unref(SYS_BUS_DEVICE(dev), &error_fatal);
+    sysbus_mmio_map(SYS_BUS_DEVICE(dev), 0, addr);
+    NucLeiSYSTIMERState *s = NUCLEI_SYSTIMER(dev);
+    s->eclic = eclic;
+    s->soft_irq =&(NUCLEI_ECLIC(eclic)->irqs[Internal_SysTimerSW_IRQn]);
+    s->timer_irq = &(NUCLEI_ECLIC(eclic)->irqs[Internal_SysTimer_IRQn]);
+    return dev;
+}

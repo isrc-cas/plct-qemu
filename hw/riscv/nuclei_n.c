@@ -127,8 +127,8 @@ static void riscv_nuclei_soc_init(Object *obj)
     object_property_set_int(OBJECT(&s->cpus), "num-harts", ms->smp.cpus,
                             &error_abort);
 
-    object_initialize_child(obj, "timer",
-                          &s->timer, TYPE_NUCLEI_SYSTIMER);
+    // object_initialize_child(obj, "timer",
+    //                       &s->timer, TYPE_NUCLEI_SYSTIMER);
 
     object_initialize_child(obj, "riscv.nuclei.gpio",
                           &s->gpio, TYPE_SIFIVE_GPIO);
@@ -157,14 +157,10 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
     s->eclic = nuclei_eclic_create(memmap[HBIRD_ECLIC].base,
         memmap[HBIRD_ECLIC].size, HBIRD_SOC_INT_MAX);
 
-    /* Timer*/
-    sysbus_realize(SYS_BUS_DEVICE(&s->timer), &err);
-    if (err) {
-        error_propagate(errp, err);
-        return;
-    }
-    sysbus_mmio_map(SYS_BUS_DEVICE(&s->timer), 0, memmap[HBIRD_TIMER].base);
-    s->timer.timebase_freq = NUCLEI_HBIRD_TIMEBASE_FREQ;
+    s->timer = nuclei_systimer_create(memmap[HBIRD_TIMER].base,
+                memmap[HBIRD_TIMER].size,
+                 s->eclic,
+                NUCLEI_HBIRD_TIMEBASE_FREQ);
 
     /* GPIO */
     sysbus_realize(SYS_BUS_DEVICE(&s->gpio), &err);
@@ -184,9 +180,6 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
                     serial_hd(0),
                     nuclei_eclic_get_irq(DEVICE(s->eclic),
                     HBIRD_SOC_INT22_IRQn));
-
-    s->timer.soft_irq = &(s->eclic->irqs[Internal_SysTimerSW_IRQn]);
-    s->timer.timer_irq = &(s->eclic->irqs[Internal_SysTimer_IRQn]);
 
     /* Flash memory */
     memory_region_init_rom(&s->xip_mem, OBJECT(dev), "riscv.nuclei.xip",

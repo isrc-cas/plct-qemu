@@ -28,6 +28,7 @@
 #include "hw/intc/nuclei_eclic.h"
 #include "hw/gpio/gd32vf103_gpio.h"
 #include "hw/timer/nuclei_rcu.h"
+#include "hw/timer/gd32vf103_timer.h"
 #include "hw/sysbus.h"
 
 #define TYPE_NUCLEI_GD32VF103_SOC "riscv.nuclei.gd32vf103.soc"
@@ -40,7 +41,7 @@ typedef struct NucleiGDSoCState {
 
     /*< public >*/
     RISCVHartArrayState cpus;
-    NucLeiECLICState *eclic;
+    DeviceState *eclic;
 
      MemoryRegion internal_rom;
     MemoryRegion main_flash;
@@ -51,8 +52,8 @@ typedef struct NucleiGDSoCState {
 
     NucLeiRCUState rcu;
     NucLeiSYSTIMERState systimer;
-    NucLeiSYSTIMERState timer;
 
+    GD32VF103TimerState timer;
     GD32VF103GPIOState gpioa;
     GD32VF103GPIOState gpiob;
     GD32VF103GPIOState gpioc;

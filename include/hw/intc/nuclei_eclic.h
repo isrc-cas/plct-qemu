@@ -23,7 +23,6 @@
 
 #include "hw/sysbus.h"
 #include "hw/irq.h"
-#include "hw/intc/nuclei_systimer.h"
 
 #define TYPE_NUCLEI_ECLIC "riscv.nuclei.eclic"
 
@@ -107,7 +106,8 @@ enum {
 };
 
 
-NucLeiECLICState *nuclei_eclic_create(hwaddr addr, uint32_t aperture_size, uint32_t num_sources);
+DeviceState *nuclei_eclic_create(hwaddr addr, uint32_t aperture_size, uint32_t num_sources);
 qemu_irq nuclei_eclic_get_irq(DeviceState *dev,  int irq);
+void nuclei_eclic_systimer_cb(DeviceState *dev);
 
 #endif
