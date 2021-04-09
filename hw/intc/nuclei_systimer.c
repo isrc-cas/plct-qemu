@@ -42,7 +42,7 @@ static void nuclei_timer_update_compare(NucLeiSYSTIMERState *s)
 
     real_time =  s->mtime_lo | ((uint64_t)s->mtime_hi << 32);
 
-    env->mtimer->expire_time  = real_time;
+    //env->mtimer->expire_time  = real_time;
 
     cmp = (uint64_t)s->mtimecmp_lo | ((uint64_t)s->mtimecmp_hi <<32);
     env->mtimecmp =  cmp;
@@ -134,14 +134,14 @@ static void nuclei_timer_write(void *opaque, hwaddr offset,
         env->mtimer->expire_time |= ((value << 32)&0xFFFFFFFF);
         break;
     case NUCLEI_SYSTIMER_REG_MTIMECMPLO:
-        // s->mtimecmp_lo = value;
-        // s->mtimecmp_hi = 0xFFFFFFFF;
-        // env->mtimecmp  |= (value &0xFFFFFFFF); 
+        s->mtimecmp_lo = value;
+        s->mtimecmp_hi = 0xFFFFFFFF;
+        env->mtimecmp  |= (value &0xFFFFFFFF); 
         nuclei_timer_update_compare(s);
         break;
     case NUCLEI_SYSTIMER_REG_MTIMECMPHI:
-        // s->mtimecmp_hi = value;
-        // env->mtimecmp  |= ((value << 32)&0xFFFFFFFF);
+        s->mtimecmp_hi = value;
+        env->mtimecmp  |= ((value << 32)&0xFFFFFFFF);
         nuclei_timer_update_compare(s);
         break;
     case NUCLEI_SYSTIMER_REG_MSFTRST:
@@ -156,7 +156,6 @@ static void nuclei_timer_write(void *opaque, hwaddr offset,
         if ((s->msip & 0x1) == 1) {
             qemu_set_irq(*(s->soft_irq), 1);
         }else{
-            //riscv_cpu_eclic_interrupt(riscv_cpu, -1);
             qemu_set_irq(*(s->soft_irq), 0);
         }
 
