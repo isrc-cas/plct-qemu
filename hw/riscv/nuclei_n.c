@@ -195,7 +195,7 @@ static void nuclei_machine_init(MachineClass *mc)
     mc->init = nuclei_board_init;
     mc->max_cpus = 1;
     mc->is_default = false;
-    mc->default_cpu_type = NUCLEI_CPU;
+    mc->default_cpu_type = NUCLEI_N_CPU;
 }
 
 DEFINE_MACHINE("hbird_eval", nuclei_machine_init)
