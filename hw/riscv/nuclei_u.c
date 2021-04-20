@@ -646,6 +646,7 @@ static void nuclei_u_soc_realize(DeviceState *dev, Error **errp)
 
     sysbus_realize(SYS_BUS_DEVICE(&s->e_cpus), &error_abort);
     sysbus_realize(SYS_BUS_DEVICE(&s->u_cpus), &error_abort);
+
     /*
      * The cluster must be realized after the RISC-V hart array container,
      * as the container's CPU object is only created on realize, and the
@@ -724,21 +725,21 @@ static void nuclei_u_soc_realize(DeviceState *dev, Error **errp)
                                             NUCLEI_U_GPIO_IRQ0 + i));
     }
 
-    if (!sysbus_realize(SYS_BUS_DEVICE(&s->spi[0]), errp)) {
-        return;
-    }
+    // if (!sysbus_realize(SYS_BUS_DEVICE(&s->spi0), errp)) {
+    //     return;
+    // }
+    // sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi0), 0,
+    //                 memmap[NUCLEI_U_SPI0].base);
+    // sysbus_connect_irq(SYS_BUS_DEVICE(&s->spi0), 0,
+    //                         qdev_get_gpio_in(DEVICE(s->plic), NUCLEI_U_SPI0_IRQ));
 
-    sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi[0]), 0, memmap[NUCLEI_U_SPI0].base);
-    sysbus_connect_irq(SYS_BUS_DEVICE(&s->spi[0]), 0,
-                            qdev_get_gpio_in(DEVICE(s->plic), NUCLEI_U_SPI0_IRQ));
+    // if (!sysbus_realize(SYS_BUS_DEVICE(&s->spi2), errp)) {
+    //     return;
+    // }
 
-    if (!sysbus_realize(SYS_BUS_DEVICE(&s->spi[2]), errp)) {
-        return;
-    }
-
-    sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi[2]), 0, memmap[NUCLEI_U_SPI2].base);
-    sysbus_connect_irq(SYS_BUS_DEVICE(&s->spi[2]), 0,
-                            qdev_get_gpio_in(DEVICE(s->plic), NUCLEI_U_SPI2_IRQ));
+    // sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi2), 0, memmap[NUCLEI_U_SPI2].base);
+    // sysbus_connect_irq(SYS_BUS_DEVICE(&s->spi2), 0,
+    //                         qdev_get_gpio_in(DEVICE(s->plic), NUCLEI_U_SPI2_IRQ));
 
     sysbus_realize(SYS_BUS_DEVICE(&s->spi0), errp);
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi0), 0,

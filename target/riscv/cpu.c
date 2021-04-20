@@ -216,9 +216,10 @@ static void rv64imacu_nuclei_u_cpu_init(Object *obj)
 static void rv64imafdcu_nuclei_u_cpu_init(Object *obj)
 {
     CPURISCVState *env = &RISCV_CPU(obj)->env;
-    set_misa(env, RV64 | RVI | RVM | RVA | RVF | RVD | RVC | RVU);
+    set_misa(env, RV64 | RVI | RVM | RVA | RVF | RVD | RVC | RVS | RVU);
     set_priv_version(env, PRIV_VERSION_1_10_0);
     set_resetvec(env, DEFAULT_RSTVEC);
+    qdev_prop_set_bit(DEVICE(obj), "mmu", true);
     set_feature(env, RISCV_FEATURE_PMP);
 }
 #else

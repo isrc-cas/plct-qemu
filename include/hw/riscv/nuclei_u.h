@@ -46,9 +46,10 @@ typedef struct NucLeiUSoCState {
     RISCVHartArrayState u_cpus;
     DeviceState *plic;
     SIFIVEGPIOState gpio;
-    SiFiveSPIState spi[NUCLEI_NUM_SPIS];
+    // SiFiveSPIState spi[NUCLEI_NUM_SPIS];
     SiFivePDMAState dma;
     NucLeiSYSTIMERState timer;
+    // DeviceState *timer;
     SiFiveSPIState spi0;
     SiFiveSPIState spi2;
 
@@ -128,7 +129,7 @@ enum {
 };
 
 #define NUCLEI_U_MANAGEMENT_CPU_COUNT   1
-#define NUCLEI_U_COMPUTE_CPU_COUNT      4
+#define NUCLEI_U_COMPUTE_CPU_COUNT      1
 
 #define NUCLEI_U_PLIC_HART_CONFIG "MS"
 #define NUCLEI_U_PLIC_NUM_SOURCES 54

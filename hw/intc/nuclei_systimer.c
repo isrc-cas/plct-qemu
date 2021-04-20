@@ -49,6 +49,7 @@ static void nuclei_timer_update_compare(NucLeiSYSTIMERState *s)
 
     cmp = (uint64_t)s->mtimecmp_lo | ((uint64_t)s->mtimecmp_hi <<32);
     env->mtimecmp =  cmp;
+    env->timecmp =  cmp;
 
     diff = cmp - real_time;
 
@@ -139,7 +140,7 @@ static void nuclei_timer_write(void *opaque, hwaddr offset,
     case NUCLEI_SYSTIMER_REG_MTIMECMPLO:
         s->mtimecmp_lo = value;
         s->mtimecmp_hi = 0xFFFFFFFF;
-        env->mtimecmp  |= (value &0xFFFFFFFF); 
+        env->mtimecmp  |= (value &0xFFFFFFFF);
         nuclei_timer_update_compare(s);
         break;
     case NUCLEI_SYSTIMER_REG_MTIMECMPHI:
@@ -188,6 +189,8 @@ static void nuclei_timer_realize(DeviceState *dev, Error **errp)
 {
     NucLeiSYSTIMERState *s = NUCLEI_SYSTIMER(dev);
 
+    if( s->aperture_size == 0)
+         s->aperture_size = 0x1000;
     memory_region_init_io(&s->iomem, OBJECT(dev), &nuclei_timer_ops,
                           s,TYPE_NUCLEI_SYSTIMER, s->aperture_size);
     sysbus_init_mmio(SYS_BUS_DEVICE(dev), &s->iomem);
@@ -241,8 +244,11 @@ DeviceState *nuclei_systimer_create(hwaddr addr, hwaddr size,
     sysbus_realize_and_unref(SYS_BUS_DEVICE(dev), &error_fatal);
     sysbus_mmio_map(SYS_BUS_DEVICE(dev), 0, addr);
     NucLeiSYSTIMERState *s = NUCLEI_SYSTIMER(dev);
-    s->eclic = eclic;
-    s->soft_irq =&(NUCLEI_ECLIC(eclic)->irqs[Internal_SysTimerSW_IRQn]);
-    s->timer_irq = &(NUCLEI_ECLIC(eclic)->irqs[Internal_SysTimer_IRQn]);
+    if(eclic != NULL)
+    {
+        s->eclic = eclic;
+        s->soft_irq =&(NUCLEI_ECLIC(eclic)->irqs[Internal_SysTimerSW_IRQn]);
+        s->timer_irq = &(NUCLEI_ECLIC(eclic)->irqs[Internal_SysTimer_IRQn]);
+    }
     return dev;
 }
