@@ -1,21 +1,20 @@
 /*
  *  NUCLEI RCU (RCU Unit) interface
  *
- * Copyright (c) 2020 Nuclei Limited. All rights reserved.
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
- * SPDX-License-Identifier: Apache-2.0
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Licensed under the Apache License, Version 2.0 (the License); you may
- * not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an AS IS BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "qemu/osdep.h"
 #include "qapi/error.h"
@@ -23,7 +22,6 @@
 #include "qemu/timer.h"
 #include "qemu/module.h"
 #include "hw/sysbus.h"
-// #include "target/riscv/cpu.h"
 #include "hw/timer/nuclei_rcu.h"
 #include "hw/intc/nuclei_eclic.h"
 #include "hw/registerfields.h"
@@ -31,12 +29,13 @@
 #include "trace.h"
 
 static uint64_t nuclei_rcu_read(void *opaque, hwaddr offset,
-                                    unsigned size)
+                                unsigned size)
 {
     NucLeiRCUState *s = NUCLEI_RCU(opaque);
     uint64_t value = 0;
 
-    switch (offset) {
+    switch (offset)
+    {
     case NUCLEI_RCU_REG_RCU_CTL:
         value = s->rcu_ctl;
         break;
@@ -44,7 +43,7 @@ static uint64_t nuclei_rcu_read(void *opaque, hwaddr offset,
         value = s->rcu_cfg0;
         break;
     case NUCLEI_RCU_REG_RCU_INT:
-         value = s->rcu_int;
+        value = s->rcu_int;
         break;
     case NUCLEI_RCU_REG_RCU_APB2RST:
         value = s->rcu_apb2rst;
@@ -59,7 +58,7 @@ static uint64_t nuclei_rcu_read(void *opaque, hwaddr offset,
         value = s->rcu_apb2en;
         break;
     case NUCLEI_RCU_REG_RCU_APB1EN:
-         value = s->rcu_apb1en;
+        value = s->rcu_apb1en;
         break;
     case NUCLEI_RCU_REG_RCU_BDCTL:
         value = s->rcu_bdctl;
@@ -84,19 +83,20 @@ static uint64_t nuclei_rcu_read(void *opaque, hwaddr offset,
 }
 
 static void nuclei_rcu_write(void *opaque, hwaddr offset,
-                                 uint64_t value, unsigned size)
+                             uint64_t value, unsigned size)
 {
     NucLeiRCUState *s = NUCLEI_RCU(opaque);
 
-    switch (offset) {
+    switch (offset)
+    {
     case NUCLEI_RCU_REG_RCU_CTL:
-        if((value & RCU_CTL_HXTALEN) != 0)
+        if ((value & RCU_CTL_HXTALEN) != 0)
             value |= RCU_CTL_HXTALSTB;
-        if((value & RCU_CTL_PLL1EN) != 0)
+        if ((value & RCU_CTL_PLL1EN) != 0)
             value |= RCU_CTL_PLL1STB;
-        if((value & RCU_CTL_PLL2EN) != 0)
+        if ((value & RCU_CTL_PLL2EN) != 0)
             value |= RCU_CTL_PLL2STB;
-        if((value & RCU_CTL_PLLEN) != 0)
+        if ((value & RCU_CTL_PLLEN) != 0)
             value |= RCU_CTL_PLLSTB;
         s->rcu_ctl = value;
         break;
@@ -171,7 +171,7 @@ static void nuclei_rcu_realize(DeviceState *dev, Error **errp)
     NucLeiRCUState *s = NUCLEI_RCU(dev);
 
     memory_region_init_io(&s->iomem, OBJECT(dev), &nuclei_rcu_ops,
-                          s,TYPE_NUCLEI_RCU, 0x400);
+                          s, TYPE_NUCLEI_RCU, 0x400);
     sysbus_init_mmio(SYS_BUS_DEVICE(dev), &s->iomem);
 
     sysbus_init_irq(SYS_BUS_DEVICE(dev), &s->rcu_irq);

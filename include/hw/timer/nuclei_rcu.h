@@ -1,21 +1,20 @@
 /*
  *  NUCLEI RCU (RCU Unit) interface
  *
- * Copyright (c) 2020 Nuclei Limited. All rights reserved.
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
- * SPDX-License-Identifier: Apache-2.0
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Licensed under the Apache License, Version 2.0 (the License); you may
- * not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an AS IS BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef HW_NUCLEI_RCU_H
 #define HW_NUCLEI_RCU_H
@@ -28,30 +27,31 @@
 #define NUCLEI_RCU(obj) \
     OBJECT_CHECK(NucLeiRCUState, (obj), TYPE_NUCLEI_RCU)
 
-#define RCU_CTL_HXTALEN                 BIT(16)
-#define RCU_CTL_HXTALSTB                BIT(17)
-#define RCU_CTL_PLLEN                   BIT(24)
-#define RCU_CTL_PLLSTB                  BIT(25)
-#define RCU_CTL_PLL1EN                  BIT(26)
-#define RCU_CTL_PLL1STB                 BIT(27)
-#define RCU_CTL_PLL2EN                  BIT(28)
-#define RCU_CTL_PLL2STB                 BIT(29)
+#define RCU_CTL_HXTALEN BIT(16)
+#define RCU_CTL_HXTALSTB BIT(17)
+#define RCU_CTL_PLLEN BIT(24)
+#define RCU_CTL_PLLSTB BIT(25)
+#define RCU_CTL_PLL1EN BIT(26)
+#define RCU_CTL_PLL1STB BIT(27)
+#define RCU_CTL_PLL2EN BIT(28)
+#define RCU_CTL_PLL2STB BIT(29)
 
-#define NUCLEI_RCU_REG_RCU_CTL   0x00
-#define NUCLEI_RCU_REG_RCU_CFG0    0x04
-#define NUCLEI_RCU_REG_RCU_INT   0x08
-#define NUCLEI_RCU_REG_RCU_APB2RST   0x0C
-#define NUCLEI_RCU_REG_RCU_APB1RST   0x10
-#define NUCLEI_RCU_REG_RCU_AHBEN   0x14
-#define NUCLEI_RCU_REG_RCU_APB2EN   0x18
-#define NUCLEI_RCU_REG_RCU_APB1EN   0x1C
-#define NUCLEI_RCU_REG_RCU_BDCTL   0x20
-#define NUCLEI_RCU_REG_RCU_RSTSCK   0x24
-#define NUCLEI_RCU_REG_RCU_AHBRST   0x28
-#define NUCLEI_RCU_REG_RCU_CFG1   0x2C
-#define NUCLEI_RCU_REG_RCU_DSV   0x34
+#define NUCLEI_RCU_REG_RCU_CTL 0x00
+#define NUCLEI_RCU_REG_RCU_CFG0 0x04
+#define NUCLEI_RCU_REG_RCU_INT 0x08
+#define NUCLEI_RCU_REG_RCU_APB2RST 0x0C
+#define NUCLEI_RCU_REG_RCU_APB1RST 0x10
+#define NUCLEI_RCU_REG_RCU_AHBEN 0x14
+#define NUCLEI_RCU_REG_RCU_APB2EN 0x18
+#define NUCLEI_RCU_REG_RCU_APB1EN 0x1C
+#define NUCLEI_RCU_REG_RCU_BDCTL 0x20
+#define NUCLEI_RCU_REG_RCU_RSTSCK 0x24
+#define NUCLEI_RCU_REG_RCU_AHBRST 0x28
+#define NUCLEI_RCU_REG_RCU_CFG1 0x2C
+#define NUCLEI_RCU_REG_RCU_DSV 0x34
 
-typedef struct NucLeiRCUState {
+typedef struct NucLeiRCUState
+{
     /*< private >*/
     SysBusDevice parent_obj;
 

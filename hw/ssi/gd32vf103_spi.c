@@ -1,7 +1,7 @@
 /*
- *  GD32VF103 RTC interface
+ *  GD32VF103 SPI interface
  *
- * Copyright (c) 2020 PLCT Lab
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ static void gd32vf103_spi_reset(DeviceState *dev)
 }
 
 static uint64_t gd32vf103_spi_read(void *opaque, hwaddr offset,
-                                    unsigned size)
+                                   unsigned size)
 {
     GD32VF103SPIState *s = GD32VF103_SPI(opaque);
     uint64_t value = 0;
@@ -82,7 +82,7 @@ static uint64_t gd32vf103_spi_read(void *opaque, hwaddr offset,
 }
 
 static void gd32vf103_spi_write(void *opaque, hwaddr offset,
-                                 uint64_t value, unsigned size)
+                                uint64_t value, unsigned size)
 {
     GD32VF103SPIState *s = GD32VF103_SPI(opaque);
     switch (offset)
@@ -134,7 +134,7 @@ static void gd32vf103_spi_realize(DeviceState *dev, Error **errp)
     GD32VF103SPIState *s = GD32VF103_SPI(dev);
 
     memory_region_init_io(&s->iomem, OBJECT(dev), &gd32vf103_spi_ops,
-                          s,TYPE_GD32VF103_SPI, 0x1000);
+                          s, TYPE_GD32VF103_SPI, 0x1000);
     sysbus_init_mmio(SYS_BUS_DEVICE(dev), &s->iomem);
 }
 

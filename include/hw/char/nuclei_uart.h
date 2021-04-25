@@ -1,7 +1,7 @@
 /*
- *  NUCLEI Hummingbird Evaluation Kit  100T UART interface
+ *  NUCLEI Hummingbird Evaluation Kit  100T/200T UART interface
  *
- * Copyright (c) 2020 PLCT Lab
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,28 +27,31 @@
 #define TYPE_NUCLEI_UART "riscv.nuclei.uart"
 OBJECT_DECLARE_SIMPLE_TYPE(NucLeiUARTState, NUCLEI_UART)
 
-#define NUCLEI_UART_REG_TXDATA     0x000
-#define NUCLEI_UART_REG_RXDATA     0x004
-#define NUCLEI_UART_REG_TXCTRL     0x008
-#define NUCLEI_UART_REG_RXCTRL     0x00C
-#define NUCLEI_UART_REG_IE         0x010
-#define NUCLEI_UART_REG_IP         0x014
-#define NUCLEI_UART_REG_DIV        0x018
+#define NUCLEI_UART_REG_TXDATA 0x000
+#define NUCLEI_UART_REG_RXDATA 0x004
+#define NUCLEI_UART_REG_TXCTRL 0x008
+#define NUCLEI_UART_REG_RXCTRL 0x00C
+#define NUCLEI_UART_REG_IE 0x010
+#define NUCLEI_UART_REG_IP 0x014
+#define NUCLEI_UART_REG_DIV 0x018
 
-#define NUCLEI_UART_GET_TXCNT(txctrl)   (txctrl & 0x1)
-#define NUCLEI_UART_GET_RXCNT(rxctrl)   (rxctrl & 0x1)
+#define NUCLEI_UART_GET_TXCNT(txctrl) (txctrl & 0x1)
+#define NUCLEI_UART_GET_RXCNT(rxctrl) (rxctrl & 0x1)
 
-enum {
-    NUCLEI_UART_IE_TXWM       = 1, /* Transmit watermark interrupt enable */
-    NUCLEI_UART_IE_RXWM       = 2  /* Receive watermark interrupt enable */
+enum
+{
+    NUCLEI_UART_IE_TXWM = 1, /* Transmit watermark interrupt enable */
+    NUCLEI_UART_IE_RXWM = 2  /* Receive watermark interrupt enable */
 };
 
-enum {
-    NUCLEI_UART_IP_TXWM       = 1, /* Transmit watermark interrupt pending */
-    NUCLEI_UART_IP_RXWM       = 2  /* Receive watermark interrupt pending */
+enum
+{
+    NUCLEI_UART_IP_TXWM = 1, /* Transmit watermark interrupt pending */
+    NUCLEI_UART_IP_RXWM = 2  /* Receive watermark interrupt pending */
 };
 
-typedef struct NucLeiUARTState {
+typedef struct NucLeiUARTState
+{
     /*< private >*/
     SysBusDevice parent_obj;
 
@@ -68,7 +71,7 @@ typedef struct NucLeiUARTState {
     uint32_t div;
 } NucLeiUARTState;
 
-NucLeiUARTState *nuclei_uart_create(MemoryRegion *address_space, hwaddr base,uint64_t size,
-    Chardev *chr, qemu_irq irq);
+NucLeiUARTState *nuclei_uart_create(MemoryRegion *address_space, hwaddr base, uint64_t size,
+                                    Chardev *chr, qemu_irq irq);
 
 #endif

@@ -1,7 +1,7 @@
 /*
  *  GD32VF103 WDT interface
  *
- * Copyright (c) 2020 PLCT Lab
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ static void gd32vf103_fwdgt_reset(DeviceState *dev)
 }
 
 static uint64_t gd32vf103_fwdgt_read(void *opaque, hwaddr offset,
-                                    unsigned size)
+                                     unsigned size)
 {
     GD32VF103FWDGTState *s = GD32VF103_FWDGT(opaque);
     uint64_t value = 0;
@@ -61,7 +61,7 @@ static uint64_t gd32vf103_fwdgt_read(void *opaque, hwaddr offset,
 }
 
 static void gd32vf103_fwdgt_write(void *opaque, hwaddr offset,
-                                 uint64_t value, unsigned size)
+                                  uint64_t value, unsigned size)
 {
     GD32VF103FWDGTState *s = GD32VF103_FWDGT(opaque);
     switch (offset)
@@ -92,7 +92,7 @@ static void gd32vf103_wwdgt_reset(DeviceState *dev)
 }
 
 static uint64_t gd32vf103_wwdgt_read(void *opaque, hwaddr offset,
-                                    unsigned size)
+                                     unsigned size)
 {
     GD32VF103WWDGTState *s = GD32VF103_WWDGT(opaque);
     uint64_t value = 0;
@@ -116,7 +116,7 @@ static uint64_t gd32vf103_wwdgt_read(void *opaque, hwaddr offset,
 }
 
 static void gd32vf103_wwdgt_write(void *opaque, hwaddr offset,
-                                 uint64_t value, unsigned size)
+                                  uint64_t value, unsigned size)
 {
     GD32VF103WWDGTState *s = GD32VF103_WWDGT(opaque);
 
@@ -156,26 +156,23 @@ static const MemoryRegionOps gd32vf103_wwdgt_ops = {
     },
 };
 
-
 static void gd32vf103_fwdgt_realize(DeviceState *dev, Error **errp)
 {
     GD32VF103FWDGTState *s = GD32VF103_FWDGT(dev);
 
     memory_region_init_io(&s->iomem, OBJECT(dev), &gd32vf103_fwdgt_ops,
-                          s,TYPE_GD32VF103_FWDGT, 0x1000);
+                          s, TYPE_GD32VF103_FWDGT, 0x1000);
     sysbus_init_mmio(SYS_BUS_DEVICE(dev), &s->iomem);
 }
-
 
 static void gd32vf103_wwdgt_realize(DeviceState *dev, Error **errp)
 {
     GD32VF103WWDGTState *s = GD32VF103_WWDGT(dev);
 
     memory_region_init_io(&s->iomem, OBJECT(dev), &gd32vf103_wwdgt_ops,
-                          s,TYPE_GD32VF103_WWDGT, 0x1000);
+                          s, TYPE_GD32VF103_WWDGT, 0x1000);
     sysbus_init_mmio(SYS_BUS_DEVICE(dev), &s->iomem);
 }
-
 
 static void gd32vf103_fwdgt_class_init(ObjectClass *klass, void *data)
 {

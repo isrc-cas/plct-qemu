@@ -1,7 +1,7 @@
 /*
  *  GD32VF103 USART interface
  *
- * Copyright (c) 2020 PLCT Lab
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

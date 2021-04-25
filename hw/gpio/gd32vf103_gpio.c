@@ -1,7 +1,7 @@
 /*
  *  GD32VF103 GPIO interface
  *
- * Copyright (c) 2020 PLCT Lab
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,64 +25,66 @@
 
 static uint64_t gd32vf103_gpio_read(void *opaque, hwaddr offset, unsigned int size)
 {
-   GD32VF103GPIOState *s =GD32VF103_GPIO(opaque);
+    GD32VF103GPIOState *s = GD32VF103_GPIO(opaque);
     uint64_t value = 0;
 
-    switch (offset) {
-    case  GPIOx_CTL0:
+    switch (offset)
+    {
+    case GPIOx_CTL0:
         value = s->gpiox_ctl0;
         break;
-    case  GPIOx_CTL1:
+    case GPIOx_CTL1:
         value = s->gpiox_ctl1;
         break;
-    case  GPIOx_ISTAT:
+    case GPIOx_ISTAT:
         value = s->gpiox_istat;
         break;
-    case  GPIOx_OCTL:
+    case GPIOx_OCTL:
         value = s->gpiox_octl;
         break;
-    case  GPIOx_BOP:
+    case GPIOx_BOP:
         value = s->gpiox_bop;
         break;
-    case  GPIOx_BC:
+    case GPIOx_BC:
         value = s->gpiox_bc;
         break;
-    case  GPIOx_LOCK:
+    case GPIOx_LOCK:
         value = s->gpiox_lock;
         break;
     default:
         qemu_log_mask(LOG_GUEST_ERROR,
-                "%s: bad read offset 0x%" HWADDR_PRIx "\n",
+                      "%s: bad read offset 0x%" HWADDR_PRIx "\n",
                       __func__, offset);
     }
     return value;
 }
 
 static void gd32vf103_gpio_write(void *opaque, hwaddr offset,
-                       uint64_t value, unsigned int size)
+                                 uint64_t value, unsigned int size)
 {
-   GD32VF103GPIOState *s =GD32VF103_GPIO(opaque);
+    GD32VF103GPIOState *s = GD32VF103_GPIO(opaque);
 
-    switch (offset) {
-    case  GPIOx_CTL0:
+    switch (offset)
+    {
+    case GPIOx_CTL0:
         s->gpiox_ctl0 = value;
         break;
-    case  GPIOx_CTL1:
+    case GPIOx_CTL1:
         s->gpiox_ctl1 = value;
         break;
-    case  GPIOx_ISTAT:
-         s->gpiox_istat = value;
+    case GPIOx_ISTAT:
+        s->gpiox_istat = value;
         break;
-    case  GPIOx_OCTL:
+    case GPIOx_OCTL:
         s->gpiox_octl = value;
         break;
-    case  GPIOx_BOP:
+    case GPIOx_BOP:
         s->gpiox_bop = value;
         break;
-    case  GPIOx_BC:
+    case GPIOx_BC:
         s->gpiox_bc = value;
         break;
-    case  GPIOx_LOCK:
+    case GPIOx_LOCK:
         s->gpiox_lock = value;
         break;
 
@@ -94,7 +96,7 @@ static void gd32vf103_gpio_write(void *opaque, hwaddr offset,
 }
 
 static const MemoryRegionOps gpio_ops = {
-    .read =  gd32vf103_gpio_read,
+    .read = gd32vf103_gpio_read,
     .write = gd32vf103_gpio_write,
     .endianness = DEVICE_LITTLE_ENDIAN,
     .impl.min_access_size = 4,
@@ -103,7 +105,7 @@ static const MemoryRegionOps gpio_ops = {
 
 static void gd32vf103_gpio_reset(DeviceState *dev)
 {
-   GD32VF103GPIOState *s =GD32VF103_GPIO(dev);
+    GD32VF103GPIOState *s = GD32VF103_GPIO(dev);
 
     s->gpiox_ctl0 = 0x44444444;
     s->gpiox_ctl1 = 0x44444444;
@@ -116,10 +118,10 @@ static void gd32vf103_gpio_reset(DeviceState *dev)
 
 static void gd32vf103_gpio_init(Object *obj)
 {
-   GD32VF103GPIOState *s =GD32VF103_GPIO(obj);
+    GD32VF103GPIOState *s = GD32VF103_GPIO(obj);
 
     memory_region_init_io(&s->mmio, obj, &gpio_ops, s,
-            TYPE_GD32VF103_GPIO, GPIO_SIZE);
+                          TYPE_GD32VF103_GPIO, GPIO_SIZE);
     sysbus_init_mmio(SYS_BUS_DEVICE(obj), &s->mmio);
 }
 
@@ -136,8 +138,7 @@ static const TypeInfo gd32vf103_gpio_info = {
     .parent = TYPE_SYS_BUS_DEVICE,
     .instance_size = sizeof(GD32VF103GPIOState),
     .instance_init = gd32vf103_gpio_init,
-    .class_init = gd32vf103_gpio_class_init
-};
+    .class_init = gd32vf103_gpio_class_init};
 
 static void gd32vf103_gpio_register_types(void)
 {

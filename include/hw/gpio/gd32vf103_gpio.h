@@ -1,7 +1,7 @@
 /*
  *  GD32VF103 GPIO interface
  *
- * Copyright (c) 2020 PLCT Lab
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,19 +24,19 @@
 #define TYPE_GD32VF103_GPIO "gd32vf103-gpio"
 OBJECT_DECLARE_SIMPLE_TYPE(GD32VF103GPIOState, GD32VF103_GPIO)
 
-
 #define GPIO_PINS 16
 #define GPIO_SIZE 0x400
 
-#define GPIOx_CTL0      0x00
-#define GPIOx_CTL1      0x04
-#define GPIOx_ISTAT     0x08
-#define GPIOx_OCTL     0x0C
-#define GPIOx_BOP       0x10
-#define GPIOx_BC          0x14
-#define GPIOx_LOCK     0x18
+#define GPIOx_CTL0 0x00
+#define GPIOx_CTL1 0x04
+#define GPIOx_ISTAT 0x08
+#define GPIOx_OCTL 0x0C
+#define GPIOx_BOP 0x10
+#define GPIOx_BC 0x14
+#define GPIOx_LOCK 0x18
 
-typedef struct GD32VF103GPIOState {
+typedef struct GD32VF103GPIOState
+{
     SysBusDevice parent_obj;
 
     MemoryRegion mmio;

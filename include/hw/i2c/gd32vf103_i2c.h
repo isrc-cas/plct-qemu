@@ -1,7 +1,7 @@
 /*
  *  GD32VF103 I2C interface
  *
- * Copyright (c) 2020 PLCT Lab
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,18 +25,18 @@
 #define TYPE_GD32VF103_I2C "gd32vf103-i2c"
 OBJECT_DECLARE_SIMPLE_TYPE(GD32VF103I2CState, GD32VF103_I2C)
 
-#define I2C_REG_I2C_CTL0   0x00
-#define I2C_REG_I2C_CTL1    0x04
-#define I2C_REG_I2C_SADDR0   0x08
-#define I2C_REG_I2C_SADDR1   0x0C
-#define I2C_REG_I2C_DATA   0x10
-#define I2C_REG_I2C_STAT0   0x14
-#define I2C_REG_I2C_STAT1   0x18
-#define I2C_REG_I2C_CKCFG   0x1C
-#define I2C_REG_I2C_RT   0x20
+#define I2C_REG_I2C_CTL0 0x00
+#define I2C_REG_I2C_CTL1 0x04
+#define I2C_REG_I2C_SADDR0 0x08
+#define I2C_REG_I2C_SADDR1 0x0C
+#define I2C_REG_I2C_DATA 0x10
+#define I2C_REG_I2C_STAT0 0x14
+#define I2C_REG_I2C_STAT1 0x18
+#define I2C_REG_I2C_CKCFG 0x1C
+#define I2C_REG_I2C_RT 0x20
 
-
-typedef struct GD32VF103I2CState {
+typedef struct GD32VF103I2CState
+{
     /*< private >*/
     SysBusDevice parent_obj;
 

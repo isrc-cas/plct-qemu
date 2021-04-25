@@ -1,22 +1,23 @@
 /*
  * NUCLEI ECLIC(Enhanced Core Local Interrupt Controller)
  *
- * Copyright (c) 2020 NucLei, Inc.
  * Copyright (c) 2020 Gao ZhiYuan <alapha23@gmail.com>
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This provides a parameterizable interrupt controller based on NucLei's ECLIC.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2 or later, as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * This program is distributed in the hope it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along with
- * this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "qemu/osdep.h"
@@ -54,19 +55,23 @@ static uint64_t nuclei_eclic_read(void *opaque, hwaddr offset, unsigned size)
     NucLeiECLICState *eclic = NUCLEI_ECLIC(opaque);
     uint64_t value = 0;
     uint32_t id = 0;
-    if( offset >= NUCLEI_ECLIC_REG_CLICINTIP_BASE){
-        if( (offset - 0x1000)%4 == 0 )
+    if (offset >= NUCLEI_ECLIC_REG_CLICINTIP_BASE)
+    {
+        if ((offset - 0x1000) % 4 == 0)
         {
-            id =  (offset - 0x1000) /4;
-        }else if ((offset - 0x1001)%4 == 0)
+            id = (offset - 0x1000) / 4;
+        }
+        else if ((offset - 0x1001) % 4 == 0)
         {
-            id =  (offset - 0x1001)/4;
-        }else if ((offset - 0x1002)%4 == 0)
+            id = (offset - 0x1001) / 4;
+        }
+        else if ((offset - 0x1002) % 4 == 0)
         {
-            id =  (offset - 0x1002)/4;
-        }else if ((offset - 0x1003)%4 == 0)
+            id = (offset - 0x1002) / 4;
+        }
+        else if ((offset - 0x1003) % 4 == 0)
         {
-            id =  (offset - 0x1003)/4;
+            id = (offset - 0x1003) / 4;
         }
         offset = offset - 4 * id;
     }
@@ -74,25 +79,25 @@ static uint64_t nuclei_eclic_read(void *opaque, hwaddr offset, unsigned size)
     switch (offset)
     {
     case NUCLEI_ECLIC_REG_CLICCFG:
-        value =  eclic->cliccfg & 0xFF;
+        value = eclic->cliccfg & 0xFF;
         break;
     case NUCLEI_ECLIC_REG_CLICINFO:
-        value =  (CLICINTCTLBITS << 21) & 0xFFFFFFFF;
+        value = (CLICINTCTLBITS << 21) & 0xFFFFFFFF;
         break;
     case NUCLEI_ECLIC_REG_MTH:
-        value =  eclic->mth & 0xFF;
+        value = eclic->mth & 0xFF;
         break;
     case NUCLEI_ECLIC_REG_CLICINTIP_BASE:
-        value =  eclic->clicintip[id] & 0xFF;
+        value = eclic->clicintip[id] & 0xFF;
         break;
     case NUCLEI_ECLIC_REG_CLICINTIE_BASE:
-        value =  eclic->clicintie[id] & 0xFF;
+        value = eclic->clicintie[id] & 0xFF;
         break;
     case NUCLEI_ECLIC_REG_CLICINTATTR_BASE:
-        value =  eclic->clicintattr[id] & 0xFF;
+        value = eclic->clicintattr[id] & 0xFF;
         break;
     case NUCLEI_ECLIC_REG_CLICINTCTL_BASE:
-        value =  eclic->clicintctl[id] & 0xFF;
+        value = eclic->clicintctl[id] & 0xFF;
         break;
     default:
         break;
@@ -102,24 +107,28 @@ static uint64_t nuclei_eclic_read(void *opaque, hwaddr offset, unsigned size)
 }
 
 static void nuclei_eclic_write(void *opaque, hwaddr offset, uint64_t value,
-        unsigned size)
+                               unsigned size)
 {
     NucLeiECLICState *eclic = NUCLEI_ECLIC(opaque);
     uint32_t id = 0;
-    if(offset >= NUCLEI_ECLIC_REG_CLICINTIP_BASE) {
+    if (offset >= NUCLEI_ECLIC_REG_CLICINTIP_BASE)
+    {
 
-         if( (offset - 0x1000)%4 == 0 )
+        if ((offset - 0x1000) % 4 == 0)
         {
-            id =  (offset - 0x1000)/4;
-        }else if ((offset - 0x1001)%4 == 0)
+            id = (offset - 0x1000) / 4;
+        }
+        else if ((offset - 0x1001) % 4 == 0)
         {
-            id =  (offset - 0x1001)/4;
-        }else if ((offset - 0x1002)%4 == 0)
+            id = (offset - 0x1001) / 4;
+        }
+        else if ((offset - 0x1002) % 4 == 0)
         {
-            id =  (offset - 0x1002)/4;
-        }else if ((offset - 0x1003)%4 == 0)
+            id = (offset - 0x1002) / 4;
+        }
+        else if ((offset - 0x1003) % 4 == 0)
         {
-            id =  (offset - 0x1003)/4;
+            id = (offset - 0x1003) / 4;
         }
         offset = offset - 4 * id;
     }
@@ -127,7 +136,8 @@ static void nuclei_eclic_write(void *opaque, hwaddr offset, uint64_t value,
     {
     case NUCLEI_ECLIC_REG_CLICCFG:
         eclic->cliccfg = value & 0xFF;
-        for (id = 0; id < eclic->num_sources; id++) {
+        for (id = 0; id < eclic->num_sources; id++)
+        {
             update_eclic_int_info(eclic, id);
         }
         break;
@@ -135,15 +145,18 @@ static void nuclei_eclic_write(void *opaque, hwaddr offset, uint64_t value,
         nuclei_eclic_update_intmth(eclic, id, value & 0xFF);
         break;
     case NUCLEI_ECLIC_REG_CLICINTIP_BASE:
-        if ((eclic->clicintlist[id].trigger & 0x1) != 0) {
-            if ((eclic->clicintip[id] == 0) && (value & 0x1) == 1) {
+        if ((eclic->clicintlist[id].trigger & 0x1) != 0)
+        {
+            if ((eclic->clicintip[id] == 0) && (value & 0x1) == 1)
+            {
                 eclic->clicintip[id] = 1;
                 eclic_insert_pending_list(eclic, id);
-            } else if ((eclic->clicintip[id] == 1) && (value & 0x1) == 0) {
+            }
+            else if ((eclic->clicintip[id] == 1) && (value & 0x1) == 0)
+            {
                 eclic->clicintip[id] = 0;
                 eclic_remove_pending_list(eclic, id);
             }
-
         }
         nuclei_eclic_next_interrupt(eclic);
         break;
@@ -184,22 +197,24 @@ static void update_eclic_int_info(NucLeiECLICState *eclic, int irq)
         level_width = CLICINTCTLBITS;
     int prio_width = CLICINTCTLBITS - level_width;
 
-    if (level_width == 0) eclic->clicintlist[irq].level = 255;
+    if (level_width == 0)
+        eclic->clicintlist[irq].level = 255;
     else
-    	eclic->clicintlist[irq].level = (((eclic->clicintctl[irq] >> (8 - level_width)) & \
-    	     ~((char)0x80 >> (8 - level_width))) << (8 - level_width)) | (0xff >> level_width);
-
+        eclic->clicintlist[irq].level = (((eclic->clicintctl[irq] >> (8 - level_width)) &
+                                          ~((char)0x80 >> (8 - level_width)))
+                                         << (8 - level_width)) |
+                                        (0xff >> level_width);
 
     // TODO: implement priority decode logic when width > CLICINTCTLBITS or zeros
-    if (prio_width == 0) eclic->clicintlist[irq].prio = 0;
+    if (prio_width == 0)
+        eclic->clicintlist[irq].prio = 0;
     else
         eclic->clicintlist[irq].prio = (eclic->clicintctl[irq] >> (8 - level_width)) &
-                ~(0x80 >> (8 - prio_width));
+                                       ~(0x80 >> (8 - prio_width));
 
     eclic->clicintlist[irq].enable = eclic->clicintie[irq] & 0x1;
     // 0, level triggered; 2, rising edge; 3, falling edge
     eclic->clicintlist[irq].trigger = (eclic->clicintattr[irq] >> 1) & 0x3;
-
 }
 
 static void nuclei_eclic_next_interrupt(void *eclic_ptr)
@@ -209,48 +224,66 @@ static void nuclei_eclic_next_interrupt(void *eclic_ptr)
     ECLICPendingInterrupt *active;
     int shv;
 
-    QLIST_FOREACH(active, &eclic->pending_list, next) {
-         if(active->enable) {
-             if (active->level >= eclic->mth) {
+    QLIST_FOREACH(active, &eclic->pending_list, next)
+    {
+        if (active->enable)
+        {
+            if (active->level >= eclic->mth)
+            {
 
                 shv = eclic->clicintattr[active->irq] & 0x1;
                 eclic->active_count++;
                 riscv_cpu_eclic_interrupt(cpu, (active->irq & 0xFFF) | (shv << 12) | (active->level << 13));
                 return;
-             }
+            }
         }
     }
     riscv_cpu_eclic_interrupt(cpu, -1);
 }
 
-void riscv_cpu_eclic_int_handler_start(void *eclic_ptr, int irq) {
+void riscv_cpu_eclic_int_handler_start(void *eclic_ptr, int irq)
+{
     NucLeiECLICState *eclic = (NucLeiECLICState *)eclic_ptr;
-    if ((eclic->clicintlist[irq].trigger & 0x1) != 0) {
+    if ((eclic->clicintlist[irq].trigger & 0x1) != 0)
+    {
         eclic->clicintip[irq] = 0;
         eclic_remove_pending_list(eclic, irq);
     }
     nuclei_eclic_next_interrupt(eclic);
 }
 
-static int level_compare(NucLeiECLICState *eclic, ECLICPendingInterrupt *irq1, ECLICPendingInterrupt *irq2) 
+static int level_compare(NucLeiECLICState *eclic, ECLICPendingInterrupt *irq1, ECLICPendingInterrupt *irq2)
 {
-    if (irq1->level == irq2->level) {
-    if (irq1->prio == irq2->prio) {
-        if (irq1->irq >= irq2->irq) {
-            // put irq2 behind
+    if (irq1->level == irq2->level)
+    {
+        if (irq1->prio == irq2->prio)
+        {
+            if (irq1->irq >= irq2->irq)
+            {
+                // put irq2 behind
+                return 0;
+            }
+            else
+            {
+                // irq2 before irq1
+                return 1;
+            }
+        }
+        else if (irq1->prio > irq2->level)
+        {
             return 0;
-        } else {
-            // irq2 before irq1
+        }
+        else
+        {
             return 1;
         }
-    } else if (irq1->prio > irq2->level) {
-        return 0;
-    } else {
-        return 1;
     }
-    } else if (irq1->level > irq2->level) {
+    else if (irq1->level > irq2->level)
+    {
         return 0;
-    } else {
+    }
+    else
+    {
         return 1;
     }
 }
@@ -267,16 +300,24 @@ static void nuclei_eclic_update_intmth(NucLeiECLICState *eclic, int irq, int mth
     nuclei_eclic_next_interrupt(eclic);
 }
 
-static void eclic_insert_pending_list(NucLeiECLICState *eclic, int irq) {
+static void eclic_insert_pending_list(NucLeiECLICState *eclic, int irq)
+{
     ECLICPendingInterrupt *node;
-    if (QLIST_EMPTY(&eclic->pending_list)) {
+    if (QLIST_EMPTY(&eclic->pending_list))
+    {
         QLIST_INSERT_HEAD(&eclic->pending_list, &eclic->clicintlist[irq], next);
-    } else {
-        QLIST_FOREACH(node, &eclic->pending_list, next) {
-            if (level_compare(eclic, node, &eclic->clicintlist[irq])) {
+    }
+    else
+    {
+        QLIST_FOREACH(node, &eclic->pending_list, next)
+        {
+            if (level_compare(eclic, node, &eclic->clicintlist[irq]))
+            {
                 QLIST_INSERT_BEFORE(node, &eclic->clicintlist[irq], next);
                 break;
-            } else if (node->next.le_next == NULL) {
+            }
+            else if (node->next.le_next == NULL)
+            {
                 QLIST_INSERT_AFTER(node, &eclic->clicintlist[irq], next);
                 break;
             }
@@ -284,7 +325,8 @@ static void eclic_insert_pending_list(NucLeiECLICState *eclic, int irq) {
     }
 }
 
-static void eclic_remove_pending_list(NucLeiECLICState *eclic, int irq) {
+static void eclic_remove_pending_list(NucLeiECLICState *eclic, int irq)
+{
     QLIST_REMOVE(&eclic->clicintlist[irq], next);
 }
 
@@ -295,12 +337,14 @@ static void nuclei_eclic_update_intip(NucLeiECLICState *eclic, int irq, int new_
     int trigger = (eclic->clicintattr[irq] >> 1) & 0x3;
     if (((trigger == 0) && new_intip) ||
         ((trigger == 1) && !old_intip && new_intip) ||
-        ((trigger == 3) && old_intip && !new_intip)) {
+        ((trigger == 3) && old_intip && !new_intip))
+    {
         eclic->clicintip[irq] = 1;
         eclic->clicintlist[irq].sig = new_intip;
         eclic_insert_pending_list(eclic, irq);
     }
-    else {
+    else
+    {
         if (eclic->clicintip[irq])
             eclic_remove_pending_list(eclic, irq);
         eclic->clicintip[irq] = 0;
@@ -349,7 +393,8 @@ static void nuclei_eclic_realize(DeviceState *dev, Error **errp)
     eclic->clicintctl = g_new0(uint8_t, eclic->num_sources);
     eclic->irqs = g_new0(qemu_irq, eclic->num_sources);
     QLIST_INIT(&eclic->pending_list);
-    for (id = 0; id < eclic->num_sources; id++) {
+    for (id = 0; id < eclic->num_sources; id++)
+    {
         eclic->clicintlist[id].irq = id;
         update_eclic_int_info(eclic, id);
     }
@@ -357,20 +402,20 @@ static void nuclei_eclic_realize(DeviceState *dev, Error **errp)
 
     /* Init ECLIC IRQ */
     eclic->irqs[Internal_SysTimerSW_IRQn] = qemu_allocate_irq(nuclei_eclic_irq_request,
-                        eclic, Internal_SysTimerSW_IRQn);
+                                                              eclic, Internal_SysTimerSW_IRQn);
     eclic->irqs[Internal_SysTimer_IRQn] = qemu_allocate_irq(nuclei_eclic_irq_request,
-                        eclic, Internal_SysTimer_IRQn);
+                                                            eclic, Internal_SysTimer_IRQn);
 
-    for (id = Internal_Reserved_Max_IRQn; id < eclic->num_sources; id++) {
+    for (id = Internal_Reserved_Max_IRQn; id < eclic->num_sources; id++)
+    {
         eclic->irqs[id] = qemu_allocate_irq(nuclei_eclic_irq_request,
-                        eclic, id);
+                                            eclic, id);
     }
 
     //  qdev_init_gpio_in(dev, nuclei_eclic_irq, eclic->num_sources);
 
     RISCVCPU *cpu = RISCV_CPU(qemu_get_cpu(0));
     cpu->env.eclic = eclic;
-
 }
 
 static void nuclei_eclic_class_init(ObjectClass *klass, void *data)
@@ -379,14 +424,13 @@ static void nuclei_eclic_class_init(ObjectClass *klass, void *data)
 
     device_class_set_props(dc, nuclei_eclic_properties);
     dc->realize = nuclei_eclic_realize;
-
 }
 
 static const TypeInfo nuclei_eclic_info = {
-    .name          = TYPE_NUCLEI_ECLIC,
-    .parent        = TYPE_SYS_BUS_DEVICE,
+    .name = TYPE_NUCLEI_ECLIC,
+    .parent = TYPE_SYS_BUS_DEVICE,
     .instance_size = sizeof(NucLeiECLICState),
-    .class_init    = nuclei_eclic_class_init,
+    .class_init = nuclei_eclic_class_init,
 };
 
 static void nuclei_eclic_register_types(void)
@@ -403,12 +447,13 @@ type_init(nuclei_eclic_register_types);
 //     timer_del(env->mtimer);
 // }
 
-void nuclei_eclic_systimer_cb(DeviceState *dev) {
+void nuclei_eclic_systimer_cb(DeviceState *dev)
+{
     NucLeiECLICState *eclic = NUCLEI_ECLIC(dev);
     nuclei_eclic_irq_request(eclic, Internal_SysTimer_IRQn, 1);
 }
 
-DeviceState *nuclei_eclic_create(hwaddr addr,  uint32_t aperture_size,  uint32_t num_sources)
+DeviceState *nuclei_eclic_create(hwaddr addr, uint32_t aperture_size, uint32_t num_sources)
 {
     DeviceState *dev = qdev_new(TYPE_NUCLEI_ECLIC);
     qdev_prop_set_uint32(dev, "aperture-size", aperture_size);
@@ -416,5 +461,5 @@ DeviceState *nuclei_eclic_create(hwaddr addr,  uint32_t aperture_size,  uint32_t
     sysbus_realize_and_unref(SYS_BUS_DEVICE(dev), &error_fatal);
     sysbus_mmio_map(SYS_BUS_DEVICE(dev), 0, addr);
 
-    return  dev;
+    return dev;
 }

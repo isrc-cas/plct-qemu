@@ -1,7 +1,7 @@
 /*
  *  GD32VF103 USART interface
  *
- * Copyright (c) 2020 PLCT Lab
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,24 +34,28 @@
 
 static void update_irq(GD32VF103USARTState *s)
 {
-     static int cond = 0;
-     int new_cond = 0;
-     s->usart_stat |=  USART_TBE;
-     if (s->rx_fifo_len)
-    	 s->usart_stat |= USART_RBNE;
-     else
-    	 s->usart_stat &= ~USART_RBNE;
-     if (((s->usart_ctl0 & USART_TCIE) && (s->usart_ctl0 & USART_TEN)) ||
-         ((s->usart_ctl0 & USART_RBNEIE) && (s->usart_ctl0 & USART_REN) && s->rx_fifo_len)) {
-         new_cond = 1;
-     }
-     if (!cond && new_cond) {
-    	 cond = new_cond;
-         qemu_irq_raise(s->irq);
-     } else if(cond && !new_cond) {
-    	 cond = new_cond;
-         qemu_irq_lower(s->irq);
-     }
+    static int cond = 0;
+    int new_cond = 0;
+    s->usart_stat |= USART_TBE;
+    if (s->rx_fifo_len)
+        s->usart_stat |= USART_RBNE;
+    else
+        s->usart_stat &= ~USART_RBNE;
+    if (((s->usart_ctl0 & USART_TCIE) && (s->usart_ctl0 & USART_TEN)) ||
+        ((s->usart_ctl0 & USART_RBNEIE) && (s->usart_ctl0 & USART_REN) && s->rx_fifo_len))
+    {
+        new_cond = 1;
+    }
+    if (!cond && new_cond)
+    {
+        cond = new_cond;
+        qemu_irq_raise(s->irq);
+    }
+    else if (cond && !new_cond)
+    {
+        cond = new_cond;
+        qemu_irq_lower(s->irq);
+    }
 }
 
 static uint64_t
@@ -66,7 +70,8 @@ uart_read(void *opaque, hwaddr offset, unsigned int size)
         value = s->usart_stat;
         break;
     case USART_DATA:
-        if (s->rx_fifo_len) {
+        if (s->rx_fifo_len)
+        {
             fifo_val = s->rx_fifo[0];
             memmove(s->rx_fifo, s->rx_fifo + 1, s->rx_fifo_len - 1);
             s->rx_fifo_len--;
@@ -106,7 +111,7 @@ uart_write(void *opaque, hwaddr offset,
     unsigned char ch = value;
     switch (offset)
     {
-    case  USART_STAT:
+    case USART_STAT:
         s->usart_stat = value;
         break;
     case USART_DATA:
@@ -120,7 +125,7 @@ uart_write(void *opaque, hwaddr offset,
         s->usart_ctl0 = value;
         break;
     case USART_CTL1:
-        s->usart_ctl1  = value;
+        s->usart_ctl1 = value;
         update_irq(s);
         break;
     case USART_CTL2:
@@ -140,16 +145,15 @@ static const MemoryRegionOps uart_ops = {
     .endianness = DEVICE_NATIVE_ENDIAN,
     .valid = {
         .min_access_size = 4,
-        .max_access_size = 4
-    }
-};
+        .max_access_size = 4}};
 
 static void uart_rx(void *opaque, const uint8_t *buf, int size)
 {
     GD32VF103USARTState *s = opaque;
 
     /* Got a byte.  */
-    if (s->rx_fifo_len >= sizeof(s->rx_fifo)) {
+    if (s->rx_fifo_len >= sizeof(s->rx_fifo))
+    {
         printf("WARNING: UART dropped char.\n");
         return;
     }
@@ -173,7 +177,7 @@ static int uart_be_change(void *opaque)
     GD32VF103USARTState *s = opaque;
 
     qemu_chr_fe_set_handlers(&s->chr, uart_can_rx, uart_rx, uart_event,
-        uart_be_change, s, NULL, true);
+                             uart_be_change, s, NULL, true);
 
     return 0;
 }
@@ -181,15 +185,15 @@ static int uart_be_change(void *opaque)
 /*
  * Create UART device.
  */
-GD32VF103USARTState *gd32vf103_usart_create(MemoryRegion *address_space, hwaddr base,  uint64_t size,
-    Chardev *chr, qemu_irq irq)
+GD32VF103USARTState *gd32vf103_usart_create(MemoryRegion *address_space, hwaddr base, uint64_t size,
+                                            Chardev *chr, qemu_irq irq)
 {
 
     GD32VF103USARTState *s = g_malloc0(sizeof(GD32VF103USARTState));
     s->irq = irq;
     qemu_chr_fe_init(&s->chr, chr, &error_abort);
     qemu_chr_fe_set_handlers(&s->chr, uart_can_rx, uart_rx, uart_event,
-        uart_be_change, s, NULL, true);
+                             uart_be_change, s, NULL, true);
     memory_region_init_io(&s->mmio, NULL, &uart_ops, s,
                           TYPE_GD32VF103_USART, size);
     memory_region_add_subregion(address_space, base, &s->mmio);

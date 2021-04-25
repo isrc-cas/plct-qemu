@@ -1,7 +1,7 @@
 /*
- *  NUCLEI Hummingbird Evaluation Kit  100T UART interface
+ *  NUCLEI Hummingbird Evaluation Kit  100T/200T UART interface
  *
- * Copyright (c) 2020 PLCT Lab
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,10 +39,12 @@ static uint64_t uart_ip(NucLeiUARTState *s)
     uint64_t txcnt = NUCLEI_UART_GET_TXCNT(s->txctrl);
     uint64_t rxcnt = NUCLEI_UART_GET_RXCNT(s->rxctrl);
 
-    if (txcnt != 0) {
+    if (txcnt != 0)
+    {
         ret |= NUCLEI_UART_IP_TXWM;
     }
-    if (s->rx_fifo_len > rxcnt) {
+    if (s->rx_fifo_len > rxcnt)
+    {
         ret |= NUCLEI_UART_IP_RXWM;
     }
 
@@ -52,20 +54,24 @@ static uint64_t uart_ip(NucLeiUARTState *s)
 static void update_irq(NucLeiUARTState *s)
 {
     int cond = 0;
-    s->txctrl |=  0x1;
+    s->txctrl |= 0x1;
     if (s->rx_fifo_len)
         s->rxctrl &= ~0x1;
-     else
+    else
         s->rxctrl |= 0x1;
 
     if ((s->ie & NUCLEI_UART_IE_TXWM) ||
-        ((s->ie & NUCLEI_UART_IE_RXWM) && s->rx_fifo_len)) {
+        ((s->ie & NUCLEI_UART_IE_RXWM) && s->rx_fifo_len))
+    {
         cond = 1;
     }
 
-    if (cond ) {
+    if (cond)
+    {
         qemu_irq_raise(s->irq);
-    } else  {
+    }
+    else
+    {
         qemu_irq_lower(s->irq);
     }
 }
@@ -80,15 +86,16 @@ uart_read(void *opaque, hwaddr offset, unsigned int size)
     switch (offset)
     {
     case NUCLEI_UART_REG_TXDATA:
-        return  0;
+        return 0;
     case NUCLEI_UART_REG_RXDATA:
-        if (s->rx_fifo_len) {
+        if (s->rx_fifo_len)
+        {
             fifo_val = s->rx_fifo[0];
             memmove(s->rx_fifo, s->rx_fifo + 1, s->rx_fifo_len - 1);
             s->rx_fifo_len--;
             qemu_chr_fe_accept_input(&s->chr);
             update_irq(s);
-            return fifo_val ;
+            return fifo_val;
         }
         return 0x80000000;
     case NUCLEI_UART_REG_TXCTRL:
@@ -132,7 +139,7 @@ uart_write(void *opaque, hwaddr offset,
         s->rxctrl = value;
         break;
     case NUCLEI_UART_REG_IE:
-        s->ie  = value;
+        s->ie = value;
         update_irq(s);
         break;
     case NUCLEI_UART_REG_IP:
@@ -152,16 +159,15 @@ static const MemoryRegionOps uart_ops = {
     .endianness = DEVICE_NATIVE_ENDIAN,
     .valid = {
         .min_access_size = 4,
-        .max_access_size = 4
-    }
-};
+        .max_access_size = 4}};
 
 static void uart_rx(void *opaque, const uint8_t *buf, int size)
 {
     NucLeiUARTState *s = opaque;
 
     /* Got a byte.  */
-    if (s->rx_fifo_len >= sizeof(s->rx_fifo)) {
+    if (s->rx_fifo_len >= sizeof(s->rx_fifo))
+    {
         printf("WARNING: UART dropped char.\n");
         return;
     }
@@ -185,7 +191,7 @@ static int uart_be_change(void *opaque)
     NucLeiUARTState *s = opaque;
 
     qemu_chr_fe_set_handlers(&s->chr, uart_can_rx, uart_rx, uart_event,
-        uart_be_change, s, NULL, true);
+                             uart_be_change, s, NULL, true);
 
     return 0;
 }
@@ -193,14 +199,14 @@ static int uart_be_change(void *opaque)
 /*
  * Create UART device.
  */
-NucLeiUARTState *nuclei_uart_create(MemoryRegion *address_space, hwaddr base,  uint64_t size,
-    Chardev *chr, qemu_irq irq)
+NucLeiUARTState *nuclei_uart_create(MemoryRegion *address_space, hwaddr base, uint64_t size,
+                                    Chardev *chr, qemu_irq irq)
 {
     NucLeiUARTState *s = g_malloc0(sizeof(NucLeiUARTState));
     s->irq = irq;
     qemu_chr_fe_init(&s->chr, chr, &error_abort);
     qemu_chr_fe_set_handlers(&s->chr, uart_can_rx, uart_rx, uart_event,
-        uart_be_change, s, NULL, true);
+                             uart_be_change, s, NULL, true);
     memory_region_init_io(&s->mmio, NULL, &uart_ops, s,
                           TYPE_NUCLEI_UART, size);
     memory_region_add_subregion(address_space, base, &s->mmio);

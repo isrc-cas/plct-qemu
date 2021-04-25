@@ -1,24 +1,22 @@
 /*
- * Nuclei machine interface
+ * Nuclei U series  SOC machine interface
  *
- * Copyright (c) 2020 Nuclei Limited. All rights reserved.
+ * Copyright (c) 2020 Gao ZhiYuan <alapha23@gmail.com>
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
- * SPDX-License-Identifier: Apache-2.0
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Licensed under the Apache License, Version 2.0 (the License); you may
- * not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an AS IS BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 #ifndef HW_RISCV_NUCLEI_HBIRD_H
 #define HW_RISCV_NUCLEI_HBIRD_H
 
@@ -33,8 +31,8 @@
 #define RISCV_NUCLEI_HBIRD_SOC(obj) \
     OBJECT_CHECK(NucleiHBSoCState, (obj), TYPE_NUCLEI_HBIRD_SOC)
 
-
-typedef struct NucleiHBSoCState {
+typedef struct NucleiHBSoCState
+{
     /*< private >*/
     SysBusDevice parent_obj;
 
@@ -58,8 +56,8 @@ typedef struct NucleiHBSoCState {
 #define HBIRD_FPGA_MACHINE(obj) \
     OBJECT_CHECK(NucleiHBState, (obj), TYPE_HBIRD_FPGA_MACHINE)
 
-
-typedef struct {
+typedef struct
+{
     /*< private >*/
     SysBusDevice parent_obj;
 
@@ -70,14 +68,16 @@ typedef struct {
 
 } NucleiHBState;
 
-enum {
+enum
+{
     MSEL_ILM = 1,
     MSEL_FLASH = 2,
     MSEL_FLASHXIP = 3,
     MSEL_DDR = 4
 };
 
-enum {
+enum
+{
     HBIRD_DEBUG,
     HBIRD_ROM,
     HBIRD_TIMER,
@@ -97,39 +97,40 @@ enum {
     HBIRD_DLM
 };
 
-enum {
-    HBIRD_SOC_INT19_IRQn           = 19,                /*!< Device Interrupt */
-    HBIRD_SOC_INT20_IRQn           = 20,                /*!< Device Interrupt */
-    HBIRD_SOC_INT21_IRQn           = 21,                /*!< Device Interrupt */
-    HBIRD_SOC_INT22_IRQn           = 22,                /*!< Device Interrupt */
-    HBIRD_SOC_INT23_IRQn           = 23,                /*!< Device Interrupt */
-    HBIRD_SOC_INT24_IRQn           = 24,                /*!< Device Interrupt */
-    HBIRD_SOC_INT25_IRQn           = 25,                /*!< Device Interrupt */
-    HBIRD_SOC_INT26_IRQn           = 26,                /*!< Device Interrupt */
-    HBIRD_SOC_INT27_IRQn           = 27,                /*!< Device Interrupt */
-    HBIRD_SOC_INT28_IRQn           = 28,                /*!< Device Interrupt */
-    HBIRD_SOC_INT29_IRQn           = 29,                /*!< Device Interrupt */
-    HBIRD_SOC_INT30_IRQn           = 30,                /*!< Device Interrupt */
-    HBIRD_SOC_INT31_IRQn           = 31,                /*!< Device Interrupt */
-    HBIRD_SOC_INT32_IRQn           = 32,                /*!< Device Interrupt */
-    HBIRD_SOC_INT33_IRQn           = 33,                /*!< Device Interrupt */
-    HBIRD_SOC_INT34_IRQn           = 34,                /*!< Device Interrupt */
-    HBIRD_SOC_INT35_IRQn           = 35,                /*!< Device Interrupt */
-    HBIRD_SOC_INT36_IRQn           = 36,                /*!< Device Interrupt */
-    HBIRD_SOC_INT37_IRQn           = 37,                /*!< Device Interrupt */
-    HBIRD_SOC_INT38_IRQn           = 38,                /*!< Device Interrupt */
-    HBIRD_SOC_INT39_IRQn           = 39,                /*!< Device Interrupt */
-    HBIRD_SOC_INT40_IRQn           = 40,                /*!< Device Interrupt */
-    HBIRD_SOC_INT41_IRQn           = 41,                /*!< Device Interrupt */
-    HBIRD_SOC_INT42_IRQn           = 42,                /*!< Device Interrupt */
-    HBIRD_SOC_INT43_IRQn           = 43,                /*!< Device Interrupt */
-    HBIRD_SOC_INT44_IRQn           = 44,                /*!< Device Interrupt */
-    HBIRD_SOC_INT45_IRQn           = 45,                /*!< Device Interrupt */
-    HBIRD_SOC_INT46_IRQn           = 46,                /*!< Device Interrupt */
-    HBIRD_SOC_INT47_IRQn           = 47,                /*!< Device Interrupt */
-    HBIRD_SOC_INT48_IRQn           = 48,                /*!< Device Interrupt */
-    HBIRD_SOC_INT49_IRQn           = 49,                /*!< Device Interrupt */
-    HBIRD_SOC_INT50_IRQn           = 50,                /*!< Device Interrupt */
+enum
+{
+    HBIRD_SOC_INT19_IRQn = 19, /*!< Device Interrupt */
+    HBIRD_SOC_INT20_IRQn = 20, /*!< Device Interrupt */
+    HBIRD_SOC_INT21_IRQn = 21, /*!< Device Interrupt */
+    HBIRD_SOC_INT22_IRQn = 22, /*!< Device Interrupt */
+    HBIRD_SOC_INT23_IRQn = 23, /*!< Device Interrupt */
+    HBIRD_SOC_INT24_IRQn = 24, /*!< Device Interrupt */
+    HBIRD_SOC_INT25_IRQn = 25, /*!< Device Interrupt */
+    HBIRD_SOC_INT26_IRQn = 26, /*!< Device Interrupt */
+    HBIRD_SOC_INT27_IRQn = 27, /*!< Device Interrupt */
+    HBIRD_SOC_INT28_IRQn = 28, /*!< Device Interrupt */
+    HBIRD_SOC_INT29_IRQn = 29, /*!< Device Interrupt */
+    HBIRD_SOC_INT30_IRQn = 30, /*!< Device Interrupt */
+    HBIRD_SOC_INT31_IRQn = 31, /*!< Device Interrupt */
+    HBIRD_SOC_INT32_IRQn = 32, /*!< Device Interrupt */
+    HBIRD_SOC_INT33_IRQn = 33, /*!< Device Interrupt */
+    HBIRD_SOC_INT34_IRQn = 34, /*!< Device Interrupt */
+    HBIRD_SOC_INT35_IRQn = 35, /*!< Device Interrupt */
+    HBIRD_SOC_INT36_IRQn = 36, /*!< Device Interrupt */
+    HBIRD_SOC_INT37_IRQn = 37, /*!< Device Interrupt */
+    HBIRD_SOC_INT38_IRQn = 38, /*!< Device Interrupt */
+    HBIRD_SOC_INT39_IRQn = 39, /*!< Device Interrupt */
+    HBIRD_SOC_INT40_IRQn = 40, /*!< Device Interrupt */
+    HBIRD_SOC_INT41_IRQn = 41, /*!< Device Interrupt */
+    HBIRD_SOC_INT42_IRQn = 42, /*!< Device Interrupt */
+    HBIRD_SOC_INT43_IRQn = 43, /*!< Device Interrupt */
+    HBIRD_SOC_INT44_IRQn = 44, /*!< Device Interrupt */
+    HBIRD_SOC_INT45_IRQn = 45, /*!< Device Interrupt */
+    HBIRD_SOC_INT46_IRQn = 46, /*!< Device Interrupt */
+    HBIRD_SOC_INT47_IRQn = 47, /*!< Device Interrupt */
+    HBIRD_SOC_INT48_IRQn = 48, /*!< Device Interrupt */
+    HBIRD_SOC_INT49_IRQn = 49, /*!< Device Interrupt */
+    HBIRD_SOC_INT50_IRQn = 50, /*!< Device Interrupt */
     HBIRD_SOC_INT_MAX,
 };
 

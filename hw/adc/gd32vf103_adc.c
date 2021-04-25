@@ -1,7 +1,7 @@
 /*
  *  GD32VF103 ADC interface
  *
- * Copyright (c) 2020 PLCT Lab
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ static void gd32vf103_adc_reset(DeviceState *dev)
     s->adc_ctl1 = 0x0;
     s->adc_sampt0 = 0x0;
     s->adc_sampt1 = 0x0;
-    for(i = 0; i < ADC_MAX; i++)
+    for (i = 0; i < ADC_MAX; i++)
     {
         s->adc_ioff[i] = 0x0;
         s->adc_idata[i] = 0x0;
@@ -51,26 +51,23 @@ static void gd32vf103_adc_reset(DeviceState *dev)
 }
 
 static uint64_t gd32vf103_adc_read(void *opaque, hwaddr offset,
-                                    unsigned size)
+                                   unsigned size)
 {
     GD32VF103ADCState *s = GD32VF103_ADC(opaque);
     uint64_t value = 0;
     uint8_t id = 0;
 
-    if(offset >= ADC_REG_ADC_IOFFx 
-        && offset < ADC_REG_ADC_WDHT)
+    if (offset >= ADC_REG_ADC_IOFFx && offset < ADC_REG_ADC_WDHT)
     {
-        id = (offset - ADC_REG_ADC_IOFFx)/0x4;
+        id = (offset - ADC_REG_ADC_IOFFx) / 0x4;
         offset = ADC_REG_ADC_IOFFx;
     }
 
-    if(offset >= ADC_REG_ADC_IDATAx 
-        && offset < ADC_REG_ADC_RDATA)
+    if (offset >= ADC_REG_ADC_IDATAx && offset < ADC_REG_ADC_RDATA)
     {
-        id = (offset - ADC_REG_ADC_IDATAx)/0x4;
+        id = (offset - ADC_REG_ADC_IDATAx) / 0x4;
         offset = ADC_REG_ADC_IDATAx;
     }
-
 
     switch (offset)
     {
@@ -127,22 +124,20 @@ static uint64_t gd32vf103_adc_read(void *opaque, hwaddr offset,
 }
 
 static void gd32vf103_adc_write(void *opaque, hwaddr offset,
-                                 uint64_t value, unsigned size)
+                                uint64_t value, unsigned size)
 {
     GD32VF103ADCState *s = GD32VF103_ADC(opaque);
     uint8_t id = 0;
 
-    if(offset >= ADC_REG_ADC_IOFFx 
-        && offset < ADC_REG_ADC_WDHT)
+    if (offset >= ADC_REG_ADC_IOFFx && offset < ADC_REG_ADC_WDHT)
     {
-        id = (offset - ADC_REG_ADC_IOFFx)/0x4;
+        id = (offset - ADC_REG_ADC_IOFFx) / 0x4;
         offset = ADC_REG_ADC_IOFFx;
     }
 
-    if(offset >= ADC_REG_ADC_IDATAx 
-        && offset < ADC_REG_ADC_RDATA)
+    if (offset >= ADC_REG_ADC_IDATAx && offset < ADC_REG_ADC_RDATA)
     {
-        id = (offset - ADC_REG_ADC_IDATAx)/0x4;
+        id = (offset - ADC_REG_ADC_IDATAx) / 0x4;
         offset = ADC_REG_ADC_IDATAx;
     }
 
@@ -213,7 +208,7 @@ static void gd32vf103_adc_realize(DeviceState *dev, Error **errp)
     GD32VF103ADCState *s = GD32VF103_ADC(dev);
 
     memory_region_init_io(&s->iomem, OBJECT(dev), &gd32vf103_adc_ops,
-                          s,TYPE_GD32VF103_ADC, 0x1000);
+                          s, TYPE_GD32VF103_ADC, 0x1000);
     sysbus_init_mmio(SYS_BUS_DEVICE(dev), &s->iomem);
 }
 

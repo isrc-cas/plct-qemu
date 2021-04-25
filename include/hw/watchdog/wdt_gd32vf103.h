@@ -1,7 +1,7 @@
 /*
  *  GD32VF103 WDT interface
  *
- * Copyright (c) 2020 PLCT Lab
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,12 +27,13 @@ OBJECT_DECLARE_SIMPLE_TYPE(GD32VF103FWDGTState, GD32VF103_FWDGT)
 #define TYPE_GD32VF103_WWDGT "gd32vf103-wwdgt"
 OBJECT_DECLARE_SIMPLE_TYPE(GD32VF103WWDGTState, GD32VF103_WWDGT)
 
-#define FWDGT_REG_FWDGT_CTL   0x00
-#define FWDGT_REG_FWDGT_PSC   0x04
-#define FWDGT_REG_FWDGT_RLD   0x08
-#define FWDGT_REG_FWDGT_STAT  0x0C
+#define FWDGT_REG_FWDGT_CTL 0x00
+#define FWDGT_REG_FWDGT_PSC 0x04
+#define FWDGT_REG_FWDGT_RLD 0x08
+#define FWDGT_REG_FWDGT_STAT 0x0C
 
-typedef struct GD32VF103FWDGTState {
+typedef struct GD32VF103FWDGTState
+{
     /*< private >*/
     SysBusDevice parent_obj;
 
@@ -45,11 +46,12 @@ typedef struct GD32VF103FWDGTState {
     uint32_t fwdgt_stat;
 } GD32VF103FWDGTState;
 
-#define WWDGT_REG_WWDGT_CTL   0x00
-#define WWDGT_REG_WWDGT_CFG    0x04
-#define WWDGT_REG_WWDGT_STAT   0x08
+#define WWDGT_REG_WWDGT_CTL 0x00
+#define WWDGT_REG_WWDGT_CFG 0x04
+#define WWDGT_REG_WWDGT_STAT 0x08
 
-typedef struct GD32VF103WWDGTState {
+typedef struct GD32VF103WWDGTState
+{
     /*< private >*/
     SysBusDevice parent_obj;
 

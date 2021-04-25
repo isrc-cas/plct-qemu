@@ -1,7 +1,7 @@
 /*
  *  GD32VF103 SPI interface
  *
- * Copyright (c) 2020 PLCT Lab
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,17 +25,18 @@
 #define TYPE_GD32VF103_SPI "gd32vf103-spi"
 OBJECT_DECLARE_SIMPLE_TYPE(GD32VF103SPIState, GD32VF103_SPI)
 
-#define SPI_REG_SPI_CTL0   0x00
-#define SPI_REG_SPI_CTL1   0x04
-#define SPI_REG_SPI_STAT   0x08
-#define SPI_REG_SPI_DATA   0x0C
-#define SPI_REG_SPI_CRCPOLY   0x10
-#define SPI_REG_SPI_RCRC   0x14
-#define SPI_REG_SPI_TCRC   0x18
-#define SPI_REG_SPI_I2SCTL   0x1C
-#define SPI_REG_SPI_I2SPSC   0x20
+#define SPI_REG_SPI_CTL0 0x00
+#define SPI_REG_SPI_CTL1 0x04
+#define SPI_REG_SPI_STAT 0x08
+#define SPI_REG_SPI_DATA 0x0C
+#define SPI_REG_SPI_CRCPOLY 0x10
+#define SPI_REG_SPI_RCRC 0x14
+#define SPI_REG_SPI_TCRC 0x18
+#define SPI_REG_SPI_I2SCTL 0x1C
+#define SPI_REG_SPI_I2SPSC 0x20
 
-typedef struct GD32VF103SPIState {
+typedef struct GD32VF103SPIState
+{
     /*< private >*/
     SysBusDevice parent_obj;
 

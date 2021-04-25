@@ -1,7 +1,7 @@
 /*
  *  GD32VF103 ADC interface
  *
- * Copyright (c) 2020 PLCT Lab
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,25 +26,26 @@
 #define TYPE_GD32VF103_ADC "gd32vf103-adc"
 OBJECT_DECLARE_SIMPLE_TYPE(GD32VF103ADCState, GD32VF103_ADC)
 
-#define ADC_REG_ADC_STAT   0x00
-#define ADC_REG_ADC_CTL0    0x04
-#define ADC_REG_ADC_CTL1   0x08
-#define ADC_REG_ADC_SAMPT0   0x0C
-#define ADC_REG_ADC_SAMPT1   0x10
-#define ADC_REG_ADC_IOFFx   0x14
-#define ADC_REG_ADC_WDHT   0x24
-#define ADC_REG_ADC_WDLT   0x28
-#define ADC_REG_ADC_RSQ0   0x2C
-#define ADC_REG_ADC_RSQ1   0x30
-#define ADC_REG_ADC_RSQ2   0x34
-#define ADC_REG_ADC_ISQ    0x38
-#define ADC_REG_ADC_IDATAx   0x3C
-#define ADC_REG_ADC_RDATA   0x4C
-#define ADC_REG_ADC_OVSAMPCTL   0x80
+#define ADC_REG_ADC_STAT 0x00
+#define ADC_REG_ADC_CTL0 0x04
+#define ADC_REG_ADC_CTL1 0x08
+#define ADC_REG_ADC_SAMPT0 0x0C
+#define ADC_REG_ADC_SAMPT1 0x10
+#define ADC_REG_ADC_IOFFx 0x14
+#define ADC_REG_ADC_WDHT 0x24
+#define ADC_REG_ADC_WDLT 0x28
+#define ADC_REG_ADC_RSQ0 0x2C
+#define ADC_REG_ADC_RSQ1 0x30
+#define ADC_REG_ADC_RSQ2 0x34
+#define ADC_REG_ADC_ISQ 0x38
+#define ADC_REG_ADC_IDATAx 0x3C
+#define ADC_REG_ADC_RDATA 0x4C
+#define ADC_REG_ADC_OVSAMPCTL 0x80
 
-#define ADC_MAX  4
+#define ADC_MAX 4
 
-typedef struct GD32VF103ADCState {
+typedef struct GD32VF103ADCState
+{
     /*< private >*/
     SysBusDevice parent_obj;
 

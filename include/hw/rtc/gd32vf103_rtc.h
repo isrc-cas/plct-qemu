@@ -1,7 +1,7 @@
 /*
  *  GD32VF103 RTC interface
  *
- * Copyright (c) 2020 PLCT Lab
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,18 +25,19 @@
 #define TYPE_GD32VF103_RTC "gd32vf103-rtc"
 OBJECT_DECLARE_SIMPLE_TYPE(GD32VF103RTCState, GD32VF103_RTC)
 
-#define RTC_REG_RTC_INTEN   0x00
-#define RTC_REG_RTC_CTL    0x04
-#define RTC_REG_RTC_PSCH   0x08
-#define RTC_REG_RTC_PSCL   0x0C
-#define RTC_REG_RTC_DIVH   0x10
-#define RTC_REG_RTC_DIVL   0x14
-#define RTC_REG_RTC_CNTH   0x18
-#define RTC_REG_RTC_CNTL   0x1C
-#define RTC_REG_RTC_ALRMH   0x20
-#define RTC_REG_RTC_ALRML   0x24
+#define RTC_REG_RTC_INTEN 0x00
+#define RTC_REG_RTC_CTL 0x04
+#define RTC_REG_RTC_PSCH 0x08
+#define RTC_REG_RTC_PSCL 0x0C
+#define RTC_REG_RTC_DIVH 0x10
+#define RTC_REG_RTC_DIVL 0x14
+#define RTC_REG_RTC_CNTH 0x18
+#define RTC_REG_RTC_CNTL 0x1C
+#define RTC_REG_RTC_ALRMH 0x20
+#define RTC_REG_RTC_ALRML 0x24
 
-typedef struct GD32VF103RTCState {
+typedef struct GD32VF103RTCState
+{
     /*< private >*/
     SysBusDevice parent_obj;
 

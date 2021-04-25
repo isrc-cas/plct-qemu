@@ -1,21 +1,22 @@
 /*
- * SiFive U series machine interface
+ * Nuclei U series  SOC machine interface
  *
- * Copyright (c) 2017 SiFive, Inc.
+ * Copyright (c) 2020 Gao ZhiYuan <alapha23@gmail.com>
+ * Copyright (c) 2020-2021 PLCT Lab.All rights reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2 or later, as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * This program is distributed in the hope it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along with
- * this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #ifndef HW_NUCLEI_U_H
 #define HW_NUCLEI_U_H
 
@@ -33,9 +34,10 @@
 #define RISCV_NUCLEI_U_SOC(obj) \
     OBJECT_CHECK(NucLeiUSoCState, (obj), TYPE_RISCV_NUCLEI_U_SOC)
 
-#define NUCLEI_NUM_SPIS       3
+#define NUCLEI_NUM_SPIS 3
 
-typedef struct NucLeiUSoCState {
+typedef struct NucLeiUSoCState
+{
     /*< private >*/
     DeviceState parent_obj;
 
@@ -61,7 +63,8 @@ typedef struct NucLeiUSoCState {
 #define RISCV_NUCLEI_U_MACHINE(obj) \
     OBJECT_CHECK(NucLeiUState, (obj), TYPE_RISCV_NUCLEI_U_MACHINE)
 
-typedef struct NucLeiUState {
+typedef struct NucLeiUState
+{
     /*< private >*/
     MachineState parent_obj;
 
@@ -76,7 +79,8 @@ typedef struct NucLeiUState {
     uint32_t serial;
 } NucLeiUState;
 
-enum {
+enum
+{
     NUCLEI_U_DEV_MROM,
     NUCLEI_U_DEV_TIMER,
     NUCLEI_U_DEV_CLINT,
@@ -90,7 +94,8 @@ enum {
     NUCLEI_U_SPI2
 };
 
-enum {
+enum
+{
     NUCLEI_U_UART0_IRQ = 4,
     NUCLEI_U_UART1_IRQ = 5,
     NUCLEI_U_GPIO_IRQ0 = 7,
@@ -113,23 +118,26 @@ enum {
     NUCLEI_U_SPI2_IRQ = 36
 };
 
-enum {
+enum
+{
     NUCLEI_U_HFCLK_FREQ = 8000000,
     NUCLEI_U_RTCCLK_FREQ = 1000000
 };
 
-enum {
+enum
+{
     MSEL_MEMMAP_QSPI0_FLASH = 1,
     MSEL_L2LIM_QSPI0_FLASH = 6,
     MSEL_L2LIM_QSPI2_SD = 11
 };
 
-enum {
+enum
+{
     NUCLEI_CLINT_TIMEBASE_FREQ = 32768
 };
 
-#define NUCLEI_U_MANAGEMENT_CPU_COUNT   1
-#define NUCLEI_U_COMPUTE_CPU_COUNT      1
+#define NUCLEI_U_MANAGEMENT_CPU_COUNT 1
+#define NUCLEI_U_COMPUTE_CPU_COUNT 1
 
 #define NUCLEI_U_PLIC_HART_CONFIG "MS"
 #define NUCLEI_U_PLIC_NUM_SOURCES 54
