@@ -22,6 +22,7 @@
 #include "qemu/log.h"
 #include "qemu/error-report.h"
 #include "qapi/error.h"
+#include "qapi/visitor.h"
 #include "hw/boards.h"
 #include "hw/loader.h"
 #include "hw/sysbus.h"
@@ -59,16 +60,34 @@ static const struct MemmapEntry {
     [HBIRD_PWM1]  = { 0x10025000,     0x1000 },
     [HBIRD_QSPI2] = { 0x10034000,     0x1000 },
     [HBIRD_PWM2]  = { 0x10035000,     0x1000 },
-    [HBIRD_XIP]   = { 0x20000000, 0x10000000 },
-    [HBIRD_ILM]   = { 0x80000000,    0x20000 },
+    [HBIRD_XIP]   = { 0x20000000, 0x10000000 },     //flashxip
+    [HBIRD_DRAM] =     { 0xa0000000,        0x0 },      //ddr
+    [HBIRD_ILM]   = { 0x80000000,    0x20000 },     //ilm
     [HBIRD_DLM]   = { 0x90000000,    0x20000 },
 };
+
+static void nuclei_machine_get_uint32_prop(Object *obj, Visitor *v,
+                                             const char *name, void *opaque,
+                                             Error **errp)
+{
+    visit_type_uint32(v, name, (uint32_t *)opaque, errp);
+}
+
+static void nuclei_machine_set_uint32_prop(Object *obj, Visitor *v,
+                                             const char *name, void *opaque,
+                                             Error **errp)
+{
+    visit_type_uint32(v, name, (uint32_t *)opaque, errp);
+}
 
 static void nuclei_board_init(MachineState *machine)
 {
     const struct MemmapEntry *memmap = nuclei_memmap;
-    NucleiHBState *s = g_new0(NucleiHBState, 1);
+    NucleiHBState *s =  HBIRD_FPGA_MACHINE(machine);
     MemoryRegion *system_memory = get_system_memory();
+    MemoryRegion *main_mem = g_new(MemoryRegion, 1);
+    MemoryRegion *flash = g_new(MemoryRegion, 1);
+    target_ulong start_addr = memmap[HBIRD_ILM].base;
     int i;
 
     /* TODO: Add qtest support */
@@ -78,13 +97,43 @@ static void nuclei_board_init(MachineState *machine)
 
     memory_region_init_ram(&s->soc.ilm, NULL, "riscv.nuclei.ram.ilm",
                            memmap[HBIRD_ILM].size, &error_fatal);
-    memory_region_add_subregion(system_memory, 
+    memory_region_add_subregion(system_memory,
     memmap[HBIRD_ILM].base, &s->soc.ilm);
 
     memory_region_init_ram(&s->soc.dlm, NULL, "riscv.nuclei.ram.dlm",
                            memmap[HBIRD_DLM].size, &error_fatal);
-    memory_region_add_subregion(system_memory, 
+    memory_region_add_subregion(system_memory,
     memmap[HBIRD_DLM].base, &s->soc.dlm);
+
+    /* register DRAM */
+    memory_region_init_ram(main_mem, NULL, "riscv.nuclei.dram",
+                           machine->ram_size, &error_fatal);
+    memory_region_add_subregion(system_memory, memmap[HBIRD_DRAM].base,
+                            main_mem);
+
+    /* Flash memory */
+    memory_region_init_ram(flash, NULL, "riscv.nuclei.xip",
+                           memmap[HBIRD_XIP].size, &error_fatal);
+    memory_region_add_subregion(system_memory, memmap[HBIRD_XIP].base,
+                                flash);
+
+    switch (s->msel) {
+    case MSEL_ILM:
+        start_addr = memmap[HBIRD_ILM].base;
+        break;
+    case MSEL_FLASH:
+        start_addr = memmap[HBIRD_XIP].base;
+        break;
+    case MSEL_FLASHXIP:
+        start_addr = memmap[HBIRD_XIP].base;
+        break;
+    case MSEL_DDR:
+        start_addr = memmap[HBIRD_DRAM].base;
+        break;
+    default:
+        start_addr = memmap[HBIRD_ILM].base;
+        break;
+    }
 
      /* reset vector */
     uint32_t reset_vec[8] = {
@@ -98,9 +147,8 @@ static void nuclei_board_init(MachineState *machine)
 #endif
         0x00028067,                  /*     jr     t0 */
         0x00000000,
-        memmap[HBIRD_ILM].base,     /* start: .dword DRAM_BASE */
+        start_addr,         /* start: .dword DRAM_BASE */
         0x00000000,
-                                     /* dtb: */
     };
 
     /* copy in the reset vector in little_endian byte order */
@@ -112,29 +160,21 @@ static void nuclei_board_init(MachineState *machine)
 
     /* boot rom */
     if (machine->kernel_filename) {
-        riscv_load_kernel(machine->kernel_filename, 
-            memmap[HBIRD_ILM].base,NULL);
+        riscv_load_kernel(machine->kernel_filename,start_addr,NULL);
     }
 }
 
-static void riscv_nuclei_soc_init(Object *obj)
+static void nuclei_soc_init(Object *obj)
 {
-    MachineState *ms = MACHINE(qdev_get_machine());
     NucleiHBSoCState *s = RISCV_NUCLEI_HBIRD_SOC(obj);
 
     object_initialize_child(obj, "cpus", &s->cpus,TYPE_RISCV_HART_ARRAY);
-
-    object_property_set_int(OBJECT(&s->cpus), "num-harts", ms->smp.cpus,
-                            &error_abort);
-
-    // object_initialize_child(obj, "timer",
-    //                       &s->timer, TYPE_NUCLEI_SYSTIMER);
 
     object_initialize_child(obj, "riscv.nuclei.gpio",
                           &s->gpio, TYPE_SIFIVE_GPIO);
 }
 
-static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
+static void nuclei_soc_realize(DeviceState *dev, Error **errp)
 {
     const struct MemmapEntry *memmap = nuclei_memmap;
     MachineState *ms = MACHINE(qdev_get_machine());
@@ -145,7 +185,6 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
     object_property_set_str(OBJECT(&s->cpus),  "cpu-type", ms->cpu_type,
                             &error_abort);
     sysbus_realize(SYS_BUS_DEVICE(&s->cpus), &error_abort);
-
 
     /* Mask ROM */
     memory_region_init_rom(&s->internal_rom, OBJECT(dev), "riscv.nuclei.irom",
@@ -180,44 +219,63 @@ static void riscv_nuclei_soc_realize(DeviceState *dev, Error **errp)
                     serial_hd(0),
                     nuclei_eclic_get_irq(DEVICE(s->eclic),
                     HBIRD_SOC_INT22_IRQn));
-
-    /* Flash memory */
-    memory_region_init_rom(&s->xip_mem, OBJECT(dev), "riscv.nuclei.xip",
-                        memmap[HBIRD_XIP].size, &error_fatal);
-    memory_region_add_subregion(sys_mem,
-                        memmap[HBIRD_XIP].base, &s->xip_mem);
-
 }
 
-static void nuclei_machine_init(MachineClass *mc)
+static void nuclei_machine_instance_init(Object *obj)
 {
+    NucleiHBState *s = HBIRD_FPGA_MACHINE(obj);
+
+    s->msel = 0;
+    object_property_add(obj, "msel", "uint32",
+                        nuclei_machine_get_uint32_prop,
+                        nuclei_machine_set_uint32_prop, NULL, &s->msel);
+    object_property_set_description(obj, "msel",
+                                    "Mode Select Startup");
+}
+
+static void nuclei_machine_class_init(ObjectClass *oc, void *data)
+{
+    MachineClass *mc = MACHINE_CLASS(oc);
+
     mc->desc = "Nuclei HummingBird Evaluation Kit";
     mc->init = nuclei_board_init;
     mc->max_cpus = 1;
-    mc->is_default = false;
     mc->default_cpu_type = NUCLEI_N_CPU;
 }
 
-DEFINE_MACHINE("hbird_eval", nuclei_machine_init)
+static const TypeInfo nuclei_machine_typeinfo = {
+    .name       = MACHINE_TYPE_NAME("hbird_fpga"),
+    .parent     = TYPE_MACHINE,
+    .class_init = nuclei_machine_class_init,
+    .instance_init = nuclei_machine_instance_init,
+    .instance_size = sizeof(NucleiHBState),
+};
 
-static void riscv_nuclei_soc_class_init(ObjectClass *oc, void *data)
+static void nuclei_machine_init_register_types(void)
+{
+    type_register_static(&nuclei_machine_typeinfo);
+}
+
+type_init(nuclei_machine_init_register_types)
+
+static void nuclei_soc_class_init(ObjectClass *oc, void *data)
 {
     DeviceClass *dc = DEVICE_CLASS(oc);
-    dc->realize = riscv_nuclei_soc_realize;
+    dc->realize = nuclei_soc_realize;
     dc->user_creatable = false;
 }
 
-static const TypeInfo riscv_nuclei_soc_type_info = {
+static const TypeInfo nuclei_soc_type_info = {
     .name = TYPE_NUCLEI_HBIRD_SOC,
     .parent = TYPE_DEVICE,
     .instance_size = sizeof(NucleiHBSoCState),
-    .instance_init = riscv_nuclei_soc_init,
-    .class_init = riscv_nuclei_soc_class_init,
+    .instance_init = nuclei_soc_init,
+    .class_init = nuclei_soc_class_init,
 };
 
-static void riscv_nuclei_soc_register_types(void)
+static void nuclei_soc_register_types(void)
 {
-    type_register_static(&riscv_nuclei_soc_type_info);
+    type_register_static(&nuclei_soc_type_info);
 }
 
-type_init(riscv_nuclei_soc_register_types)
+type_init(nuclei_soc_register_types)

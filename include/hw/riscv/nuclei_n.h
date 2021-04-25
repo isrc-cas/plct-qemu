@@ -54,13 +54,28 @@ typedef struct NucleiHBSoCState {
 
 } NucleiHBSoCState;
 
+#define TYPE_HBIRD_FPGA_MACHINE MACHINE_TYPE_NAME("hbird_fpga")
+#define HBIRD_FPGA_MACHINE(obj) \
+    OBJECT_CHECK(NucleiHBState, (obj), TYPE_HBIRD_FPGA_MACHINE)
+
+
 typedef struct {
     /*< private >*/
     SysBusDevice parent_obj;
 
     /*< public >*/
     NucleiHBSoCState soc;
+
+    uint32_t msel;
+
 } NucleiHBState;
+
+enum {
+    MSEL_ILM = 1,
+    MSEL_FLASH = 2,
+    MSEL_FLASHXIP = 3,
+    MSEL_DDR = 4
+};
 
 enum {
     HBIRD_DEBUG,
@@ -77,6 +92,7 @@ enum {
     HBIRD_QSPI2,
     HBIRD_PWM2,
     HBIRD_XIP,
+    HBIRD_DRAM,
     HBIRD_ILM,
     HBIRD_DLM
 };
