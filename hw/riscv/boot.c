@@ -201,7 +201,6 @@ uint32_t riscv_load_fdt(hwaddr dram_base, uint64_t mem_size, void *fdt)
     fdt_pack(fdt);
     /* copy in the device tree */
     qemu_fdt_dumpdtb(fdt, fdtsize);
-
     rom_add_blob_fixed_as("fdt", fdt, fdtsize, fdt_addr,
                           &address_space_memory);
 

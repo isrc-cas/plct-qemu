@@ -127,6 +127,9 @@ static void create_fdt(NucLeiUState *s, const struct MemmapEntry *memmap,
 
     qemu_fdt_add_subnode(fdt, "/chosen");
 
+    qemu_fdt_add_subnode(fdt, "/console");
+    qemu_fdt_setprop_string(fdt, "/console", "compatible", "sbi,console");
+
     hfclk_phandle = phandle++;
     nodename = g_strdup_printf("/hfclk");
     qemu_fdt_add_subnode(fdt, nodename);
@@ -259,7 +262,6 @@ static void create_fdt(NucLeiUState *s, const struct MemmapEntry *memmap,
         0x0, memmap[NUCLEI_U_DEV_UART0].base,
         0x0, memmap[NUCLEI_U_DEV_UART0].size);
     qemu_fdt_setprop_cell(fdt, nodename, "clocks", hfclk_phandle);
-    qemu_fdt_setprop_cell(fdt, nodename, "baud", 57600);
     qemu_fdt_setprop_cell(fdt, nodename, "interrupt-parent", plic_phandle);
     qemu_fdt_setprop_cell(fdt, nodename, "interrupts", NUCLEI_U_UART0_IRQ);
     qemu_fdt_setprop_cell(fdt, nodename, "phandle", uart_phandle);
@@ -284,7 +286,7 @@ static void create_fdt(NucLeiUState *s, const struct MemmapEntry *memmap,
     nodename = g_strdup_printf("/spi@%lx",
         memmap[NUCLEI_U_SPI0].base);
     qemu_fdt_add_subnode(fdt, nodename);
-    qemu_fdt_setprop_string(fdt, nodename, "compatible", "sifive,spi0");
+    qemu_fdt_setprop_string(fdt, nodename, "compatible", "nuclei,spi0");
     qemu_fdt_setprop_cells(fdt, nodename, "reg",
         0x0, memmap[NUCLEI_U_SPI0].base,
         0x0, memmap[NUCLEI_U_SPI0].size,
@@ -306,7 +308,7 @@ static void create_fdt(NucLeiUState *s, const struct MemmapEntry *memmap,
     qemu_fdt_setprop_string(fdt, nodename, "compatible", "jedec,spi-nor");
     qemu_fdt_setprop_cells(fdt, nodename, "reg", 0x0);
     qemu_fdt_setprop_cells(fdt, nodename, "spi-max-frequency", 1000000);
-    qemu_fdt_setprop_cells(fdt, nodename, "m25p,fast-read");
+    // qemu_fdt_setprop_cells(fdt, nodename, "m25p,fast-read");
     qemu_fdt_setprop_cells(fdt, nodename, "#spi-tx-bus-width", 0x1);
     qemu_fdt_setprop_cells(fdt, nodename, "#spi-rx-bus-width", 0x1);
     g_free(nodename);
@@ -314,7 +316,7 @@ static void create_fdt(NucLeiUState *s, const struct MemmapEntry *memmap,
     nodename = g_strdup_printf("/spi@%lx",
         (long)memmap[NUCLEI_U_SPI2].base);
     qemu_fdt_add_subnode(fdt, nodename);
-    qemu_fdt_setprop_string(fdt, nodename, "compatible", "sifive,spi0");
+    qemu_fdt_setprop_string(fdt, nodename, "compatible", "nuclei,spi0");
     qemu_fdt_setprop_cells(fdt, nodename, "reg",
         0x0, memmap[NUCLEI_U_SPI2].base,
         0x0, memmap[NUCLEI_U_SPI2].size);
@@ -434,6 +436,7 @@ static void nuclei_u_machine_init(MachineState *machine)
 
     firmware_end_addr = riscv_find_and_load_firmware(machine, BIOS_FILENAME,
                                                      start_addr, NULL);
+    printf(">>start_addr %lx firmware_end_addr %lx\n", start_addr, firmware_end_addr);
 
     if (machine->kernel_filename) {
         kernel_start_addr = riscv_calc_kernel_start_addr(&s->soc.u_cpus,
@@ -442,6 +445,7 @@ static void nuclei_u_machine_init(MachineState *machine)
         kernel_entry = riscv_load_kernel(machine->kernel_filename,
                                          kernel_start_addr, NULL);
 
+        printf(">>kernel_start_addr %lx kernel_entry %lx\n", kernel_start_addr, kernel_entry);
         if (machine->initrd_filename) {
             hwaddr start;
             hwaddr end = riscv_load_initrd(machine->initrd_filename,
@@ -463,6 +467,7 @@ static void nuclei_u_machine_init(MachineState *machine)
     /* Compute the fdt load address in dram */
     fdt_load_addr = riscv_load_fdt(memmap[NUCLEI_U_DEV_DRAM].base,
                                    machine->ram_size, s->fdt);
+    printf(">> fdt_load_addr %x\n", fdt_load_addr);
     #if defined(TARGET_RISCV64)
     start_addr_hi32 = start_addr >> 32;
     #endif
