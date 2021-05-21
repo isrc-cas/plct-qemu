@@ -21,6 +21,7 @@
 #define HW_NUCLEI_U_H
 
 #include "hw/sysbus.h"
+#include "hw/riscv/riscv_hart.h"
 
 #define TYPE_NUCLEI_U_SOC "riscv.nuclei.u.soc"
 #define NUCLEI_U_SOC(obj) \
@@ -31,6 +32,7 @@ typedef struct NucLeiUSoCState {
     DeviceState parent_obj;
 
     /*< public >*/
+    RISCVHartArrayState cpus;
 
 } NucLeiUSoCState;
 
@@ -46,5 +48,7 @@ typedef struct NucLeiUState {
     NucLeiUSoCState soc;
 
 } NucLeiUState;
+
+#define NUCLEI_U_CPU TYPE_RISCV_CPU_NUCLEI_UX600
 
 #endif

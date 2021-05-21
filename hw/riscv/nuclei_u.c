@@ -54,6 +54,8 @@ static void nuclei_ddr_machine_class_init(ObjectClass *oc, void *data)
 
     mc->desc = "Nuclei DDR 200T FPGA Evaluation Kit";
     mc->init = nuclei_ddr_machine_init;
+    mc->max_cpus = 1;
+    mc->default_cpu_type = NUCLEI_U_CPU;
 }
 
 static void nuclei_ddr_machine_instance_init(Object *obj)
@@ -77,10 +79,22 @@ type_init(nuclei_u_machine_init_register_types)
 
 static void nuclei_u_soc_realize(DeviceState *dev, Error **errp)
 {
+    MachineState *ms = MACHINE(qdev_get_machine());
+    NucLeiUSoCState *s = NUCLEI_U_SOC(dev);
+
+    object_property_set_str(OBJECT(&s->cpus), "cpu-type", ms->cpu_type,
+                            &error_abort);
+    object_property_set_int(OBJECT(&s->cpus), "num-harts", ms->smp.cpus,
+                            &error_abort);
+    object_property_set_int(OBJECT(&s->cpus), "resetvec", 0x1004, &error_abort);
+
+    sysbus_realize(SYS_BUS_DEVICE(&s->cpus), &error_abort);
 }
 
 static void nuclei_u_soc_instance_init(Object *obj)
 {
+    NucLeiUSoCState *s = NUCLEI_U_SOC(obj);
+    object_initialize_child(obj, "cpus", &s->cpus, TYPE_RISCV_HART_ARRAY);
 }
 
 static void nuclei_u_soc_class_init(ObjectClass *oc, void *data)

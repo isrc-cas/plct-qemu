@@ -50,6 +50,16 @@ static void nuclei_mcu_machine_init(MachineState *machine)
 static void nuclei_n_soc_realize(DeviceState *dev, Error **errp)
 {
     qemu_log(">>nuclei_n_soc_realize \n");
+    MachineState *ms = MACHINE(qdev_get_machine());
+    NucLeiNSoCState *s = NUCLEI_N_SOC(dev);
+
+    object_property_set_str(OBJECT(&s->cpus), "cpu-type", ms->cpu_type,
+                            &error_abort);
+    object_property_set_int(OBJECT(&s->cpus), "num-harts", ms->smp.cpus,
+                            &error_abort);
+    object_property_set_int(OBJECT(&s->cpus), "resetvec", 0x1004, &error_abort);
+
+    sysbus_realize(SYS_BUS_DEVICE(&s->cpus), &error_abort);
 }
 
 static void nuclei_mcu_machine_instance_init(Object *obj)
@@ -63,6 +73,8 @@ static void nuclei_mcu_machine_class_init(ObjectClass *oc, void *data)
     MachineClass *mc = MACHINE_CLASS(oc);
     mc->desc = "Nuclei MCU 200T FPGA Evaluation Kit";
     mc->init = nuclei_mcu_machine_init;
+    mc->max_cpus = 1;
+    mc->default_cpu_type = NUCLEI_N_CPU;
 }
 
 static const TypeInfo nuclei_mcu_machine_typeinfo = {
@@ -83,6 +95,9 @@ type_init(nuclei_mcu_machine_register_types)
 static void nuclei_n_soc_instance_init(Object *obj)
 {
     qemu_log(">>nuclei_n_soc_instance_init \n");
+
+    NucLeiNSoCState *s = NUCLEI_N_SOC(obj);
+    object_initialize_child(obj, "cpus", &s->cpus, TYPE_RISCV_HART_ARRAY);
 }
 
 static void nuclei_n_soc_class_init(ObjectClass *oc, void *data)
