@@ -478,6 +478,9 @@ typedef enum {
     rv_op_fsflags = 316,
     rv_op_fsrmi = 317,
     rv_op_fsflagsi = 318,
+    rv_op_custom_lbuf = 319,
+    rv_op_custom_sbuf = 320,
+    rv_op_custom_rowsum = 321,
 } rv_op;
 
 /* structures */
@@ -1117,6 +1120,9 @@ const rv_opcode_data opcode_data[] = {
     { "fsflags", rv_codec_i_csr, rv_fmt_rd_rs1, NULL, 0, 0, 0 },
     { "fsrmi", rv_codec_i_csr, rv_fmt_rd_zimm, NULL, 0, 0, 0 },
     { "fsflagsi", rv_codec_i_csr, rv_fmt_rd_zimm, NULL, 0, 0, 0 },
+    { "custom.lbuf", rv_codec_r, rv_fmt_rd_rs1_rs2, NULL, 0, 0, 0 },
+    { "custom.sbuf", rv_codec_r, rv_fmt_rd_rs1_rs2, NULL, 0, 0, 0 },
+    { "custom.rowsum", rv_codec_r, rv_fmt_rd_rs1_rs2, NULL, 0, 0, 0 },
 };
 
 /* CSR names */
@@ -1954,6 +1960,9 @@ static void decode_inst_opcode(rv_decode *dec, rv_isa isa)
             case 13: op = rv_op_divud; break;
             case 14: op = rv_op_remd; break;
             case 15: op = rv_op_remud; break;
+            case 18: op = rv_op_custom_lbuf; break;
+            case 34: op = rv_op_custom_sbuf; break;
+            case 54: op = rv_op_custom_rowsum; break;
             case 256: op = rv_op_subd; break;
             case 261: op = rv_op_srad; break;
             }

@@ -83,7 +83,8 @@
 enum {
     RISCV_FEATURE_MMU,
     RISCV_FEATURE_PMP,
-    RISCV_FEATURE_MISA
+    RISCV_FEATURE_MISA,
+    RISCV_FEATURE_NICE
 };
 
 #define PRIV_VERSION_1_10_0 0x00011000
@@ -298,6 +299,7 @@ struct RISCVCPU {
         bool ext_counters;
         bool ext_ifencei;
         bool ext_icsr;
+        bool ext_nice;
 
         char *priv_spec;
         char *user_spec;
