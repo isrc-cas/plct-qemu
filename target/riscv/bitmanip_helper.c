@@ -84,3 +84,7 @@ target_ulong HELPER(gorc)(target_ulong rs1, target_ulong rs2)
     return do_gorc(rs1, rs2, TARGET_LONG_BITS);
 }
 
+target_ulong HELPER(gorcw)(target_ulong rs1, target_ulong rs2)
+{
+    return do_gorc(rs1, rs2, 32);
+}
