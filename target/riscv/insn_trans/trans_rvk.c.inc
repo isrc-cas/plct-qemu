@@ -126,7 +126,6 @@ static bool trans_aesds(DisasContext *ctx, arg_aesds *a)
 	return true;
 }
 
-#ifdef TARGET_RISCV64
 static bool trans_aes64ks1i(DisasContext *ctx, arg_aes64ks1i *a)
 {
 	REQUIRE_EXT(ctx, RVK);
@@ -159,7 +158,6 @@ static bool trans_aes64im(DisasContext *ctx, arg_aes64im *a)
 	tcg_temp_free(source1);
 	return true;
 }
-#endif
 
 static bool trans_sha256sig0(DisasContext *ctx, arg_sha256sig0 *a)
 {
@@ -326,7 +324,6 @@ static bool trans_sha512sig1h(DisasContext *ctx, arg_sha512sig1h *a)
 	return true;
 }
 
-#ifdef TARGET_RISCV64
 static bool trans_sha512sig0(DisasContext *ctx, arg_sha512sig0 *a)
 {
 	REQUIRE_EXT(ctx, RVK);
@@ -382,7 +379,6 @@ static bool trans_sha512sum1(DisasContext *ctx, arg_sha512sum1 *a)
 	tcg_temp_free(source1);
 	return true;
 }
-#endif
 
 /* SM3 */
 static bool trans_sm3p0(DisasContext *ctx, arg_sm3p0 *a)
