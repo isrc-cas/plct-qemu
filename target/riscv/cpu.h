@@ -67,6 +67,7 @@
 #define RVS RV('S')
 #define RVU RV('U')
 #define RVH RV('H')
+#define RVK RV('K')
 #define RVB RV('B')
 
 /* S extension denotes that Supervisor mode exists, however it is possible
@@ -137,6 +138,10 @@ struct CPURISCVState {
     target_ulong misa_mask;
 
     uint32_t features;
+
+    /* Crypto Extension CSR */
+    target_ulong mentropy;
+    target_ulong mnoise;
 
 #ifdef CONFIG_USER_ONLY
     uint32_t elf_flags;
@@ -291,6 +296,7 @@ struct RISCVCPU {
         bool ext_u;
         bool ext_h;
         bool ext_v;
+        bool ext_k;
         bool ext_counters;
         bool ext_ifencei;
         bool ext_icsr;
