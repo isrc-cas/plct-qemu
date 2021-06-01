@@ -531,4 +531,16 @@ typedef enum RISCVException {
 #define MIE_UTIE                           (1 << IRQ_U_TIMER)
 #define MIE_SSIE                           (1 << IRQ_S_SOFT)
 #define MIE_USIE                           (1 << IRQ_U_SOFT)
+
+/* Crypto Extension */
+#define CSR_MENTROPY             0xf15
+#define CSR_MNOISE               0x7a9
+
+#define K_EXT_OPST               (unsigned)(0b11 << 30)
+#define K_EXT_SEED               (unsigned)((0b1 << 16) - 1)
+#define K_EXT_OPST_BIST          0b00
+#define K_EXT_OPST_ES16          0b01
+#define K_EXT_OPST_WAIT          0b10
+#define K_EXT_OPST_DEAD          0b11
+#define K_EXT_NOISE_TEST         (unsigned)(0b1 << 31)
 #endif
