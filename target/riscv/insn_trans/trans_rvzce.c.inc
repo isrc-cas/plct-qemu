@@ -323,7 +323,7 @@ static bool trans_c_popret(DisasContext *ctx, arg_c_popret *a)
     TCGv ret0_1 = tcg_const_tl(a->zce_ret0_1);
     TCGv rlist3 = tcg_const_tl(a->zce_rlist3);
 
-    // gen_helper_c_popret(cpu_env, sp, spimm0_5, rlist3, ret0_1);
+    gen_helper_c_popret(cpu_env, sp, spimm0_5, rlist3, ret0_1);
     tcg_temp_free(sp);
     tcg_temp_free(spimm0_5);
     tcg_temp_free(ret0_1);
@@ -342,7 +342,7 @@ static bool trans_c_popret_e(DisasContext *ctx, arg_c_popret_e *a)
     TCGv ret0_2 = tcg_const_tl(a->zce_ret0_2);
     TCGv rlist2 = tcg_const_tl(a->zce_rlist2);
 
-    // gen_helper_c_popret_e(cpu_env, sp, spimm0_5, rlist2, ret0_2);
+    gen_helper_c_popret_e(cpu_env, sp, spimm0_5, rlist2, ret0_2);
     tcg_temp_free(sp);
     tcg_temp_free(spimm0_5);
     tcg_temp_free(ret0_2);
@@ -370,7 +370,7 @@ static bool trans_c_pop(DisasContext *ctx, arg_c_pop *a)
 static bool trans_c_pop_e(DisasContext *ctx, arg_c_pop_e *a)
 {
     REQUIRE_EXT(ctx, RVZCE);
-    
+
     TCGv sp = tcg_temp_new();
     gen_get_gpr(sp, xSP);
 

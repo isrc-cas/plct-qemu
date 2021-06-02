@@ -27,100 +27,105 @@
 #define XLEN (8 * sizeof(target_ulong))
 #define align16(x) (((x) + 15) & ~0xf)
 #define ZCE_POP(env, sp, bytes, rlist, ra, spimm, ret_val, ret) \
-{ \
-    target_ulong stack_adjust = rlist * (XLEN >> 3); \
-    stack_adjust += (ra == 1) ? XLEN >> 3 : 0; \
-    stack_adjust = align16(stack_adjust) + spimm; \
-    target_ulong addr = sp + stack_adjust; \
-    if(ra) \
-    { \
-        addr -= bytes; \
-        switch (bytes) \
-        { \
-        case 4: \
-            env->gpr[xRA] = (int)(addr); \
-            break; \
-        case 8: \
-            env->gpr[xRA] = (long)(addr); \
-            break; \
-        default: \
-            break; \
-        } \
-    } \
-    for (int i = 0; i < rlist; i++) \
-    { \
-        addr -= bytes; \
-        target_ulong reg = i < 2 ? X_S0 + i : X_Sn + i; \
-        switch (bytes) \
-        { \
-        case 4: \
-            env->gpr[reg] = (int)(addr); \
-            break; \
-        case 8: \
-            env->gpr[reg] = (long)(addr); \
-            break; \
-        default: \
-            break; \
-        } \
-    } \
-    switch (ret_val) \
-    { \
-    case 1: \
-        env->gpr[xA0] = 0; \
-        break; \
-    case 2: \
-        env->gpr[xA0] = 1; \
-        break; \
-    case 3: \
-        env->gpr[xA0] = -1; \
-        break; \
-    default: \
-        break; \
-    } \
-    env->gpr[xSP] = sp + stack_adjust; \
-    if(ret) \
-    { \
-        env->pc = env->gpr[xRA]; \
-    } \
-}
+    {                                                           \
+        target_ulong stack_adjust = rlist * (XLEN >> 3);        \
+        stack_adjust += (ra == 1) ? XLEN >> 3 : 0;              \
+        stack_adjust = align16(stack_adjust) + spimm;           \
+        target_ulong addr = sp + stack_adjust;                  \
+        if (ra)                                                 \
+        {                                                       \
+            addr -= bytes;                                      \
+            switch (bytes)                                      \
+            {                                                   \
+            case 4:                                             \
+                env->gpr[xRA] = (int)(addr);                    \
+                break;                                          \
+            case 8:                                             \
+                env->gpr[xRA] = (long)(addr);                   \
+                break;                                          \
+            default:                                            \
+                break;                                          \
+            }                                                   \
+        }                                                       \
+        for (int i = 0; i < rlist; i++)                         \
+        {                                                       \
+            addr -= bytes;                                      \
+            target_ulong reg = i < 2 ? X_S0 + i : X_Sn + i;     \
+            switch (bytes)                                      \
+            {                                                   \
+            case 4:                                             \
+                env->gpr[reg] = (int)(addr);                    \
+                break;                                          \
+            case 8:                                             \
+                env->gpr[reg] = (long)(addr);                   \
+                break;                                          \
+            default:                                            \
+                break;                                          \
+            }                                                   \
+        }                                                       \
+        switch (ret_val)                                        \
+        {                                                       \
+        case 1:                                                 \
+            env->gpr[xA0] = 0;                                  \
+            break;                                              \
+        case 2:                                                 \
+            env->gpr[xA0] = 1;                                  \
+            break;                                              \
+        case 3:                                                 \
+            env->gpr[xA0] = -1;                                 \
+            break;                                              \
+        default:                                                \
+            break;                                              \
+        }                                                       \
+        env->gpr[xSP] = sp + stack_adjust;                      \
+        if (ret)                                                \
+        {                                                       \
+            env->pc = env->gpr[xRA];                            \
+        }                                                       \
+    }
 
-#define ZCE_PUSH(env, sp, bytes, rlist, ra, spimm, alist) \
-{ \
-target_ulong addr = sp; \
-if (ra) { \
-  addr -= bytes; \
-  switch (bytes) { \
-  case 4: \
-    env->gpr[xRA] = (int)(addr); \
-    break; \
-  case 8: \
-    env->gpr[xRA] = (long)(addr); \
-    break; \
-  default: \
-    break; \
-  } \
-} \
-target_ulong data; \
-for (int i=0; i < rlist; i++) { \
-  addr -= bytes; \
-  data = i < 2 ? X_S0 + i : X_Sn + i; \
-  switch (bytes) { \
-  case 4: \
-    env->gpr[addr] = data; \
-    break; \
-  case 8: \
-    env->gpr[addr] = data; \
-    break; \
-  default: \
-    break; \
-  } \
-} \
-for (int i=0; i < alist; i++) { \
-   env->gpr[i < 2 ? X_S0 + i : X_Sn + i] = (long)(env->gpr[xA0 + i]); \
-} \
-target_ulong stack_adjust = align16(addr - sp) - spimm; \
-env -> gpr[xSP] = sp + stack_adjust; \
-}
+#define ZCE_PUSH(env, sp, bytes, rlist, ra, spimm, alist)                      \
+    {                                                                          \
+        target_ulong addr = sp;                                                \
+        if (ra)                                                                \
+        {                                                                      \
+            addr -= bytes;                                                     \
+            switch (bytes)                                                     \
+            {                                                                  \
+            case 4:                                                            \
+                env->gpr[xRA] = (int)(addr);                                   \
+                break;                                                         \
+            case 8:                                                            \
+                env->gpr[xRA] = (long)(addr);                                  \
+                break;                                                         \
+            default:                                                           \
+                break;                                                         \
+            }                                                                  \
+        }                                                                      \
+        target_ulong data;                                                     \
+        for (int i = 0; i < rlist; i++)                                        \
+        {                                                                      \
+            addr -= bytes;                                                     \
+            data = i < 2 ? X_S0 + i : X_Sn + i;                                \
+            switch (bytes)                                                     \
+            {                                                                  \
+            case 4:                                                            \
+                env->gpr[addr] = data;                                         \
+                break;                                                         \
+            case 8:                                                            \
+                env->gpr[addr] = data;                                         \
+                break;                                                         \
+            default:                                                           \
+                break;                                                         \
+            }                                                                  \
+        }                                                                      \
+        for (int i = 0; i < alist; i++)                                        \
+        {                                                                      \
+            env->gpr[i < 2 ? X_S0 + i : X_Sn + i] = (long)(env->gpr[xA0 + i]); \
+        }                                                                      \
+        target_ulong stack_adjust = align16(addr - sp) - spimm;                \
+        env->gpr[xSP] = sp + stack_adjust;                                     \
+    }
 
 void HELPER(c_tblj_all)(target_ulong index)
 {
@@ -157,14 +162,15 @@ void HELPER(c_pop_e)(CPURISCVState *env, target_ulong sp, target_ulong spimm, ta
     {
         return;
     }
-    if(rlist == 3) {
+    if (rlist == 3)
+    {
         return;
     }
     target_ulong bytes = XLEN >> 3;
     ZCE_POP(env, sp, bytes, rlist, true, spimm, 0, false);
 }
-/*
-void HELPER(c_popret)(CPURISCVState *env, target_ulong sp, target_ulong spimm, target_ulong rlist, target_long ret)
+
+void HELPER(c_popret)(CPURISCVState *env, target_ulong sp, target_ulong spimm, target_ulong rlist, target_ulong ret)
 {
     if (((XLEN / 4 - 1) & sp) != 0)
     {
@@ -174,19 +180,20 @@ void HELPER(c_popret)(CPURISCVState *env, target_ulong sp, target_ulong spimm, t
     ZCE_POP(env, sp, bytes, rlist, true, spimm, ret, true);
 }
 
-void HELPER(c_popret_e)(CPURISCVState *env, target_ulong sp, target_ulong spimm, target_ulong rlist, target_long ret)
+void HELPER(c_popret_e)(CPURISCVState *env, target_ulong sp, target_ulong spimm, target_ulong rlist, target_ulong ret)
 {
     if (((XLEN / 4 - 1) & sp) != 0)
     {
         return;
     }
-    if(rlist == 3) {
+    if (rlist == 3)
+    {
         return;
     }
     target_ulong bytes = XLEN >> 3;
     ZCE_POP(env, sp, bytes, rlist, true, spimm, ret, true);
 }
-*/
+
 void HELPER(c_push)(CPURISCVState *env, target_ulong sp, target_ulong spimm, target_ulong rlist)
 {
     if (((XLEN / 4 - 1) & sp) != 0)
@@ -194,7 +201,7 @@ void HELPER(c_push)(CPURISCVState *env, target_ulong sp, target_ulong spimm, tar
         return;
     }
     target_ulong bytes = XLEN >> 3;
-    target_ulong alist = rlist <= 4 ? rlist:4;
+    target_ulong alist = rlist <= 4 ? rlist : 4;
     ZCE_PUSH(env, sp, bytes, rlist, true, spimm, alist);
 }
 
@@ -205,7 +212,8 @@ void HELPER(c_push_e)(CPURISCVState *env, target_ulong sp, target_ulong spimm, t
         return;
     }
     target_ulong bytes = XLEN >> 3;
-    if(rlist == 3) {
+    if (rlist == 3)
+    {
         return;
     }
     ZCE_PUSH(env, sp, bytes, rlist, true, spimm, 0);
