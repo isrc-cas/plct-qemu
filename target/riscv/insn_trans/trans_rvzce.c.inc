@@ -313,12 +313,18 @@ static bool trans_c_sh(DisasContext *ctx, arg_c_sh *a)
 }
 
 static bool trans_c_popret(DisasContext *ctx, arg_c_popret *a)
-{ // TODO
+{
     REQUIRE_EXT(ctx, RVZCE);
+
+    TCGv sp = tcg_temp_new();
+    gen_get_gpr(sp, xSP);
+
     TCGv spimm0_5 = tcg_const_tl(a->zce_spimm0_5);
     TCGv ret0_1 = tcg_const_tl(a->zce_ret0_1);
     TCGv rlist3 = tcg_const_tl(a->zce_rlist3);
-    // gen_helper_c_popret(spimm0_5, ret0_1, rlist3);
+
+    // gen_helper_c_popret(cpu_env, sp, spimm0_5, rlist3, ret0_1);
+    tcg_temp_free(sp);
     tcg_temp_free(spimm0_5);
     tcg_temp_free(ret0_1);
     tcg_temp_free(rlist3);
@@ -326,12 +332,18 @@ static bool trans_c_popret(DisasContext *ctx, arg_c_popret *a)
 }
 
 static bool trans_c_popret_e(DisasContext *ctx, arg_c_popret_e *a)
-{ // TODO
+{
     REQUIRE_EXT(ctx, RVZCE);
+
+    TCGv sp = tcg_temp_new();
+    gen_get_gpr(sp, xSP);
+
     TCGv spimm0_5 = tcg_const_tl(a->zce_spimm0_5);
     TCGv ret0_2 = tcg_const_tl(a->zce_ret0_2);
     TCGv rlist2 = tcg_const_tl(a->zce_rlist2);
-    // gen_helper_c_popret_e(spimm0_5, ret0_2, rlist2);
+
+    // gen_helper_c_popret_e(cpu_env, sp, spimm0_5, rlist2, ret0_2);
+    tcg_temp_free(sp);
     tcg_temp_free(spimm0_5);
     tcg_temp_free(ret0_2);
     tcg_temp_free(rlist2);
@@ -339,7 +351,7 @@ static bool trans_c_popret_e(DisasContext *ctx, arg_c_popret_e *a)
 }
 
 static bool trans_c_pop(DisasContext *ctx, arg_c_pop *a)
-{ // TODO
+{
     REQUIRE_EXT(ctx, RVZCE);
 
     TCGv sp = tcg_temp_new();
@@ -349,45 +361,58 @@ static bool trans_c_pop(DisasContext *ctx, arg_c_pop *a)
     TCGv rlist3 = tcg_const_tl(a->zce_rlist3);
 
     gen_helper_c_pop(cpu_env, sp, spimm, rlist3);
+    tcg_temp_free(sp);
     tcg_temp_free(spimm);
     tcg_temp_free(rlist3);
     return true;
 }
 
 static bool trans_c_pop_e(DisasContext *ctx, arg_c_pop_e *a)
-{ // TODO
+{
     REQUIRE_EXT(ctx, RVZCE);
+    
+    TCGv sp = tcg_temp_new();
+    gen_get_gpr(sp, xSP);
+
     TCGv spimm = tcg_const_tl(a->zce_spimm);
     TCGv rlist2 = tcg_const_tl(a->zce_rlist2);
-    // gen_helper_c_pop_e(spimm, rlist2);
+
+    gen_helper_c_pop_e(cpu_env, sp, spimm, rlist2);
+    tcg_temp_free(sp);
     tcg_temp_free(spimm);
     tcg_temp_free(rlist2);
     return true;
 }
 
 static bool trans_c_push(DisasContext *ctx, arg_c_push *a)
-{ // TODO
+{
     REQUIRE_EXT(ctx, RVZCE);
+
+    TCGv sp = tcg_temp_new();
+    gen_get_gpr(sp, xSP);
+
     TCGv rlist = tcg_const_tl(a->zce_rlist3);
     TCGv spimm = tcg_const_tl(a->zce_spimm0_5);
 
-    // gen_helper_c_push(spimm, rlist);
-
+    gen_helper_c_push(cpu_env, sp, spimm, rlist);
+    tcg_temp_free(sp);
     tcg_temp_free(rlist);
     tcg_temp_free(spimm);
     return true;
 }
 
 static bool trans_c_push_e(DisasContext *ctx, arg_c_push_e *a)
-{ // TODO
+{
     REQUIRE_EXT(ctx, RVZCE);
-    // TCGv addr = tcg_temp_new();
-    // gen_get_gpr(addr, xSP);
+
+    TCGv sp = tcg_temp_new();
+    gen_get_gpr(sp, xSP);
+
     TCGv rlist = tcg_const_tl(a->zce_rlist2);
     TCGv spimm = tcg_const_tl(a->zce_spimm_pe);
 
-    // gen_helper_c_push_e(spimm, rlist);
-    // tcg_temp_free(addr);
+    gen_helper_c_push_e(cpu_env, sp, spimm, rlist);
+    tcg_temp_free(sp);
     tcg_temp_free(rlist);
     tcg_temp_free(spimm);
     return true;

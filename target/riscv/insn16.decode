@@ -100,9 +100,7 @@
   illegal         000  000 000 00 --- 00
   addi            000  ... ... .. ... 00 @c_addi4spn
 }
-fld               001  ... ... .. ... 00 @cl_d
 lw                010  ... ... .. ... 00 @cl_w
-fsd               101  ... ... .. ... 00 @cs_d
 sw                110  ... ... .. ... 00 @cs_w
 
 # *** RV32C and RV64C specific Standard Extension (Quadrant 0) ***
@@ -146,12 +144,6 @@ addw              100 1 11 ... 01 ... 01 @cs_2
 # *** RV32/64C Standard Extension (Quadrant 2) ***
 slli              000 .  .....  ..... 10 @c_shift2
 {
-  fld               001  ... ... .. ... 00 @cl_d
-  fld               001 .  .....  ..... 10 @c_ldsp
-  c_lbu             001 0 .. ... .. ... 00 @zce_b
-  c_lhu             001 1 .. ... .. ... 00 @zce_h
-}
-{
   illegal         010 -  00000  ----- 10 # c.lwsp, RES rd=0
   lw              010 .  .....  ..... 10 @c_lwsp
 }
@@ -166,7 +158,12 @@ slli              000 .  .....  ..... 10 @c_shift2
   add             100 1  .....  ..... 10 @cr
 }
 {
+  fld               001 .  .....  ..... 10 @c_ldsp
   fsd               101  ... ... .. ... 00 @cs_d
+  c_lbu             001 0 .. ... .. ... 00 @zce_b
+  c_lhu             001 1 .. ... .. ... 00 @zce_h
+  fsd               101  ... ... .. ... 00 @cs_d
+  fld               001  ... ... .. ... 00 @cl_d
   fsd               101   ......  ..... 10 @c_sdsp
   c_decbnez         101 ... ... ... .. 10  %zce_nzuimm %rs1_3 %zce_scale
   c_lb              101 0 .. ... .. ... 10 @zce_b
@@ -185,6 +182,7 @@ sw                110 .  .....  ..... 10 @c_swsp
 {
   sd              111 .  .....  ..... 10 @c_sdsp
   fsw             111 .  .....  ..... 10 @c_swsp
+}
 
 # *** RV16 Zcea Extension ***
 c_zext_b          100 000 ... 00 000 00 @zcea_unary
