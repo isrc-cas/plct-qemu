@@ -177,10 +177,12 @@ static bool trans_swgp(DisasContext *ctx, arg_swgp *a)
 }
 
 static bool trans_c_tblj_all(DisasContext *ctx, arg_c_tblj_all *a)
-{ //TODO
+{
     REQUIRE_EXT(ctx, RVZCE);
     TCGv index = tcg_const_tl(a->zce_table_jump_index);
-    gen_helper_c_tblj_all(index);
+
+    gen_helper_c_tblj_all(cpu_env, index);
+
     tcg_temp_free(index);
     return true;
 }
@@ -422,12 +424,14 @@ static bool trans_c_push_e(DisasContext *ctx, arg_c_push_e *a)
 // RV64 Only
 static bool trans_c_zext_w(DisasContext *ctx, arg_c_zext_w *a)
 {
+    REQUIRE_64BIT(ctx);
     REQUIRE_EXT(ctx, RVZCE);
     return gen_unary(ctx, a, tcg_gen_ext32u_tl);
 }
 
 static bool trans_ldgp(DisasContext *ctx, arg_ldgp *a)
 {
+    REQUIRE_64BIT(ctx);
     REQUIRE_EXT(ctx, RVZCE);
     TCGv t0 = tcg_temp_new();
     TCGv t1 = tcg_temp_new();
@@ -444,6 +448,7 @@ static bool trans_ldgp(DisasContext *ctx, arg_ldgp *a)
 
 static bool trans_sdgp(DisasContext *ctx, arg_sdgp *a)
 {
+    REQUIRE_64BIT(ctx);
     REQUIRE_EXT(ctx, RVZCE);
     TCGv t0 = tcg_temp_new();
     TCGv dat = tcg_temp_new();

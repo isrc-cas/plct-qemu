@@ -1802,5 +1802,11 @@ riscv_csr_operations csr_ops[CSR_TABLE_SIZE] = {
     [CSR_MHPMCOUNTER29H] = { "mhpmcounter29h", any32,  read_zero },
     [CSR_MHPMCOUNTER30H] = { "mhpmcounter30h", any32,  read_zero },
     [CSR_MHPMCOUNTER31H] = { "mhpmcounter31h", any32,  read_zero },
+
+    /* Zce Extension */
+    [CSR_MTBLJALVEC] = {"mtbljalvec", },
+    [CSR_STBLJALVEC] = {"stbljalvec", },
+    [CSR_UTBLJALVEC] = {"utbljalvec", },
+
 #endif /* !CONFIG_USER_ONLY */
 };

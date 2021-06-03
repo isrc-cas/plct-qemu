@@ -127,9 +127,8 @@
         env->gpr[xSP] = sp + stack_adjust;                                     \
     }
 
-void HELPER(c_tblj_all)(target_ulong index)
-{
-    /*
+void HELPER(c_tblj_all)(CPURISCVState *env, target_ulong index)
+{    
     if (index < 7)
     {
         // C.TBLJALM
@@ -142,7 +141,6 @@ void HELPER(c_tblj_all)(target_ulong index)
     {
         // C.TBLJAL
     }
-    */
     return;
 }
 

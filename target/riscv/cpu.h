@@ -218,6 +218,12 @@ struct CPURISCVState {
     target_ulong sscratch;
     target_ulong mscratch;
 
+    /* Zce Extension */
+    target_ulong mtbljalvec;
+    target_ulong stbljalvec;
+    target_ulong utbljalvec;
+
+
     /* temporary htif regs */
     uint64_t mfromhost;
     uint64_t mtohost;
