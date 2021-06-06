@@ -26,22 +26,34 @@
 #define X_Sn 16
 #define XLEN (8 * sizeof(target_ulong))
 #define align16(x) (((x) + 15) & ~0xf)
+#define sext_xlen(x) (((int64_t)(x) << (64 - XLEN)) >> (64 - XLEN))
+#define load32 tcg_gen_qemu_ld32s(t1, t0, ctx->mem_idx)
+#define load64 tcg_gen_qemu_ld64(t1, t0, ctx->mem_idx)
+#define store32 tcg_gen_qemu_st32u(dat, t0, ctx->mem_idx);
+#define store64 tcg_gen_qemu_st64(dat, t0, ctx->mem_idx);
+#define loadu32 tcg_gen_qemu_ld32u(t1, t0, ctx->mem_idx)
+
 #define ZCE_POP(env, sp, bytes, rlist, ra, spimm, ret_val, ret) \
     {                                                           \
         target_ulong stack_adjust = rlist * (XLEN >> 3);        \
         stack_adjust += (ra == 1) ? XLEN >> 3 : 0;              \
         stack_adjust = align16(stack_adjust) + spimm;           \
         target_ulong addr = sp + stack_adjust;                  \
+        TCGv t1 = tcg_temp_new();                               \
+        TCGv t0;                                                \
+        t0 = tcg_const_tl(addr);                                \
         if (ra)                                                 \
         {                                                       \
             addr -= bytes;                                      \
             switch (bytes)                                      \
             {                                                   \
             case 4:                                             \
-                env->gpr[xRA] = (int)(addr);                    \
+                load32;                                         \
+                env->gpr[xRA] = t1;                             \
                 break;                                          \
             case 8:                                             \
-                env->gpr[xRA] = (long)(addr);                   \
+                load64;                                         \
+                env->gpr[xRA] = t1;                             \
                 break;                                          \
             default:                                            \
                 break;                                          \
@@ -50,14 +62,17 @@
         for (int i = 0; i < rlist; i++)                         \
         {                                                       \
             addr -= bytes;                                      \
+            t0 = tcg_const_tl(addr);                            \
             target_ulong reg = i < 2 ? X_S0 + i : X_Sn + i;     \
             switch (bytes)                                      \
             {                                                   \
             case 4:                                             \
-                env->gpr[reg] = (int)(addr);                    \
+                load32;                                         \
+                env->gpr[reg] = t1;                             \
                 break;                                          \
             case 8:                                             \
-                env->gpr[reg] = (long)(addr);                   \
+                load64;                                         \
+                env->gpr[reg] = t1;                             \
                 break;                                          \
             default:                                            \
                 break;                                          \
@@ -82,21 +97,27 @@
         {                                                       \
             env->pc = env->gpr[xRA];                            \
         }                                                       \
+        tcg_temp_free(t0);                                      \
+        tcg_temp_free(t1);                                      \
     }
 
 #define ZCE_PUSH(env, sp, bytes, rlist, ra, spimm, alist)                      \
     {                                                                          \
         target_ulong addr = sp;                                                \
+        TCGv dat;                                                              \
+        TCGv t0 = tcg_temp_new();                                              \
         if (ra)                                                                \
         {                                                                      \
             addr -= bytes;                                                     \
+            t0 = tcg_const_tl(addr);                                           \
+            dat = tcg_const_tl(env->gpr[xRA]);                                 \
             switch (bytes)                                                     \
             {                                                                  \
             case 4:                                                            \
-                env->gpr[xRA] = (int)(addr);                                   \
+                store32;                                                       \
                 break;                                                         \
             case 8:                                                            \
-                env->gpr[xRA] = (long)(addr);                                  \
+                store64;                                                       \
                 break;                                                         \
             default:                                                           \
                 break;                                                         \
@@ -107,13 +128,15 @@
         {                                                                      \
             addr -= bytes;                                                     \
             data = i < 2 ? X_S0 + i : X_Sn + i;                                \
+            t0 = tcg_const_tl(addr);                                           \
+            dat = tcg_const_tl(data);                                          \
             switch (bytes)                                                     \
             {                                                                  \
             case 4:                                                            \
-                env->gpr[addr] = data;                                         \
+                store32;                                                       \
                 break;                                                         \
             case 8:                                                            \
-                env->gpr[addr] = data;                                         \
+                store64;                                                       \
                 break;                                                         \
             default:                                                           \
                 break;                                                         \
@@ -127,20 +150,68 @@
         env->gpr[xSP] = sp + stack_adjust;                                     \
     }
 
-void HELPER(c_tblj_all)(CPURISCVState *env, target_ulong index)
-{    
-    if (index < 7)
+void HELPER(c_tblj_all)(CPURISCVState *env, target_ulong csr, target_ulong index)
+{
+#ifndef CONFIG_USER_ONLY
+    target_ulong val = 0;
+    RISCVException ret =
+        (env->priv == PRV_U) ? read_zce_tblj_csr_u(env, csr, &val) : (env->priv == PRV_S) ? read_zce_tblj_csr_s(env, csr, &val)
+                                                                                          : read_zce_tblj_csr_m(env, csr, &val);
+
+    if (ret != RISCV_EXCP_NONE)
     {
-        // C.TBLJALM
+        riscv_raise_exception(env, ret, GETPC());
     }
-    else if (index >= 8 && index < 64)
+
+    uint8_t mode = get_field(val, TBLJALVEC_MODE);
+    uint8_t scale = get_field(val, TBLJALVEC_SCALE);
+    target_ulong base = get_field(val, TBLJALVEC_BASE);
+    target_ulong target;
+    target_ulong next_pc = ctx->base.pc_next + imm;
+    TCGv t1 = tcg_temp_new();
+    TCGv t0;
+    switch (mode)
     {
-        // C.TBLJ
+    case 0: //jump table mode
+        if (XLEN == 32)
+        {
+            t0 = tcg_const_tl(base + index << 2);
+            loadu32;
+            target = t1;
+        }
+        else // XLEN = 8
+        {
+            t0 = tcg_const_tl(base + index << 3);
+            load64;
+            target = t1;
+        }
+        tcg_temp_free(t0);
+        tcg_temp_free(t1);
+        if (index < 7) // t0
+        {
+            // C.TBLJALM
+            env->gpr[5] = next_pc;
+        }
+        else if (index < 64) // zero
+        {
+            // C.TBLJ
+            env->gpr[0] = next_pc;
+        }
+        else // ra
+        {
+            // C.TBLJAL
+            env->gpr[1] = next_pc;
+        }
+        break;
+    case 1: // TODO: Vector Table Mode
+        break;
+    case 2: // TODO: Emulation Mode
+        break;
+    default:
+        riscv_raise_exception(env, RISCV_EXCP_ILLEGAL_INST, GETPC());
+        break;
     }
-    else if (index > 64)
-    {
-        // C.TBLJAL
-    }
+#endif
     return;
 }
 
@@ -222,3 +293,9 @@ void HELPER(c_push_e)(CPURISCVState *env, target_ulong sp, target_ulong spimm, t
 #undef align16
 #undef XLEN
 #undef ZCE_POP
+#undef sext_xlen
+#undef load32
+#undef load64
+#undef store32
+#undef store64
+#undef loadu32

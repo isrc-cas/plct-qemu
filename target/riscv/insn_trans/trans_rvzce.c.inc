@@ -180,10 +180,12 @@ static bool trans_c_tblj_all(DisasContext *ctx, arg_c_tblj_all *a)
 {
     REQUIRE_EXT(ctx, RVZCE);
     TCGv index = tcg_const_tl(a->zce_table_jump_index);
+    TCGv csr_store = tcg_temp_new();
 
-    gen_helper_c_tblj_all(cpu_env, index);
+    gen_helper_c_tblj_all(cpu_env, csr_store, index);
 
     tcg_temp_free(index);
+    tcg_temp_free(csr_store);
     return true;
 }
 
@@ -419,7 +421,6 @@ static bool trans_c_push_e(DisasContext *ctx, arg_c_push_e *a)
     tcg_temp_free(spimm);
     return true;
 }
-//#undef XLEN
 
 // RV64 Only
 static bool trans_c_zext_w(DisasContext *ctx, arg_c_zext_w *a)

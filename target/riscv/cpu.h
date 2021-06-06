@@ -136,6 +136,11 @@ struct CPURISCVState {
 
     uint32_t features;
 
+    /* Zce Extension */
+    target_ulong mtbljalvec;
+    target_ulong stbljalvec;
+    target_ulong utbljalvec;
+
 #ifdef CONFIG_USER_ONLY
     uint32_t elf_flags;
 #endif
@@ -217,11 +222,6 @@ struct CPURISCVState {
 
     target_ulong sscratch;
     target_ulong mscratch;
-
-    /* Zce Extension */
-    target_ulong mtbljalvec;
-    target_ulong stbljalvec;
-    target_ulong utbljalvec;
 
 
     /* temporary htif regs */
