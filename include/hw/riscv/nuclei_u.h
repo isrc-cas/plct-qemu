@@ -47,7 +47,32 @@ typedef struct NucLeiUState {
     /*< public >*/
     NucLeiUSoCState soc;
 
+    void *fdt;
+    int fdt_size;
+
+    uint32_t msel;
+
 } NucLeiUState;
+
+enum
+{
+    MSEL_FLASH = 1,
+    MSEL_SD = 2
+};
+enum
+{
+    NUCLEI_U_MROM,
+    NUCLEI_U_TIMER,
+    NUCLEI_U_CLINT,
+    NUCLEI_U_PLIC,
+    NUCLEI_U_UART0,
+    NUCLEI_U_UART1,
+    NUCLEI_U_GPIO,
+    NUCLEI_U_FLASH0,
+    NUCLEI_U_DRAM,
+    NUCLEI_U_SPI0,
+    NUCLEI_U_SPI2
+};
 
 #define NUCLEI_U_CPU TYPE_RISCV_CPU_NUCLEI_UX600
 

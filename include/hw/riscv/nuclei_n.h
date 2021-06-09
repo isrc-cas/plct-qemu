@@ -32,9 +32,13 @@ typedef struct NucLeiNSoCState {
     /*< private >*/
     DeviceState parent_obj;
 
+    /*< public >*/
     RISCVHartArrayState cpus;
 
-    /*< public >*/
+    MemoryRegion internal_rom;
+    MemoryRegion ilm;
+    MemoryRegion dlm;
+    MemoryRegion xip_mem;
 
 } NucLeiNSoCState;
 
@@ -49,7 +53,38 @@ typedef struct NucLeiNState {
     /*< public >*/
     NucLeiNSoCState soc;
 
+    uint32_t msel;
+
 } NucLeiNState;
+
+enum
+{
+    MSEL_ILM = 1,
+    MSEL_FLASH = 2,
+    MSEL_FLASHXIP = 3,
+    MSEL_DDR = 4
+};
+
+enum
+{
+    NUCLEI_N_DEBUG,
+    NUCLEI_N_ROM,
+    NUCLEI_N_TIMER,
+    NUCLEI_N_ECLIC,
+    NUCLEI_N_GPIO,
+    NUCLEI_N_UART0,
+    NUCLEI_N_QSPI0,
+    NUCLEI_N_PWM0,
+    NUCLEI_N_UART1,
+    NUCLEI_N_QSPI1,
+    NUCLEI_N_PWM1,
+    NUCLEI_N_QSPI2,
+    NUCLEI_N_PWM2,
+    NUCLEI_N_XIP,
+    NUCLEI_N_DRAM,
+    NUCLEI_N_ILM,
+    NUCLEI_N_DLM
+};
 
 #if defined(TARGET_RISCV32)
 #define NUCLEI_N_CPU TYPE_RISCV_CPU_NUCLEI_N600
