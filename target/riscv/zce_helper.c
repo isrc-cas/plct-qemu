@@ -21,17 +21,23 @@
 #include "cpu.h"
 #include "exec/exec-all.h"
 #include "exec/helper-proto.h"
+// #include "exec/memop.h"
+// #include "exec/memattrs.h"
+// #include "tcg/tcg-internal.h"
+#include "exec/cpu_ldst.h"
 
 #define X_S0 8
 #define X_Sn 16
 #define XLEN (8 * sizeof(target_ulong))
 #define align16(x) (((x) + 15) & ~0xf)
 #define sext_xlen(x) (((int64_t)(x) << (64 - XLEN)) >> (64 - XLEN))
-#define load32 tcg_gen_qemu_ld32s(t1, t0, ctx->mem_idx)
-#define load64 tcg_gen_qemu_ld64(t1, t0, ctx->mem_idx)
-#define store32 tcg_gen_qemu_st32u(dat, t0, ctx->mem_idx);
-#define store64 tcg_gen_qemu_st64(dat, t0, ctx->mem_idx);
-#define loadu32 tcg_gen_qemu_ld32u(t1, t0, ctx->mem_idx)
+
+#define load32 cpu_ldsw_le_data_ra(env, t1, t0)
+#define load64 cpu_ldl_le_data_ra(env, t1, t0)
+#define loadu32 cpu_lduw_le_data_ra(env, t1, t0)
+
+#define store32 cpu_stw_le_data(env, dat, t0)
+#define store64 cpu_stl_le_data(env, dat, t0)
 
 #define ZCE_POP(env, sp, bytes, rlist, ra, spimm, ret_val, ret) \
     {                                                           \
@@ -39,20 +45,19 @@
         stack_adjust += (ra == 1) ? XLEN >> 3 : 0;              \
         stack_adjust = align16(stack_adjust) + spimm;           \
         target_ulong addr = sp + stack_adjust;                  \
-        TCGv t1 = tcg_temp_new();                               \
-        TCGv t0;                                                \
-        t0 = tcg_const_tl(addr);                                \
+        target_ulong t1 = 0;                                        \
+        target_ulong t0 = addr;                                 \
         if (ra)                                                 \
         {                                                       \
             addr -= bytes;                                      \
             switch (bytes)                                      \
             {                                                   \
             case 4:                                             \
-                load32;                                         \
+                load32;                            \
                 env->gpr[xRA] = t1;                             \
                 break;                                          \
             case 8:                                             \
-                load64;                                         \
+                load64;                            \
                 env->gpr[xRA] = t1;                             \
                 break;                                          \
             default:                                            \
@@ -62,16 +67,16 @@
         for (int i = 0; i < rlist; i++)                         \
         {                                                       \
             addr -= bytes;                                      \
-            t0 = tcg_const_tl(addr);                            \
+            t0 = addr;                                          \
             target_ulong reg = i < 2 ? X_S0 + i : X_Sn + i;     \
             switch (bytes)                                      \
             {                                                   \
             case 4:                                             \
-                load32;                                         \
+                load32;                            \
                 env->gpr[reg] = t1;                             \
                 break;                                          \
             case 8:                                             \
-                load64;                                         \
+                load64;                            \
                 env->gpr[reg] = t1;                             \
                 break;                                          \
             default:                                            \
@@ -97,20 +102,18 @@
         {                                                       \
             env->pc = env->gpr[xRA];                            \
         }                                                       \
-        tcg_temp_free(t0);                                      \
-        tcg_temp_free(t1);                                      \
     }
 
 #define ZCE_PUSH(env, sp, bytes, rlist, ra, spimm, alist)                      \
     {                                                                          \
         target_ulong addr = sp;                                                \
-        TCGv dat;                                                              \
-        TCGv t0 = tcg_temp_new();                                              \
+        target_ulong dat;                                                      \
+        target_ulong t0;                                                       \
         if (ra)                                                                \
         {                                                                      \
             addr -= bytes;                                                     \
-            t0 = tcg_const_tl(addr);                                           \
-            dat = tcg_const_tl(env->gpr[xRA]);                                 \
+            t0 = addr;                                                         \
+            dat = env->gpr[xRA];                                               \
             switch (bytes)                                                     \
             {                                                                  \
             case 4:                                                            \
@@ -128,8 +131,8 @@
         {                                                                      \
             addr -= bytes;                                                     \
             data = i < 2 ? X_S0 + i : X_Sn + i;                                \
-            t0 = tcg_const_tl(addr);                                           \
-            dat = tcg_const_tl(data);                                          \
+            t0 = addr;                                                         \
+            dat = data;                                                        \
             switch (bytes)                                                     \
             {                                                                  \
             case 4:                                                            \
@@ -168,25 +171,23 @@ void HELPER(c_tblj_all)(CPURISCVState *env, target_ulong csr, target_ulong index
     target_ulong base = get_field(val, TBLJALVEC_BASE);
     target_ulong target;
     target_ulong next_pc = ctx->base.pc_next + imm;
-    TCGv t1 = tcg_temp_new();
-    TCGv t0;
+    target_ulong t1 = 0;
+    target_ulong t0;
     switch (mode)
     {
     case 0: //jump table mode
         if (XLEN == 32)
         {
-            t0 = tcg_const_tl(base + index << 2);
+            t0 = base + index << 2;
             loadu32;
             target = t1;
         }
         else // XLEN = 8
         {
-            t0 = tcg_const_tl(base + index << 3);
+            t0 = base + index << 3;
             load64;
             target = t1;
         }
-        tcg_temp_free(t0);
-        tcg_temp_free(t1);
         if (index < 7) // t0
         {
             // C.TBLJALM
@@ -294,8 +295,10 @@ void HELPER(c_push_e)(CPURISCVState *env, target_ulong sp, target_ulong spimm, t
 #undef XLEN
 #undef ZCE_POP
 #undef sext_xlen
+
 #undef load32
+#undef loadu32
 #undef load64
+
 #undef store32
 #undef store64
-#undef loadu32
