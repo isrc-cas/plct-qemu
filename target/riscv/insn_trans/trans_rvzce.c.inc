@@ -320,11 +320,14 @@ static bool trans_c_popret(DisasContext *ctx, arg_c_popret *a)
 {
     REQUIRE_EXT(ctx, RVZCE);
 
+    TCGv spimm0_5 = tcg_const_tl(a->zce_spimm0_5);
+    if (a->zce_spimm0_5 > 5) {
+        return false;
+    }
+
     TCGv sp = tcg_temp_new();
     gen_get_gpr(sp, xSP);
 
-    TCGv spimm0_5 = tcg_const_tl(a->zce_spimm0_5);
-    // spimm0_5 < 5
     TCGv ret0_1 = tcg_const_tl(a->zce_ret0_1);
     TCGv rlist3 = tcg_const_tl(a->zce_rlist3);
 
@@ -340,11 +343,14 @@ static bool trans_c_popret_e(DisasContext *ctx, arg_c_popret_e *a)
 {
     REQUIRE_EXT(ctx, RVZCE);
 
+    TCGv spimm0_5 = tcg_const_tl(a->zce_spimm0_5);
+    if (a->zce_spimm0_5 > 5) {
+        return false;
+    }
+
     TCGv sp = tcg_temp_new();
     gen_get_gpr(sp, xSP);
 
-    TCGv spimm0_5 = tcg_const_tl(a->zce_spimm0_5);
-    // spimm0_5 < 5
     TCGv ret0_2 = tcg_const_tl(a->zce_ret0_2);
     TCGv rlist2 = tcg_const_tl(a->zce_rlist2);
 
