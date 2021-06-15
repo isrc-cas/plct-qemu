@@ -320,7 +320,6 @@ static bool trans_c_popret(DisasContext *ctx, arg_c_popret *a)
 {
     REQUIRE_EXT(ctx, RVZCE);
 
-    TCGv spimm0_5 = tcg_const_tl(a->zce_spimm0_5);
     if (a->zce_spimm0_5 > 5) {
         return false;
     }
@@ -330,6 +329,7 @@ static bool trans_c_popret(DisasContext *ctx, arg_c_popret *a)
 
     TCGv ret0_1 = tcg_const_tl(a->zce_ret0_1);
     TCGv rlist3 = tcg_const_tl(a->zce_rlist3);
+    TCGv spimm0_5 = tcg_const_tl(a->zce_spimm0_5);
 
     gen_helper_c_popret(cpu_env, sp, spimm0_5, rlist3, ret0_1);
     tcg_temp_free(sp);
@@ -343,7 +343,6 @@ static bool trans_c_popret_e(DisasContext *ctx, arg_c_popret_e *a)
 {
     REQUIRE_EXT(ctx, RVZCE);
 
-    TCGv spimm0_5 = tcg_const_tl(a->zce_spimm0_5);
     if (a->zce_spimm0_5 > 5) {
         return false;
     }
@@ -353,6 +352,7 @@ static bool trans_c_popret_e(DisasContext *ctx, arg_c_popret_e *a)
 
     TCGv ret0_2 = tcg_const_tl(a->zce_ret0_2);
     TCGv rlist2 = tcg_const_tl(a->zce_rlist2);
+    TCGv spimm0_5 = tcg_const_tl(a->zce_spimm0_5);
 
     gen_helper_c_popret_e(cpu_env, sp, spimm0_5, rlist2, ret0_2);
     tcg_temp_free(sp);
@@ -400,12 +400,15 @@ static bool trans_c_push(DisasContext *ctx, arg_c_push *a)
 {
     REQUIRE_EXT(ctx, RVZCE);
 
+    if (a->zce_spimm0_5 > 5) {
+        return false;
+    }
+
     TCGv sp = tcg_temp_new();
     gen_get_gpr(sp, xSP);
 
     TCGv rlist = tcg_const_tl(a->zce_rlist3);
     TCGv spimm = tcg_const_tl(a->zce_spimm0_5);
-    // spimm < 5
 
     gen_helper_c_push(cpu_env, sp, spimm, rlist);
     tcg_temp_free(sp);
@@ -418,12 +421,15 @@ static bool trans_c_push_e(DisasContext *ctx, arg_c_push_e *a)
 {
     REQUIRE_EXT(ctx, RVZCE);
 
+    if (a->zce_spimm_pe > 5) {
+        return false;
+    }
+
     TCGv sp = tcg_temp_new();
     gen_get_gpr(sp, xSP);
 
     TCGv rlist = tcg_const_tl(a->zce_rlist2);
     TCGv spimm = tcg_const_tl(a->zce_spimm_pe);
-    // spimm < 5
 
     gen_helper_c_push_e(cpu_env, sp, spimm, rlist);
     tcg_temp_free(sp);
