@@ -26,10 +26,18 @@ static bool kvm_cpu_realizefn(CPUState *cs, Error **errp)
     /*
      * The realize order is important, since x86_cpu_realize() checks if
      * nothing else has been set by the user (or by accelerators) in
-     * cpu->ucode_rev and cpu->phys_bits.
+     * cpu->ucode_rev and cpu->phys_bits, and updates the CPUID results in
+     * mwait.ecx.
+     * This accel realization code also assumes cpu features are already expanded.
      *
      * realize order:
-     * kvm_cpu -> host_cpu -> x86_cpu
+     *
+     * x86_cpu_realize():
+     *  -> x86_cpu_expand_features()
+     *  -> cpu_exec_realizefn():
+     *            -> accel_cpu_realizefn()
+     *               kvm_cpu_realizefn() -> host_cpu_realizefn()
+     *  -> check/update ucode_rev, phys_bits, mwait
      */
     if (cpu->max_features) {
         if (enable_cpu_pm && kvm_has_waitpkg()) {
@@ -47,6 +55,11 @@ static bool kvm_cpu_realizefn(CPUState *cs, Error **errp)
 /*
  * KVM-specific features that are automatically added/removed
  * from all CPU models when KVM is enabled.
+ *
+ * NOTE: features can be enabled by default only if they were
+ *       already available in the oldest kernel version supported
+ *       by the KVM accelerator (see "OS requirements" section at
+ *       docs/system/target-i386.rst)
  */
 static PropValue kvm_default_props[] = {
     { "kvmclock", "on" },

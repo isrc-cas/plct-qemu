@@ -341,23 +341,23 @@ target_ulong HELPER(aes64ds)(target_ulong rs1, target_ulong rs2, target_ulong bs
 	return aes64_operation(rs1, rs2, false, false, bs);
 }
 
-target_ulong HELPER(aes64dsm_ks2)(target_ulong rs1, target_ulong rs2, target_ulong bs)
+target_ulong HELPER(aes64dsm)(target_ulong rs1, target_ulong rs2)
 {
-	if(bs == 0b00) {
-		return aes64_operation(rs1, rs2, false, true, bs);	
-	} else if(bs == 0b01) {
-		uint64_t RS1 = rs1;
-		uint64_t RS2 = rs2;
-		uint32_t rs1_hi =  RS1 >> 32;
-		uint32_t rs2_lo =  RS2      ;
-		uint32_t rs2_hi =  RS2 >> 32;
-	
-		uint32_t r_lo   = (rs1_hi ^ rs2_lo         ) ;
-		uint32_t r_hi   = (rs1_hi ^ rs2_lo ^ rs2_hi) ;
-		target_ulong result =  ((uint64_t)r_hi << 32) | r_lo ;
-		return result;
-	}
-	return 0;
+	return aes64_operation(rs1, rs2, false, true, 0);	
+}
+
+target_ulong HELPER(aes64ks2)(target_ulong rs1, target_ulong rs2)
+{
+	uint64_t RS1 = rs1;
+	uint64_t RS2 = rs2;
+	uint32_t rs1_hi =  RS1 >> 32;
+	uint32_t rs2_lo =  RS2      ;
+	uint32_t rs2_hi =  RS2 >> 32;
+
+	uint32_t r_lo   = (rs1_hi ^ rs2_lo         ) ;
+	uint32_t r_hi   = (rs1_hi ^ rs2_lo ^ rs2_hi) ;
+	target_ulong result =  ((uint64_t)r_hi << 32) | r_lo ;
+	return result;
 }
 
 target_ulong HELPER(aes64ks1i)(target_ulong rs1, target_ulong rcon)

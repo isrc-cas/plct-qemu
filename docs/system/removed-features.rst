@@ -126,6 +126,11 @@ devices.  Drives the board doesn't pick up can no longer be used with
 This option was undocumented and not used in the field.
 Use `-device usb-ccid`` instead.
 
+RISC-V firmware not booted by default (removed in 5.1)
+''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+QEMU 5.1 changes the default behaviour from ``-bios none`` to ``-bios default``
+for the RISC-V ``virt`` machine and ``sifive_u`` machine.
 
 QEMU Machine Protocol (QMP) commands
 ------------------------------------
@@ -248,6 +253,11 @@ Use ``migrate-set-parameters`` and ``info migrate-parameters`` instead.
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 Use ``migrate-set-parameters`` instead.
+
+``info cpustats`` (removed in 6.1)
+''''''''''''''''''''''''''''''''''
+
+This command didn't produce any output already. Removed with no replacement.
 
 Guest Emulator ISAs
 -------------------
