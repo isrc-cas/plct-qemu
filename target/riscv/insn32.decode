@@ -34,6 +34,9 @@
 %imm_b    31:s1 7:1 25:6 8:4     !function=ex_shift_1
 %imm_j    31:s1 12:8 20:1 21:10  !function=ex_shift_1
 %imm_u    12:s20                 !function=ex_shift_12
+%zce_uimm    20:5
+%zce_offset 31:1 7:1 25:6 8:4    !function=ex_shift_1
+%zce_scale   18:2
 
 # Argument sets:
 &empty
@@ -50,6 +53,7 @@
 &rwdvm     vm wd rd rs1 rs2
 &r2nfvm    vm rd rs1 nf
 &rnfvm     vm rd rs1 rs2 nf
+&zcea_b    zce_offset zce_uimm rs1
 
 # Formats 32:
 @r       .......   ..... ..... ... ..... ....... &r                %rs2 %rs1 %rd
@@ -89,6 +93,8 @@
 
 # Formats 64:
 @sh5     .......  ..... .....  ... ..... ....... &shift  shamt=%sh5      %rs1 %rd
+# @zce     ............ ..... ... ..... ....... %imm_i %rs1 %rd
+@zcea_b ....... ..... ..... ... ..... ....... &zcea_b zce_offset=%zce_offset zce_uimm=%zce_uimm rs1=%rs1
 
 # *** Privileged Instructions ***
 ecall       000000000000     00000 000 00000 1110011
@@ -239,8 +245,22 @@ fcvt_s_l   1101000  00010 ..... ... ..... 1010011 @r2_rm
 fcvt_s_lu  1101000  00011 ..... ... ..... 1010011 @r2_rm
 
 # *** RV32D Standard Extension ***
-fld        ............   ..... 011 ..... 0000111 @i
-fsd        ....... .....  ..... 011 ..... 0100111 @s
+%zce_b_imm_lw 15:s5 20:2 22:7      !function=ex_shift_2
+%zce_b_imm_sw 15:s5 7:2 25:4 9:3   !function=ex_shift_2
+%zce_b_imm_ld 22:s1 15:5 20:2 23:6 !function=ex_shift_3
+%zce_b_imm_sd 9:s1 15:5 7:2 25:4 10:2 !function=ex_shift_3
+%zce_b_imm_dec 15:2 20:2 22:7 17:1 !function=ex_shift_1
+{
+  fld        ............   ..... 011 ..... 0000111 @i
+  decbnez    100 ....... .. .. ... 011 ..... 0000111 %zce_scale %zce_b_imm_dec %rd
+  lwgp       000 ....... .. ..... 011 ..... 0000111 %zce_b_imm_lw %rd 
+  ldgp       010 ....... .. ..... 011 ..... 0000111 %zce_b_imm_ld %rd
+}    
+{
+  fsd        ....... .....  ..... 011 ..... 0100111 @s
+  swgp       000 ....  ..... ..... 011 ..... 0100111 %rs2 %zce_b_imm_sw 
+  sdgp       010 .... ..... ..... 011 ..... 0100111 %rs2 %zce_b_imm_sd
+}
 fmadd_d    ..... 01 ..... ..... ... ..... 1000011 @r4_rm
 fmsub_d    ..... 01 ..... ..... ... ..... 1000111 @r4_rm
 fnmsub_d   ..... 01 ..... ..... ... ..... 1001011 @r4_rm
@@ -657,3 +677,20 @@ vamomind_v      10000 . . ..... ..... 111 ..... 0101111 @r_wdvm
 vamomaxd_v      10100 . . ..... ..... 111 ..... 0101111 @r_wdvm
 vamominud_v     11000 . . ..... ..... 111 ..... 0101111 @r_wdvm
 vamomaxud_v     11100 . . ..... ..... 111 ..... 0101111 @r_wdvm
+
+# *** RV32 Zcea Extension ***
+# currently overlapping
+# muli      ............ ..... 001 ..... 0010011 @zce
+beqi . ...... ..... ..... 010 ..... 1100011 @zcea_b
+bnei . ...... ..... ..... 011 ..... 1100011 @zcea_b
+
+# push, push_e 
+# currently overlapping
+# %zce_rlist     16:4
+# %zce_spimm     7:5
+# @zcea_push_pop .......... .. .... . ... ..... .......  %zce_rlist %zce_spimm
+# push_all      0000000000 00 .... 0 100 ..... 0010011 @zcea_push_pop
+# pop, pop_e
+# pop_all       0000000000 00 .... 0 101 ..... 0010011 @zcea_push_pop
+# popret, popret_e
+# popret_all    0000000000 00 .... 0 110 ..... 0010011 @zcea_push_pop

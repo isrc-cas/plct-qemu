@@ -17,6 +17,7 @@ riscv_ss.add(files(
   'op_helper.c',
   'vector_helper.c',
   'translate.c',
+  'zce_helper.c',
 ))
 
 riscv_softmmu_ss = ss.source_set()

@@ -137,6 +137,11 @@ static RISCVException ctr32(CPURISCVState *env, int csrno)
     return ctr(env, csrno);
 }
 
+static RISCVException zcemode(CPURISCVState *env, int csrno)
+{
+    return -!env_archcpu(env)->cfg.ext_zce;
+}
+
 #if !defined(CONFIG_USER_ONLY)
 static RISCVException any(CPURISCVState *env, int csrno)
 {
@@ -1529,6 +1534,42 @@ RISCVException riscv_csrrw_debug(CPURISCVState *env, int csrno,
     return ret;
 }
 
+static RISCVException read_zce_tblj_csr_m(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mtbljalvec;
+    return RISCV_EXCP_NONE;
+}
+
+static RISCVException write_zce_tblj_csr_m(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->mtbljalvec = val;
+    return RISCV_EXCP_NONE;
+}
+
+static RISCVException read_zce_tblj_csr_s(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->stbljalvec;
+    return RISCV_EXCP_NONE;
+}
+
+static RISCVException write_zce_tblj_csr_s(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->stbljalvec = val;
+    return RISCV_EXCP_NONE;
+}
+
+static RISCVException read_zce_tblj_csr_u(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->utbljalvec;
+    return RISCV_EXCP_NONE;
+}
+
+static RISCVException write_zce_tblj_csr_u(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->utbljalvec = val;
+    return RISCV_EXCP_NONE;
+}
+
 /* Control and Status Register function table */
 riscv_csr_operations csr_ops[CSR_TABLE_SIZE] = {
     /* User Floating-Point CSRs */
@@ -1553,6 +1594,11 @@ riscv_csr_operations csr_ops[CSR_TABLE_SIZE] = {
      */
     [CSR_TIME]  = { "time",  ctr,   read_time  },
     [CSR_TIMEH] = { "timeh", ctr32, read_timeh },
+
+    /* Zce Extension */
+    [CSR_MTBLJALVEC] = {"mtbljalvec", zcemode, read_zce_tblj_csr_m, write_zce_tblj_csr_m},
+    [CSR_STBLJALVEC] = {"stbljalvec", zcemode, read_zce_tblj_csr_s, write_zce_tblj_csr_s},
+    [CSR_UTBLJALVEC] = {"utbljalvec", zcemode, read_zce_tblj_csr_u, write_zce_tblj_csr_u},
 
 #if !defined(CONFIG_USER_ONLY)
     /* Machine Timers and Counters */
@@ -1802,5 +1848,6 @@ riscv_csr_operations csr_ops[CSR_TABLE_SIZE] = {
     [CSR_MHPMCOUNTER29H] = { "mhpmcounter29h", any32,  read_zero },
     [CSR_MHPMCOUNTER30H] = { "mhpmcounter30h", any32,  read_zero },
     [CSR_MHPMCOUNTER31H] = { "mhpmcounter31h", any32,  read_zero },
+
 #endif /* !CONFIG_USER_ONLY */
 };

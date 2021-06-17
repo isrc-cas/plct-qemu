@@ -135,6 +135,11 @@ struct CPURISCVState {
 
     uint32_t features;
 
+    /* Zce Extension */
+    target_ulong mtbljalvec;
+    target_ulong stbljalvec;
+    target_ulong utbljalvec;
+
 #ifdef CONFIG_USER_ONLY
     uint32_t elf_flags;
 #endif
@@ -290,6 +295,7 @@ struct RISCVCPU {
         bool ext_counters;
         bool ext_ifencei;
         bool ext_icsr;
+        bool ext_zce;
 
         char *priv_spec;
         char *user_spec;
