@@ -525,9 +525,6 @@ static void riscv_cpu_realize(DeviceState *dev, Error **errp)
             }
             set_vext_version(env, vext_version);
         }
-        if (cpu->cfg.ext_zce) {
-            target_misa |= RVZCE;
-        }
 
         set_misa(env, target_misa);
     }

@@ -67,7 +67,6 @@
 #define RVS RV('S')
 #define RVU RV('U')
 #define RVH RV('H')
-#define RVZCE RV('Z')
 
 /* S extension denotes that Supervisor mode exists, however it is possible
    to have a core that support S mode but does not have an MMU and there
@@ -222,7 +221,6 @@ struct CPURISCVState {
 
     target_ulong sscratch;
     target_ulong mscratch;
-
 
     /* temporary htif regs */
     uint64_t mfromhost;

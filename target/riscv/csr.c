@@ -139,7 +139,7 @@ static RISCVException ctr32(CPURISCVState *env, int csrno)
 
 static RISCVException zcemode(CPURISCVState *env, int csrno)
 {
-    return -!riscv_has_ext(env, RVZCE);
+    return -!env_archcpu(env)->cfg.ext_zce;
 }
 
 #if !defined(CONFIG_USER_ONLY)
