@@ -23,6 +23,8 @@
 
 #include "hw/sysbus.h"
 #include "hw/riscv/riscv_hart.h"
+#include "hw/intc/nuclei_systimer.h"
+#include "hw/char/nuclei_uart.h"
 
 #define TYPE_NUCLEI_N_SOC "riscv.nuclei.n.soc"
 #define NUCLEI_N_SOC(obj) \
@@ -39,6 +41,11 @@ typedef struct NucLeiNSoCState {
     MemoryRegion ilm;
     MemoryRegion dlm;
     MemoryRegion xip_mem;
+
+    NucLeiSYSTIMERState timer;
+    NucLeiUARTState uart0;
+    NucLeiUARTState uart1;
+
 
 } NucLeiNSoCState;
 

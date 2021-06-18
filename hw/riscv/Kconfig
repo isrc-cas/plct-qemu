@@ -71,6 +71,8 @@ config SPIKE
 config NUCLEI_N
     bool
     select MSI_NONBROKEN
+    select NUCLEI_SYSTIMER
+    select NUCLEI_UART
     select UNIMP
 
 config NUCLEI_U

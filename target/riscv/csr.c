@@ -664,6 +664,54 @@ static int write_mscounteren(CPURISCVState *env, int csrno, target_ulong val)
     return 0;
 }
 
+static int read_mtvt(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mtvt;
+    return 0;
+}
+
+static int write_mtvt(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->mtvt = val;
+    return 0;
+}
+
+static int read_mtvt2(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mtvt2;
+    return 0;
+}
+
+static int write_mtvt2(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->mtvt2 = val;
+    return 0;
+}
+
+static int read_mmisc_ctl(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mmisc_ctl;
+    return 0;
+}
+
+static int write_mmisc_ctl(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->mmisc_ctl = val;
+    return 0;
+}
+
+static int read_mucounteren(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->scounteren;
+    return 0;
+}
+
+static int write_mucounteren(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->scounteren = val;
+    return 0;
+}
+
 /* Machine Trap Handling */
 static int read_mscratch(CPURISCVState *env, int csrno, target_ulong *val)
 {
@@ -1416,6 +1464,11 @@ riscv_csr_operations csr_ops[CSR_TABLE_SIZE] = {
     [CSR_MIE]         = { "mie",        any,   read_mie,         write_mie         },
     [CSR_MTVEC]       = { "mtvec",      any,   read_mtvec,       write_mtvec       },
     [CSR_MCOUNTEREN]  = { "mcounteren", any,   read_mcounteren,  write_mcounteren  },
+
+    [CSR_MTVT2] =               { "mtvt2", any,  read_mtvt2,       write_mtvt2       },
+    [CSR_MTVT] =                { "mtvt", any,  read_mtvt,        write_mtvt        },
+    [CSR_MMISC_CTL] =           { "mmisc_ctl", any,  read_mmisc_ctl,   write_mmisc_ctl   },
+    [CSR_MUCOUNTEREN] =         { "mucounteren", any,  read_mucounteren, write_mucounteren },
 
     [CSR_MSTATUSH]    = { "mstatush",   any32, read_mstatush,    write_mstatush    },
 

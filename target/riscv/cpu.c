@@ -232,7 +232,7 @@ static void rv32_imafcu_nommu_cpu_init(Object *obj)
 static void rv32_nuclei_n_cpu_init(Object *obj)
 {
     CPURISCVState *env = &RISCV_CPU(obj)->env;
-    set_misa(env, RV32 | RVI | RVM | RVA | RVC | RVU);
+    set_misa(env, RV32 | RVI | RVM | RVA | RVC |RVF | RVD | RVU);
     set_priv_version(env, PRIV_VERSION_1_10_0);
     set_resetvec(env, DEFAULT_RSTVEC);
     qdev_prop_set_bit(DEVICE(obj), "mmu", false);

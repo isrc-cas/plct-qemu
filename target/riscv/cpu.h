@@ -182,6 +182,11 @@ struct CPURISCVState {
     target_ulong mcause;
     target_ulong mtval;  /* since: priv-1.10.0 */
 
+    target_ulong msubm;
+    target_ulong mmisc_ctl;
+    target_ulong mtvt;
+    target_ulong mtvt2;
+
     /* Hypervisor CSRs */
     target_ulong hstatus;
     target_ulong hedeleg;

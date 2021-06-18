@@ -265,6 +265,11 @@
 #define CSR_DPC             0x7b1
 #define CSR_DSCRATCH        0x7b2
 
+//NUCLEI
+#define CSR_MMISC_CTL           0x07d0
+#define CSR_MTVT      0x307
+#define CSR_MTVT2     0x07ec
+
 /* Performance Counters */
 #define CSR_MHPMCOUNTER3    0xb03
 #define CSR_MHPMCOUNTER4    0xb04

@@ -31,6 +31,8 @@
 #include "hw/char/riscv_htif.h"
 #include "hw/riscv/riscv_hart.h"
 #include "hw/riscv/nuclei_n.h"
+#include "hw/intc/nuclei_systimer.h"
+#include "hw/char/nuclei_uart.h"
 #include "hw/riscv/boot.h"
 #include "sysemu/arch_init.h"
 #include "sysemu/device_tree.h"
@@ -181,8 +183,12 @@ static void nuclei_n_soc_realize(DeviceState *dev, Error **errp)
                                 memmap[NUCLEI_N_ROM].base, &s->internal_rom);
 
     /* SysTimer */
-    create_unimplemented_device("riscv.nuclei.n.timer",
-        memmap[NUCLEI_N_TIMER].base, memmap[NUCLEI_N_TIMER].size);
+    object_property_set_int(OBJECT(&s->timer), "aperture-size",
+                        memmap[NUCLEI_N_TIMER].size,   &error_abort);
+    if (!sysbus_realize(SYS_BUS_DEVICE(&s->timer), errp)) {
+        return;
+    }
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->timer), 0, memmap[NUCLEI_N_TIMER].base);
 
     /* Eclic */
     create_unimplemented_device("riscv.nuclei.n.eclic",
@@ -193,10 +199,19 @@ static void nuclei_n_soc_realize(DeviceState *dev, Error **errp)
         memmap[NUCLEI_N_GPIO].base, memmap[NUCLEI_N_GPIO].size);
 
     /* UART 0~1 */
-    create_unimplemented_device("riscv.nuclei.n.uart0",
-        memmap[NUCLEI_N_UART0].base, memmap[NUCLEI_N_UART0].size);
-    create_unimplemented_device("riscv.nuclei.n.uart1",
-        memmap[NUCLEI_N_UART1].base, memmap[NUCLEI_N_UART1].size);
+    qdev_prop_set_chr(DEVICE(&s->uart0), "chardev", serial_hd(0));
+    if (!sysbus_realize(SYS_BUS_DEVICE(&s->uart0), errp)) {
+        return;
+    }
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->uart0), 0,
+                    memmap[NUCLEI_N_UART0].base);
+
+    qdev_prop_set_chr(DEVICE(&s->uart1), "chardev", serial_hd(1));
+    if (!sysbus_realize(SYS_BUS_DEVICE(&s->uart1), errp)) {
+        return;
+    }
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->uart1), 0,
+                    memmap[NUCLEI_N_UART1].base);
 
     /* QSPI 0~2 */
     create_unimplemented_device("riscv.nuclei.n.qspi0",
@@ -255,6 +270,14 @@ static void nuclei_n_soc_instance_init(Object *obj)
 {
     NucLeiNSoCState *s = NUCLEI_N_SOC(obj);
     object_initialize_child(obj, "cpus", &s->cpus, TYPE_RISCV_HART_ARRAY);
+
+    object_initialize_child(obj, "systimer", &s->timer,
+                            TYPE_NUCLEI_SYSTIMER);
+
+    object_initialize_child(obj, "uart0", &s->uart0,
+                            TYPE_NUCLEI_UART);
+    object_initialize_child(obj, "uart1", &s->uart1,
+                            TYPE_NUCLEI_UART);
 }
 
 static void nuclei_n_soc_class_init(ObjectClass *oc, void *data)
