@@ -159,18 +159,18 @@ static bool trans_aesds(DisasContext *ctx, arg_aesds *a)
 static bool trans_aes64ks1i(DisasContext *ctx, arg_aes64ks1i *a)
 {
 	REQUIRE_EXT(ctx, RVK);
-	TCGv rcon;
-	rcon = tcg_const_tl(a->rcon);
+	TCGv rnum;
+	rnum = tcg_const_tl(a->rnum);
 	TCGv source1 = tcg_temp_new();
 	gen_get_gpr(source1, a->rs1);
 
 	TCGv dst = tcg_temp_new();
-	gen_helper_aes64ks1i(dst, source1, rcon);
+	gen_helper_aes64ks1i(dst, source1, rnum);
 	gen_set_gpr(a->rd, dst);
 	tcg_temp_free(dst);
 	
 	tcg_temp_free(source1);
-	tcg_temp_free(rcon);
+	tcg_temp_free(rnum);
 	return true;
 }
 
