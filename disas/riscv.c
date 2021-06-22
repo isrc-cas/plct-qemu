@@ -106,7 +106,7 @@ typedef enum {
     rvc_csr_eq_0xc80,
     rvc_csr_eq_0xc81,
     rvc_csr_eq_0xc82,
-    rvc_csr_eq_0xf15,
+    rvc_csr_eq_0xdbf,
     rvc_rcon_lt_0x00a,
 } rvc_constraint;
 
@@ -664,7 +664,7 @@ static const rvc_constraint rvcc_fsrm[] = { rvc_csr_eq_0x002, rvc_end };
 static const rvc_constraint rvcc_fsflags[] = { rvc_csr_eq_0x001, rvc_end };
 static const rvc_constraint rvcc_fsrmi[] = { rvc_csr_eq_0x002, rvc_end };
 static const rvc_constraint rvcc_fsflagsi[] = { rvc_csr_eq_0x001, rvc_end };
-static const rvc_constraint rvcc_mentropy[] = { rvc_csr_eq_0xf15, rvc_end };
+static const rvc_constraint rvcc_sentropy[] = { rvc_csr_eq_0xdbf, rvc_end };
 static const rvc_constraint rvcc_mnoise[] = { rvc_csr_eq_0x7a9, rvc_end };
 
 /* pseudo-instruction metadata */
@@ -776,7 +776,7 @@ static const rv_comp_data rvcp_csrrs[] = {
     { rv_op_frcsr, rvcc_frcsr },
     { rv_op_frrm, rvcc_frrm },
     { rv_op_frflags, rvcc_frflags },
-    { rv_op_pollentropy, rvcc_mentropy },
+    { rv_op_pollentropy, rvcc_sentropy },
     { rv_op_getnoise, rvcc_mnoise },
     { rv_op_illegal, NULL }
 };
@@ -2808,8 +2808,8 @@ static bool check_constraints(rv_decode *dec, const rvc_constraint *c)
                 return false;
             }
             break;
-        case rvc_csr_eq_0xf15:
-            if (!(imm == 0x0f15)) {
+        case rvc_csr_eq_0xdbf:
+            if (!(imm == 0x0dbf)) {
                 return false;
             }
             break;

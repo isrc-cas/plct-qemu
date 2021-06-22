@@ -360,16 +360,16 @@ target_ulong HELPER(aes64ks2)(target_ulong rs1, target_ulong rs2)
 	return result;
 }
 
-target_ulong HELPER(aes64ks1i)(target_ulong rs1, target_ulong rcon)
+target_ulong HELPER(aes64ks1i)(target_ulong rs1, target_ulong rnum)
 {
 	uint64_t RS1 = rs1;
 	uint8_t round_consts [10] = {
 	    0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
 	};
 
-	uint8_t enc_rcon = rcon;
+	uint8_t enc_rnum = rnum;
 
-	if(enc_rcon > 0xA) {
+	if(enc_rnum > 0xA) {
 		// Invalid opcode.
 		return 0;
 	}
@@ -378,9 +378,9 @@ target_ulong HELPER(aes64ks1i)(target_ulong rs1, target_ulong rcon)
 	uint8_t rcon_ = 0;
 	target_ulong result;
 
-	if(enc_rcon != 0xA) {
-	    temp = (temp >> 8) | (temp << 24); // Rotate left by 8
-	    rcon_ = round_consts[enc_rcon];
+	if(enc_rnum != 0xA) {
+	    temp = (temp >> 8) | (temp << 24); // Rotate right by 8
+	    rcon_ = round_consts[enc_rnum];
 	}
 
 	temp =
