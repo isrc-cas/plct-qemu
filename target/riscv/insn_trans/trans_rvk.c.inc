@@ -159,6 +159,11 @@ static bool trans_aesds(DisasContext *ctx, arg_aesds *a)
 static bool trans_aes64ks1i(DisasContext *ctx, arg_aes64ks1i *a)
 {
 	REQUIRE_EXT(ctx, RVK);
+
+	if(a->rnum > 0xA) {
+		return false;
+	}
+
 	TCGv rnum;
 	rnum = tcg_const_tl(a->rnum);
 	TCGv source1 = tcg_temp_new();

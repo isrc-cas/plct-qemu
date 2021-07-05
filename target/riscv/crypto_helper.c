@@ -368,12 +368,6 @@ target_ulong HELPER(aes64ks1i)(target_ulong rs1, target_ulong rnum)
 	};
 
 	uint8_t enc_rnum = rnum;
-
-	if(enc_rnum > 0xA) {
-		// Invalid opcode.
-		return 0;
-	}
-
 	uint32_t temp = (RS1 >> 32) & 0xFFFFFFFF;
 	uint8_t rcon_ = 0;
 	target_ulong result;
