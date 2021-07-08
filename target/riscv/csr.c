@@ -1531,13 +1531,8 @@ RISCVException riscv_csrrw_debug(CPURISCVState *env, int csrno,
     return ret;
 }
 
-static int kmode(CPURISCVState *env, int csrno)
-{
-    return -!riscv_has_ext(env, RVK);
-}
-
 /* Crypto Extension */
-static int read_mentropy(CPURISCVState *env, int csrno, target_ulong *val)
+static int read_sentropy(CPURISCVState *env, int csrno, target_ulong *val)
 {
     *val = 0;
     uint32_t return_status = get_field(env->mnoise, K_EXT_NOISE_TEST) ? K_EXT_OPST_BIST : K_EXT_OPST_ES16;
@@ -1604,8 +1599,8 @@ riscv_csr_operations csr_ops[CSR_TABLE_SIZE] = {
     [CSR_TIMEH] = { "timeh", ctr32, read_timeh },
 
     /* Crypto Extension */
-    [CSR_MENTROPY] = { "mentropy", kmode, read_mentropy},
-    [CSR_MNOISE]   = { "mnoise",   kmode, read_mnoise,  write_mnoise},
+    [CSR_SENTROPY] = { "sentropy", smode, read_sentropy},
+    [CSR_MNOISE]   = { "mnoise",   smode, read_mnoise,  write_mnoise},
 
 #if !defined(CONFIG_USER_ONLY)
     /* Machine Timers and Counters */
