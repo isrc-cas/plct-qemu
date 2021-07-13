@@ -526,7 +526,7 @@ restart:
             return TRANSLATE_FAIL;
         }
 
-        hwaddr ppn = pte >> PTE_PPN_SHIFT;
+        hwaddr ppn = (pte & ~(target_ulong)PTE_N) >> PTE_PPN_SHIFT;
 
         if (!(pte & PTE_V)) {
             /* Invalid PTE */
@@ -606,8 +606,13 @@ restart:
             /* for superpage mappings, make a fake leaf PTE for the TLB's
                benefit. */
             target_ulong vpn = addr >> PGSHIFT;
-            *physical = ((ppn | (vpn & ((1L << ptshift) - 1))) << PGSHIFT) |
-                        (addr & ~TARGET_PAGE_MASK);
+            int napot_bits = ((pte & PTE_N) ? (ctzl(ppn) + 1) : 0);
+            if (((pte & PTE_N) && (ppn == 0 || i != 0)) || (napot_bits != 0 && napot_bits != 4))
+                 return TRANSLATE_FAIL;
+            *physical = (((ppn & ~(((target_ulong)1 << napot_bits) - 1))
+                        | (vpn & (((target_ulong)1 << napot_bits) - 1))
+                        | (vpn & (((target_ulong)1 << ptshift) - 1))) << PGSHIFT)
+                        | (addr & ~TARGET_PAGE_MASK);
 
             /* set permissions on the TLB entry */
             if ((pte & PTE_R) || ((pte & PTE_X) && mxr)) {
