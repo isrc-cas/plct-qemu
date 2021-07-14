@@ -46,6 +46,7 @@ typedef struct NucLeiNSoCState {
     NucLeiUARTState uart0;
     NucLeiUARTState uart1;
 
+    DeviceState *eclic;
 
 } NucLeiNSoCState;
 

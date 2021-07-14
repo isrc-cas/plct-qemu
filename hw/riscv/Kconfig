@@ -73,6 +73,7 @@ config NUCLEI_N
     select MSI_NONBROKEN
     select NUCLEI_SYSTIMER
     select NUCLEI_UART
+    select NUCLEI_ECLIC
     select UNIMP
 
 config NUCLEI_U

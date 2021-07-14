@@ -32,6 +32,7 @@
 #include "hw/riscv/riscv_hart.h"
 #include "hw/riscv/nuclei_n.h"
 #include "hw/intc/nuclei_systimer.h"
+#include "hw/intc/nuclei_eclic.h"
 #include "hw/char/nuclei_uart.h"
 #include "hw/riscv/boot.h"
 #include "sysemu/arch_init.h"
@@ -191,8 +192,20 @@ static void nuclei_n_soc_realize(DeviceState *dev, Error **errp)
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->timer), 0, memmap[NUCLEI_N_TIMER].base);
 
     /* Eclic */
-    create_unimplemented_device("riscv.nuclei.n.eclic",
-        memmap[NUCLEI_N_ECLIC].base, memmap[NUCLEI_N_ECLIC].size);
+    // create_unimplemented_device("riscv.nuclei.n.eclic",
+    //     memmap[NUCLEI_N_ECLIC].base, memmap[NUCLEI_N_ECLIC].size);
+
+    //TODO:update 51
+    s->eclic = nuclei_eclic_create(memmap[NUCLEI_N_ECLIC].base,
+                                   memmap[NUCLEI_N_ECLIC].size, 51);
+    if( s->eclic != NULL)
+    {
+        s->timer.eclic = s->eclic;
+        s->timer.soft_irq =&(NUCLEI_ECLIC(s->eclic)->irqs[Internal_SysTimerSW_IRQn]);
+        s->timer.timer_irq = &(NUCLEI_ECLIC(s->eclic)->irqs[Internal_SysTimer_IRQn]);
+
+        s->uart0.irq = nuclei_eclic_get_irq(DEVICE(s->eclic),22);
+    }
 
     /* GPIO */
     create_unimplemented_device("riscv.nuclei.n.gpio",

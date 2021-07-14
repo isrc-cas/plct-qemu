@@ -103,6 +103,8 @@ enum {
 
 #define MAX_RISCV_PMPS (16)
 
+#define CPU_INTERRUPT_ECLIC CPU_INTERRUPT_TGT_EXT_0
+
 typedef struct CPURISCVState CPURISCVState;
 
 #include "pmp.h"
@@ -252,6 +254,33 @@ struct CPURISCVState {
 
     /* Fields from here on are preserved across CPU reset. */
     QEMUTimer *timer; /* Internal timer */
+
+    void *eclic;
+    uint32_t exccode;    /* irq id: 0~11  shv: 12 */
+    uint32_t eclic_flag;
+    bool irq_pending;
+
+    target_ulong mnxti;
+    target_ulong mintstatus;
+    target_ulong mscratchcsw;
+    target_ulong mscratchcswl;
+    target_ulong mnvec;
+    target_ulong mdcause;
+    target_ulong mcache_ctl;
+    target_ulong msavestatus;
+    target_ulong msaveepc1;
+    target_ulong msavecause1;
+    target_ulong msaveepc2;
+    target_ulong msavecause2;
+    target_ulong msavedcause1;
+    target_ulong msavedcause2;
+    target_ulong pushmsubm;
+    target_ulong jalmnxti;
+    target_ulong pushmcause;
+    target_ulong pushmepc;
+    target_ulong wfe;
+    target_ulong sleepvalue;
+    target_ulong txevt;
 };
 
 OBJECT_DECLARE_TYPE(RISCVCPU, RISCVCPUClass,
@@ -374,6 +403,8 @@ void riscv_cpu_list(void);
 void riscv_cpu_swap_hypervisor_regs(CPURISCVState *env);
 int riscv_cpu_claim_interrupts(RISCVCPU *cpu, uint32_t interrupts);
 uint32_t riscv_cpu_update_mip(RISCVCPU *cpu, uint32_t mask, uint32_t value);
+void riscv_cpu_eclic_clean_pending(void *eclic, int irq);
+void riscv_cpu_eclic_get_next_interrupt(void *eclic);
 #define BOOL_TO_MASK(x) (-!!(x)) /* helper for riscv_cpu_update_mip value */
 void riscv_cpu_set_rdtime_fn(CPURISCVState *env, uint64_t (*fn)(uint32_t),
                              uint32_t arg);

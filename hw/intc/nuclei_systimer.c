@@ -30,6 +30,7 @@
 #include "hw/registerfields.h"
 #include "hw/qdev-properties.h"
 #include "migration/vmstate.h"
+#include "hw/intc/nuclei_eclic.h"
 
 static uint64_t cpu_riscv_read_rtc(uint64_t timebase_freq)
 {
@@ -49,10 +50,41 @@ static void nuclei_timer_reset(DeviceState *dev)
     s->msip = 0x0;
 }
 
+static void nuclei_timer_update_compare(NucLeiSYSTIMERState *s)
+{
+    CPUState *cpu = qemu_get_cpu(0);
+    CPURISCVState *env = cpu ? cpu->env_ptr : NULL;
+    uint64_t cmp, real_time;
+    int64_t diff;
+
+    real_time =  s->mtime_lo | ((uint64_t)s->mtime_hi << 32);
+
+    cmp = (uint64_t)s->mtimecmp_lo | ((uint64_t)s->mtimecmp_hi <<32);
+    env->timecmp =  cmp;
+
+    diff = cmp - real_time;
+
+    if ( real_time >= cmp) {
+        qemu_set_irq(*(s->timer_irq), 1);
+    }
+    else {
+    	qemu_set_irq(*(s->timer_irq), 0);
+
+        if (s->mtimecmp_hi != 0xffffffff) {
+            // set up future timer interrupt
+            uint64_t next_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
+                muldiv64(diff, NANOSECONDS_PER_SECOND, s->timebase_freq);
+            timer_mod(env->timer, next_ns);
+	    }
+    }
+}
+
 static uint64_t nuclei_timer_read(void *opaque, hwaddr offset,
                                     unsigned size)
 {
     NucLeiSYSTIMERState *s = NUCLEI_SYSTIMER(opaque);
+    CPUState *cpu = qemu_get_cpu(0);
+    CPURISCVState *env = cpu ? cpu->env_ptr : NULL;
     uint64_t value = 0;
 
     switch (offset) {
@@ -66,10 +98,12 @@ static uint64_t nuclei_timer_read(void *opaque, hwaddr offset,
         value =  s->mtime_hi;
         break;
     case NUCLEI_SYSTIMER_REG_MTIMECMPLO:
-        value =  s->mtimecmp_lo;
+        s->mtimecmp_lo = (env->timecmp) & 0xFFFFFFFF;
+        value = s->mtimecmp_lo;
         break;
     case NUCLEI_SYSTIMER_REG_MTIMECMPHI:
-        value =  s->mtimecmp_hi;
+        s->mtimecmp_hi = (env->timecmp >> 32) & 0xFFFFFFFF;
+        value = s->mtimecmp_hi;
         break;
     case NUCLEI_SYSTIMER_REG_MSFTRST:
         value =  s->msftrst;
@@ -107,18 +141,30 @@ static void nuclei_timer_write(void *opaque, hwaddr offset,
         break;
     case NUCLEI_SYSTIMER_REG_MTIMECMPLO:
         s->mtimecmp_lo = value;
+        s->mtimecmp_hi = 0xFFFFFFFF;
+        env->timecmp  |= (value &0xFFFFFFFF);
+        nuclei_timer_update_compare(s);
         break;
     case NUCLEI_SYSTIMER_REG_MTIMECMPHI:
         s->mtimecmp_hi = value;
+        env->timecmp  |= ((value << 32)&0xFFFFFFFF);
+        nuclei_timer_update_compare(s);
         break;
     case NUCLEI_SYSTIMER_REG_MSFTRST:
-        s->msftrst = value;
+	if (!(value & 0x80000000) == 0)
+            nuclei_timer_reset((DeviceState *)s);
         break;
     case NUCLEI_SYSTIMER_REG_MTIMECTL:
         s->mtimectl = value;
         break;
     case NUCLEI_SYSTIMER_REG_MSIP:
         s->msip = value;
+        if ((s->msip & 0x1) == 1) {
+            qemu_set_irq(*(s->soft_irq), 1);
+        }else{
+            qemu_set_irq(*(s->soft_irq), 0);
+        }
+
         break;
     default:
         break;
@@ -150,8 +196,21 @@ static void nuclei_timer_instance_init(Object *obj)
     sysbus_init_mmio(SYS_BUS_DEVICE(obj), &s->mmio);
 }
 
+static void nuclei_mtimecmp_cb(void *opaque) {
+    RISCVCPU *cpu = RISCV_CPU(qemu_get_cpu(0));
+    CPURISCVState *env = &cpu->env;
+    nuclei_eclic_systimer_cb(((RISCVCPU *)cpu)->env.eclic);
+    timer_del(env->timer);
+}
+
 static void nuclei_timer_realize(DeviceState *dev, Error **errp)
 {
+    RISCVCPU *cpu = RISCV_CPU(qemu_get_cpu(0));
+    CPURISCVState *env = &cpu->env;
+
+    env->timer = timer_new_ns(QEMU_CLOCK_VIRTUAL,
+                                   &nuclei_mtimecmp_cb, cpu);
+    env->timecmp = 0;
 
 }
 
