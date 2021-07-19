@@ -4,9 +4,9 @@
 #define TARGET_RISCV_CPU_BITS_H
 
 #define get_field(reg, mask) (((reg) & \
-                 (uint64_t)(mask)) / ((mask) & ~((mask) << 1)))
+                 (uint64_t)(mask)) / (((uint64_t)mask) & ~(((uint64_t)mask) << 1)))
 #define set_field(reg, mask, val) (((reg) & ~(uint64_t)(mask)) | \
-                 (((uint64_t)(val) * ((mask) & ~((mask) << 1))) & \
+                 (((uint64_t)(val) * (((uint64_t)mask) & ~(((uint64_t)mask) << 1))) & \
                  (uint64_t)(mask)))
 
 /* Floating point round mode */
@@ -334,6 +334,10 @@
 #define CSR_MHPMCOUNTER30H  0xb9e
 #define CSR_MHPMCOUNTER31H  0xb9f
 
+/* Crypto Extension */
+#define CSR_SENTROPY         0xdbf
+#define CSR_MNOISE           0x7a9
+
 /* mstatus CSR bits */
 #define MSTATUS_UIE         0x00000001
 #define MSTATUS_SIE         0x00000002
@@ -532,15 +536,11 @@ typedef enum RISCVException {
 #define MIE_SSIE                           (1 << IRQ_S_SOFT)
 #define MIE_USIE                           (1 << IRQ_U_SOFT)
 
-/* Crypto Extension */
-#define CSR_SENTROPY             0xdbf
-#define CSR_MNOISE               0x7a9
-
-#define K_EXT_OPST               (0b11 << 30)
-#define K_EXT_SEED               ((0b1 << 16) - 1)
-#define K_EXT_OPST_BIST         （0b00 << 30）
-#define K_EXT_OPST_ES16         （0b01 << 30）
-#define K_EXT_OPST_WAIT         （0b10 << 30）
-#define K_EXT_OPST_DEAD         （0b11 << 30）
-#define K_EXT_NOISE_TEST         (0b1 << 31)
+#define K_EXT_OPST                        (0b11 << 30)
+#define K_EXT_SEED                        ((0b1 << 16) - 1)
+#define K_EXT_OPST_BIST                   (0b00 << 30)
+#define K_EXT_OPST_ES16                   (0b01 << 30)
+#define K_EXT_OPST_WAIT                   (0b10 << 30)
+#define K_EXT_OPST_DEAD                   (0b11 << 30)
+#define K_EXT_NOISE_TEST                  (0b1 << 31)
 #endif

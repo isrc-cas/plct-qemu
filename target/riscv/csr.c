@@ -1422,6 +1422,47 @@ static RISCVException write_pmpaddr(CPURISCVState *env, int csrno,
     return RISCV_EXCP_NONE;
 }
 
+/* Crypto Extension */
+static int read_sentropy(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = 0;
+    uint32_t return_status = get_field(env->mnoise, K_EXT_NOISE_TEST) ? K_EXT_OPST_BIST : K_EXT_OPST_ES16;
+    *val = (*val) | return_status;
+    if(return_status == K_EXT_OPST_ES16) {
+        uint16_t random_number;
+        Error *err = NULL;
+        if (qemu_guest_getrandom(&random_number, sizeof(random_number), &err) < 0) {
+            qemu_log_mask(LOG_UNIMP, "darn: Crypto failure: %s",
+                          error_get_pretty(err));
+            error_free(err);
+            return -1;
+        }
+        *val = (*val) | random_number;
+    } else if(return_status == K_EXT_OPST_BIST) {
+        // Do nothing
+    } else if(return_status == K_EXT_OPST_WAIT) {
+        // Do nothing
+    } else if(return_status == K_EXT_OPST_DEAD) {
+        // Do nothing
+    }
+    return 0;
+}
+
+static int read_mnoise(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = 0;
+    if(get_field(env->mnoise, K_EXT_NOISE_TEST) == 1) {
+        *val |= 0x1 << 31;
+    }
+    return 0;
+}
+
+static int write_mnoise(CPURISCVState *env, int csrno, target_ulong val)
+{
+    int new_noisemode = (val >> 31) & 0x1;
+    val = set_field(env->mnoise, K_EXT_NOISE_TEST, new_noisemode == 1);
+    return 0;
+}
 #endif
 
 /*
@@ -1531,48 +1572,6 @@ RISCVException riscv_csrrw_debug(CPURISCVState *env, int csrno,
     return ret;
 }
 
-/* Crypto Extension */
-static int read_sentropy(CPURISCVState *env, int csrno, target_ulong *val)
-{
-    *val = 0;
-    uint32_t return_status = get_field(env->mnoise, K_EXT_NOISE_TEST) ? K_EXT_OPST_BIST : K_EXT_OPST_ES16;
-    *val = (*val) | return_status;
-    if(return_status == K_EXT_OPST_ES16) {
-        uint16_t random_number;
-        Error *err = NULL;
-        if (qemu_guest_getrandom(&random_number, sizeof(random_number), &err) < 0) {
-            qemu_log_mask(LOG_UNIMP, "darn: Crypto failure: %s",
-                          error_get_pretty(err));
-            error_free(err);
-            return -1;
-        }
-        *val = (*val) | random_number;
-    } else if(return_status == K_EXT_OPST_BIST) {
-        // Do nothing
-    } else if(return_status == K_EXT_OPST_WAIT) {
-        // Do nothing
-    } else if(return_status == K_EXT_OPST_DEAD) {
-        // Do nothing
-    }
-    return 0;
-}
-
-static int read_mnoise(CPURISCVState *env, int csrno, target_ulong *val)
-{
-    *val = 0;
-    if(get_field(env->mnoise, K_EXT_NOISE_TEST) == 1) {
-        *val |= 0x1 << 31;
-    }
-    return 0;
-}
-
-static int write_mnoise(CPURISCVState *env, int csrno, target_ulong val)
-{
-    int new_noisemode = (val >> 31) & 0x1;
-    val = set_field(env->mnoise, K_EXT_NOISE_TEST, new_noisemode == 1);
-    return 0;
-}
-
 /* Control and Status Register function table */
 riscv_csr_operations csr_ops[CSR_TABLE_SIZE] = {
     /* User Floating-Point CSRs */
@@ -1598,11 +1597,11 @@ riscv_csr_operations csr_ops[CSR_TABLE_SIZE] = {
     [CSR_TIME]  = { "time",  ctr,   read_time  },
     [CSR_TIMEH] = { "timeh", ctr32, read_timeh },
 
+#if !defined(CONFIG_USER_ONLY)
     /* Crypto Extension */
     [CSR_SENTROPY] = { "sentropy", smode, read_sentropy},
-    [CSR_MNOISE]   = { "mnoise",   smode, read_mnoise,  write_mnoise},
+    [CSR_MNOISE]   = { "mnoise",   any, read_mnoise,  write_mnoise},
 
-#if !defined(CONFIG_USER_ONLY)
     /* Machine Timers and Counters */
     [CSR_MCYCLE]    = { "mcycle",    any,   read_instret  },
     [CSR_MINSTRET]  = { "minstret",  any,   read_instret  },
