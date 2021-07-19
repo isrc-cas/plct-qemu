@@ -436,3 +436,84 @@ static bool trans_slli_uw(DisasContext *ctx, arg_slli_uw *a)
     tcg_temp_free(source1);
     return true;
 }
+
+static bool trans_shfl(DisasContext *ctx, arg_shfl *a)
+{
+    REQUIRE_EXT(ctx, RVB);
+    return gen_shuf(ctx, a, gen_helper_shfl);
+}
+
+static bool trans_shfli(DisasContext *ctx, arg_shfli *a)
+{
+    REQUIRE_EXT(ctx, RVB);
+    return gen_shufi(ctx, a, gen_helper_shfl);
+}
+
+static bool trans_unshfl(DisasContext *ctx, arg_unshfl *a)
+{
+    REQUIRE_EXT(ctx, RVB);
+    return gen_shuf(ctx, a, gen_helper_unshfl);
+}
+
+static bool trans_unshfli(DisasContext *ctx, arg_unshfli *a)
+{
+    REQUIRE_EXT(ctx, RVB);
+    return gen_shufi(ctx, a, gen_helper_unshfl);
+}
+
+static bool trans_xperm_n(DisasContext *ctx, arg_xperm_n *a)
+{
+    REQUIRE_EXT(ctx, RVB);
+    return gen_xperm(ctx, a, 2);
+}
+
+static bool trans_xperm_b(DisasContext *ctx, arg_xperm_b *a)
+{
+    REQUIRE_EXT(ctx, RVB);
+    return gen_xperm(ctx, a, 3);
+}
+
+static bool trans_xperm_h(DisasContext *ctx, arg_xperm_h *a)
+{
+    REQUIRE_EXT(ctx, RVB);
+    return gen_xperm(ctx, a, 4);
+}
+
+static bool trans_xperm_w(DisasContext *ctx, arg_xperm_w *a)
+{
+    REQUIRE_64BIT(ctx);
+    REQUIRE_EXT(ctx, RVB);
+    return gen_xperm(ctx, a, 5);
+}
+
+static bool trans_shflw(DisasContext *ctx, arg_shflw *a)
+{
+    REQUIRE_64BIT(ctx);
+    REQUIRE_EXT(ctx, RVB);
+    return gen_shufw(ctx, a, gen_helper_shfl);
+}
+
+static bool trans_unshflw(DisasContext *ctx, arg_unshflw *a)
+{
+    REQUIRE_64BIT(ctx);
+    REQUIRE_EXT(ctx, RVB);
+    return gen_shufw(ctx, a, gen_helper_unshfl);
+}
+
+static bool trans_clmul(DisasContext *ctx, arg_clmul *a)
+{
+    REQUIRE_EXT(ctx, RVB);
+    return gen_arith(ctx, a, gen_helper_clmul);
+}
+
+static bool trans_clmulh(DisasContext *ctx, arg_clmulh *a)
+{
+    REQUIRE_EXT(ctx, RVB);
+    return gen_arith(ctx, a, gen_helper_clmulh);
+}
+
+static bool trans_clmulr(DisasContext *ctx, arg_clmulr *a)
+{
+    REQUIRE_EXT(ctx, RVB);
+    return gen_arith(ctx, a, gen_helper_clmulr);
+}
